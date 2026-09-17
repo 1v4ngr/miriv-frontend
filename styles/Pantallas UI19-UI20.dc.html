@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #F2EEF1; }
+  a { color: #6D4656; text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { color: #452833; }
+</style>
+</helmet>
+
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #2E262A; padding: 44px; display: flex; flex-direction: column; gap: 44px;">
+
+  <div style="display: flex; flex-direction: column; gap: 10px; max-width: 820px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6F6169;">MIRIV · seguimiento enológico · P0</div>
+    <h1 style="margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.025em;">UI19 – UI20 · escritorio y móvil</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #5C4F55; text-wrap: pretty;">Agenda operativa agrupada por vencimiento y ficha de ejecución que confirma primero depósito y contenido. Una tarea que exige resultado validado sigue pendiente aunque ya se tomó la muestra.</p>
+  </div>
+
+  <section data-screen-label="UI19" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI19</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Tareas y agenda</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Grupos Vencidas / Hoy / Próximas / Sin fecha</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+
+      <div style="width: 1280px; flex: 0 0 auto; height: 940px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="width: 232px; flex: 0 0 auto; background: #FDFBFC; border-right: 1px solid #EADFE4; padding: 22px 16px; display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 0 6px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #DCC8D4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: #6D4656;">M</div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; letter-spacing: 0.18em; color: #3D2F36; text-indent: 0.18em;">MIRIV</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Inicio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Bodega</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Laboratorio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Seguimiento</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Actividad</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Incidencias<span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">3</span></div>
+            <div style="height: 42px; border-radius: 13px; background: #F3E7EE; color: #6D4656; font-size: 14px; font-weight: 600; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #6D4656;"></span>Tareas<span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #F5EED0; color: #6B5A10;">9</span></div>
+          </div>
+          <div style="margin-top: auto; border-radius: 16px; background: #F7F0F4; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 12.5px; font-weight: 600;">María Solana</span>
+            <span style="font-size: 12px; color: #6F6169;">Enóloga · Centro Norte</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+          <div style="height: 68px; flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; display: flex; align-items: center; gap: 14px; padding: 0 26px;">
+            <div style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 13px; background: #F3E7EE; font-size: 13.5px; font-weight: 600; color: #6D4656;">Mis tareas</div>
+            <div style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600;">Equipo</div>
+            <div style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600;">Sin asignar</div>
+            <div style="flex: 1; max-width: 300px; height: 40px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FBF8FA; display: flex; align-items: center; padding: 0 14px; font-size: 13.5px; color: #7B6D74;">Filtrar por zona o tipo</div>
+            <div style="margin-left: auto; height: 40px; padding: 0 16px; border-radius: 13px; background: #6D4656; color: #FFF8FB; font-size: 13.5px; font-weight: 600; display: flex; align-items: center;">Crear tarea</div>
+          </div>
+
+          <div style="flex: 1; overflow: hidden; padding: 26px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+              <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em;">Tareas</div>
+              <div style="font-size: 13.5px; color: #6F6169;">9 pendientes · vista lista · agenda por día disponible como variante</div>
+            </div>
+
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden;">
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8E1F33;">Vencidas <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; letter-spacing: 0;">2</span></div>
+                <div style="background: #FFFFFF; border: 1px solid #F0D9DE; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 16px;">
+                  <span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #F7DADF; color: #8E1F33; flex: 0 0 auto;">Alta</span>
+                  <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                    <span style="font-size: 14px;">Analítica de control completa</span>
+                    <span style="font-size: 12px; color: #6F6169;">DEP-014 · C-2026-114 · origen: incidencia de acidez volátil</span>
+                  </div>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8E1F33; flex: 0 0 auto;">venció ayer</span>
+                  <span style="font-size: 13px; font-weight: 600; color: #6D4656; flex: 0 0 auto;">Sin asignar</span>
+                  <div style="height: 38px; padding: 0 15px; border-radius: 12px; background: #F3E7EE; color: #6D4656; font-size: 13px; font-weight: 600; display: flex; align-items: center; flex: 0 0 auto;">Abrir</div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #F0D9DE; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 16px;">
+                  <span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #F5EED0; color: #6B5A10; flex: 0 0 auto;">Media</span>
+                  <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                    <span style="display: flex; align-items: center; gap: 8px;">Trasegar antes de fin de mes<span style="font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #E3E3EF; color: #43435C;">Ubicación cambiada</span></span>
+                    <span style="font-size: 12px; color: #6F6169;">DEP-009 → ahora en DEP-014 · revisar aplicabilidad</span>
+                  </div>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8E1F33; flex: 0 0 auto;">venció hace 3 d</span>
+                  <span style="font-size: 13px; color: #5C4F55; flex: 0 0 auto;">Jordi Ferrer</span>
+                  <div style="height: 38px; padding: 0 15px; border-radius: 12px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center; flex: 0 0 auto;">Abrir</div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6D4656;">Hoy <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; letter-spacing: 0;">3</span></div>
+                <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 16px;">
+                  <span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #FAE3D3; color: #8A4715; flex: 0 0 auto;">Alta</span>
+                  <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                    <span style="font-size: 14px;">Toma de muestra · densidad y temperatura</span>
+                    <span style="font-size: 12px; color: #6F6169;">DEP-007 · C-2026-101 · plan Tinto reserva</span>
+                  </div>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5C4F55; flex: 0 0 auto;">hoy 12:00</span>
+                  <span style="font-size: 13px; font-weight: 600; color: #6D4656; flex: 0 0 auto;">María Solana</span>
+                  <div style="height: 38px; padding: 0 15px; border-radius: 12px; background: #F3E7EE; color: #6D4656; font-size: 13px; font-weight: 600; display: flex; align-items: center; flex: 0 0 auto;">Abrir</div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 16px;">
+                  <span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #F5EED0; color: #6B5A10; flex: 0 0 auto;">Media</span>
+                  <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                    <span style="font-size: 14px;">Sulfitado según plan</span>
+                    <span style="font-size: 12px; color: #6F6169;">DEP-014 · C-2026-114 · control recurrente del plan</span>
+                  </div>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5C4F55; flex: 0 0 auto;">hoy 17:00</span>
+                  <span style="font-size: 13px; color: #5C4F55; flex: 0 0 auto;">María Solana</span>
+                  <div style="height: 38px; padding: 0 15px; border-radius: 12px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center; flex: 0 0 auto;">Abrir</div>
+                </div>
+                <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; opacity: 0.75;">
+                  <span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #E9E4EE; color: #5C4F55; flex: 0 0 auto;">Baja</span>
+                  <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                    <span style="display: flex; align-items: center; gap: 8px;">Limpieza de DEP-033<span style="font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #DCEADF; color: #1F5C3A;">Parcialmente realizada</span></span>
+                    <span style="font-size: 12px; color: #6F6169;">Falta registrar el aclarado final</span>
+                  </div>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5C4F55; flex: 0 0 auto;">hoy 20:00</span>
+                  <span style="font-size: 13px; color: #5C4F55; flex: 0 0 auto;">Jordi Ferrer</span>
+                  <div style="height: 38px; padding: 0 15px; border-radius: 12px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center; flex: 0 0 auto;">Abrir</div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #5C4F55;">Sin fecha <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; letter-spacing: 0;">1</span></div>
+                <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px 18px; display: flex; align-items: center; gap: 16px;">
+                  <span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #E9E4EE; color: #5C4F55; flex: 0 0 auto;">Sin prioridad</span>
+                  <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                    <span style="font-size: 14px;">Revisar etiquetado de lote L-2026-034</span>
+                    <span style="font-size: 12px; color: #6F6169;">Variedad pendiente de confirmar</span>
+                  </div>
+                  <span style="font-size: 13px; color: #6F6169; flex: 0 0 auto;">Sin fecha</span>
+                  <span style="font-size: 13px; color: #5C4F55; flex: 0 0 auto;">Sin asignar</span>
+                  <div style="height: 38px; padding: 0 15px; border-radius: 12px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center; flex: 0 0 auto;">Abrir</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 940px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">
+            <span>9:41</span><span>UI19 · móvil</span>
+          </div>
+          <div style="font-size: 21px; font-weight: 600; letter-spacing: -0.02em;">Tareas</div>
+          <div style="display: flex; gap: 8px;">
+            <span style="height: 34px; padding: 0 13px; border-radius: 11px; background: #6D4656; color: #FFF8FB; font-size: 12.5px; font-weight: 600; display: flex; align-items: center;">Mis tareas</span>
+            <span style="height: 34px; padding: 0 13px; border-radius: 11px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; display: flex; align-items: center;">Zona</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #8E1F33;">Vencidas · 2</div>
+          <div style="background: #FFFFFF; border: 1px solid #F0D9DE; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 7px;">
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">Alta</span><span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #8E1F33;">venció ayer</span></div>
+            <span style="font-size: 13.5px;">Analítica de control completa</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">DEP-014 · C-2026-114</span>
+          </div>
+          <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6D4656; margin-top: 4px;">Hoy · 3</div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 7px;">
+            <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #FAE3D3; color: #8A4715;">Alta</span><span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #5C4F55;">12:00</span></div>
+            <span style="font-size: 13.5px;">Toma de muestra · densidad</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">DEP-007 · C-2026-101</span>
+          </div>
+        </div>
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-top: 1px solid #EADFE4; padding: 10px 14px 18px; display: flex; gap: 6px;">
+          <div style="flex: 1; height: 52px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #D6C6CE;"></span>
+            <span style="font-size: 11.5px; font-weight: 500; color: #5C4F55;">Inicio</span>
+          </div>
+          <div style="flex: 1; height: 52px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #D6C6CE;"></span>
+            <span style="font-size: 11.5px; font-weight: 500; color: #5C4F55;">Bodega</span>
+          </div>
+          <div style="flex: 1; height: 52px; border-radius: 15px; background: #F3E7EE; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #6D4656;"></span>
+            <span style="font-size: 11.5px; font-weight: 600; color: #6D4656;">Tareas</span>
+          </div>
+          <div style="flex: 1; height: 52px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #D6C6CE;"></span>
+            <span style="font-size: 11.5px; font-weight: 500; color: #5C4F55;">Más</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section data-screen-label="UI20" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI20</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Ficha y ejecución de tarea</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Confirmar depósito y contenido antes de ejecutar</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+
+      <div style="width: 1280px; flex: 0 0 auto; height: 960px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="flex: 0 0 auto; background: #FFFFFF; border-bottom: 1px solid #EADFE4; padding: 20px 26px; display: flex; align-items: center; gap: 18px;">
+          <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 11px;">
+              <span style="font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Toma de muestra · densidad y temperatura</span>
+              <span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #FAE3D3; color: #8A4715;">Alta</span>
+            </div>
+            <div style="font-size: 13px; color: #5C4F55;">DEP-007 · C-2026-101 · vence hoy 12:00 · responsable María Solana</div>
+          </div>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 9px; flex: 0 0 auto;">
+            <div style="height: 42px; padding: 0 15px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600; display: flex; align-items: center;">Reasignar</div>
+            <div style="height: 42px; padding: 0 15px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600; display: flex; align-items: center;">Cancelar</div>
+          </div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 22px 26px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; min-height: 0;">
+
+          <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+            <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+              <span style="font-size: 16px; font-weight: 600;">Confirmar objetivo</span>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 13px 15px; border-radius: 14px; background: #DCEADF;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #1F5C3A;"></span>
+                <span style="font-size: 13px; color: #1F5C3A;">DEP-007 coincide con la ubicación prevista. Contenido C-2026-101 sin traslado desde la asignación.</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Depósito</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px;">DEP-007</span></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Contenido</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px;">C-2026-101</span></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Volumen actual</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px;">6.200 L</span></div>
+              </div>
+            </div>
+
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+              <span style="font-size: 16px; font-weight: 600;">Registrar ejecución</span>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Fecha y hora real</span>
+                  <div style="height: 46px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FFFFFF; display: flex; align-items: center; padding: 0 14px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;">16 sep 2026 · 09:15</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Punto de muestreo</span>
+                  <div style="height: 46px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FFFFFF; display: flex; align-items: center; padding: 0 14px; font-size: 14px;">Grifo inferior</div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Observaciones</span>
+                <div style="height: 72px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FFFFFF; padding: 12px 14px; font-size: 13.5px; color: #7B6D74;">Aspecto normal, sin sedimento visible.</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Adjuntos</span>
+                <div style="height: 46px; border: 1px dashed #D6C6CE; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #6F6169;">Arrastra evidencia o pulsa para adjuntar</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #F5EED0;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #6B5A10;"></span>
+                <span style="font-size: 12.5px; color: #6B5A10;">Esta tarea exige resultado validado en laboratorio: seguirá pendiente tras registrar la muestra.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 14px; font-weight: 600;">Criterio de finalización</span>
+              <span style="font-size: 13px; color: #5C4F55;">Muestra tomada, resultado cargado y validado por laboratorio.</span>
+            </div>
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 14px; font-weight: 600;">Autor e historial</span>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 9px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169; flex: 0 0 auto;">14 sep</span><span style="font-size: 12.5px;">Creada por María Solana desde el plan Tinto reserva</span></div>
+                <div style="display: flex; gap: 9px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169; flex: 0 0 auto;">15 sep</span><span style="font-size: 12.5px; color: #5C4F55;">Vencimiento confirmado sin cambios</span></div>
+              </div>
+            </div>
+            <div style="margin-top: auto; background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="height: 46px; border-radius: 15px; background: #6D4656; color: #FFF8FB; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Guardar y abrir muestra en UI09</div>
+              <span style="font-size: 12px; color: #6F6169; text-align: center;">La toma queda registrada; el resultado se carga y valida por separado.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 960px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">
+            <span>9:41</span><span>UI20 · móvil</span>
+          </div>
+          <span style="font-size: 16px; font-weight: 600; letter-spacing: -0.01em;">Toma de muestra</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">DEP-007 · C-2026-101 · vence hoy 12:00</span>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 11px;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-radius: 13px; background: #DCEADF;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #1F5C3A;"></span>
+            <span style="font-size: 12px; color: #1F5C3A;">Depósito y contenido confirmados</span>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Fecha y hora</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;">16 sep · 09:15</span>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Punto de muestreo</span>
+            <span style="font-size: 13.5px;">Grifo inferior</span>
+          </div>
+          <div style="height: 46px; border: 1px dashed #D6C6CE; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 12.5px; color: #6F6169;">Adjuntar evidencia</div>
+          <div style="background: #F5EED0; border-radius: 14px; padding: 12px; font-size: 12px; color: #6B5A10;">Sigue pendiente hasta validar el resultado en laboratorio.</div>
+        </div>
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-top: 1px solid #EADFE4; padding: 12px 20px 18px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="height: 50px; border-radius: 15px; background: #6D4656; color: #FFF8FB; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Guardar muestra</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>

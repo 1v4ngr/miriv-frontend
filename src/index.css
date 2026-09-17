@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-ink: #2e262a;
+  --color-muted: #6f6169;
+  --color-copy: #5c4f55;
+  --color-plum: #6d4656;
+  --color-plum-dark: #452833;
+  --color-plum-soft: #f3e7ee;
+  --color-border: #eadfe4;
+  --color-field: #fbf8fa;
+}
+
+:root {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  color: #2e262a;
+  background: #f2eef1;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #c99aad;
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #fff8fb;
+  background: #6d4656;
+}

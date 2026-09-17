@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #F2EEF1; }
+  a { color: #6D4656; text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { color: #452833; }
+</style>
+</helmet>
+
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #2E262A; padding: 44px; display: flex; flex-direction: column; gap: 44px;">
+
+  <div style="display: flex; flex-direction: column; gap: 10px; max-width: 820px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6F6169;">MIRIV · seguimiento enológico</div>
+    <h1 style="margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.025em;">UI26 – UI28 · escritorio y móvil</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #5C4F55; text-wrap: pretty;">Auditoría con comparación Antes/Después, sensores e integraciones (P1) y el centro personal de cuenta, notificaciones y sincronización. Marcar una notificación como leída nunca cambia el episodio que la generó.</p>
+  </div>
+
+  <section data-screen-label="UI26" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI26</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Auditoría y versiones</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Comparación Antes/Después · sin Editar ni Eliminar</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+      <div style="width: 1280px; flex: 0 0 auto; height: 900px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 20px 26px; display: flex; align-items: center; gap: 14px;">
+          <span style="font-size: 20px; font-weight: 600;">Auditoría</span>
+          <div style="margin-left: auto; display: flex; gap: 9px;">
+            <div style="height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center;">Periodo</div>
+            <div style="height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center;">Entidad</div>
+            <div style="height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center;">Usuario</div>
+          </div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; display: flex; min-height: 0;">
+          <div style="width: 520px; flex: 0 0 auto; border-right: 1px solid #EADFE4; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; overflow: hidden;">
+            <div style="display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: 10px; padding: 8px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6D4656; border-bottom: 1px solid #EFE6EA;">
+              <span>Registro</span><span>Entidad</span><span>Motivo</span>
+            </div>
+            <div style="background: #F3E7EE; border-radius: 12px; padding: 11px 12px; display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: 10px; align-items: center;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6D4656;">14 sep 10:05</span>
+              <span style="font-size: 12.5px; color: #6D4656;">Análisis MU-0412</span>
+              <span style="font-size: 12px; color: #6D4656;">Corrección de valor</span>
+            </div>
+            <div style="border-radius: 12px; padding: 11px 12px; display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: 10px; align-items: center;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">14 sep 09:40</span>
+              <span style="font-size: 12.5px;">Incidencia AL-02</span>
+              <span style="font-size: 12px; color: #6F6169;">Generada por regla</span>
+            </div>
+            <div style="border-radius: 12px; padding: 11px 12px; display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: 10px; align-items: center;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">1 sep 08:00</span>
+              <span style="font-size: 12.5px;">Plan Tinto reserva v3</span>
+              <span style="font-size: 12px; color: #6F6169;">Aprobación de versión</span>
+            </div>
+            <div style="border-radius: 12px; padding: 11px 12px; display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: 10px; align-items: center;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">16 sep 08:30</span>
+              <span style="font-size: 12.5px;">Operación OP-2026-071</span>
+              <span style="font-size: 12px; color: #6F6169;">Ejecución con desviación</span>
+            </div>
+          </div>
+
+          <div style="flex: 1; padding: 22px 26px; display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow: hidden;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-size: 16px; font-weight: 600;">Análisis MU-0412 · corrección</span>
+              <span style="font-size: 12.5px; color: #6F6169;">Autor: Jordi Ferrer · registrado 14 sep 10:05 · efectivo desde la toma del 14 sep 09:20</span>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 18px; overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 11px 18px; background: #F7F0F4; font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6D4656;">
+                <span>Campo</span><span>Antes</span><span>Después</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 14px 18px; border-top: 1px solid #EFE6EA; align-items: center;">
+                <span style="font-size: 13.5px;">Acidez volátil</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #8E1F33; text-decoration: line-through;">0,38 g/L</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600;">0,72 g/L</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 14px 18px; border-top: 1px solid #EFE6EA; align-items: center;">
+                <span style="font-size: 13.5px;">Motivo</span>
+                <span style="font-size: 13px; color: #6F6169;">—</span>
+                <span style="font-size: 13px;">Transcripción errónea en la carga inicial</span>
+              </div>
+            </div>
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 14px; font-weight: 600;">Referencias relacionadas</span>
+              <span style="font-size: 13px; color: #6D4656;">Incidencia AL-02 generada con este valor corregido · ver evidencia</span>
+            </div>
+            <div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #F3E7EE;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #6D4656;"></span>
+              <span style="font-size: 12.5px; color: #6D4656;">La auditoría no ofrece Editar ni Eliminar. Para corregir de nuevo, use el flujo de análisis.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 900px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;"><span>9:41</span><span>UI26 · móvil</span></div>
+          <span style="font-size: 17px; font-weight: 600;">MU-0412 · corrección</span>
+        </div>
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 11px;">
+          <div style="font-size: 12px; color: #6F6169;">Jordi Ferrer · 14 sep 10:05</div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Antes</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #8E1F33; text-decoration: line-through;">0,38 g/L</span>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Después</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600;">0,72 g/L</span>
+          </div>
+          <div style="background: #F3E7EE; border-radius: 14px; padding: 12px; font-size: 12px; color: #6D4656;">Transcripción errónea en la carga inicial.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen-label="UI27" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI27</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Equipos sensores e integraciones</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">P1 · hueco visible, nunca lectura inventada</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+      <div style="width: 1280px; flex: 0 0 auto; height: 900px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 20px 26px 0; display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-size: 20px; font-weight: 600;">Sensores e integraciones</span>
+          <div style="display: flex; gap: 22px;">
+            <span style="font-size: 13.5px; font-weight: 600; color: #6D4656; padding-bottom: 12px; border-bottom: 2.5px solid #6D4656;">Sensores</span>
+            <span style="font-size: 13.5px; font-weight: 500; color: #5C4F55; padding-bottom: 12px;">Equipos de laboratorio</span>
+            <span style="font-size: 13.5px; font-weight: 500; color: #5C4F55; padding-bottom: 12px;">Integraciones</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; display: flex; min-height: 0;">
+          <div style="flex: 1; padding: 22px 26px; display: flex; flex-direction: column; gap: 14px; min-width: 0;">
+            <div style="flex: 1; min-height: 0; background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+              <div style="display: grid; grid-template-columns: 0.7fr 0.8fr 0.8fr 1fr 0.9fr; gap: 12px; padding: 12px 20px; background: #F7F0F4; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6D4656;">
+                <span>Sensor</span><span>Magnitud</span><span>Depósito</span><span>Última lectura</span><span>Calidad</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.7fr 0.8fr 0.8fr 1fr 0.9fr; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFE6EA; background: #FFFFFF; align-items: center;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">S-014-T</span><span style="font-size: 13px;">Temperatura</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">DEP-014</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">16 sep 09:20</span><span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #DCEADF; color: #1F5C3A; justify-self: start;">Correcta</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.7fr 0.8fr 0.8fr 1fr 0.9fr; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFE6EA; background: #FDFBFC; align-items: center;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">S-007-T</span><span style="font-size: 13px;">Temperatura</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">DEP-007</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8A4715;">12 sep 03:00</span><span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #FAE3D3; color: #8A4715; justify-self: start;">Atrasada</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.7fr 0.8fr 0.8fr 1fr 0.9fr; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFE6EA; background: #FFFFFF; align-items: center;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">S-021-T</span><span style="font-size: 13px;">Temperatura</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">DEP-021</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8E1F33;">sin conexión desde 12 sep</span><span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #F7DADF; color: #8E1F33; justify-self: start;">Sin conexión</span>
+              </div>
+              <div style="margin-top: auto; padding: 12px 20px; border-top: 1px solid #EFE6EA; font-size: 12px; color: #6F6169;">S-021-T: el hueco desde el 12 sep se muestra como ausencia de dato, nunca como temperatura constante.</div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;">
+              <span style="font-size: 15px; font-weight: 600;">S-021-T · serie con hueco</span>
+              <svg viewBox="0 0 800 120" style="width: 100%; height: 100px;" preserveAspectRatio="none">
+                <line x1="40" y1="100" x2="770" y2="100" stroke="#EADFE4" stroke-width="1.5"></line>
+                <polyline points="40,70 200,64 340,60" fill="none" stroke="#6D4656" stroke-width="2.5"></polyline>
+                <line x1="340" y1="60" x2="520" y2="60" stroke="#D6C6CE" stroke-width="2" stroke-dasharray="3 5"></line>
+                <text x="430" y="45" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#8E1F33">sin datos · 4 d</text>
+                <polyline points="520,58 650,55 770,53" fill="none" stroke="#6D4656" stroke-width="2.5"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <div style="width: 300px; flex: 0 0 auto; background: #FDFBFC; border-left: 1px solid #EADFE4; padding: 22px 20px; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 15px; font-weight: 600;">S-021-T</span>
+            <div style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 12px; font-weight: 600; color: #5C4F55;">Depósito · posición</span><span style="font-size: 13.5px;">DEP-021 · sonda superior</span></div>
+            <div style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 12px; font-weight: 600; color: #5C4F55;">Última lectura recibida</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; color: #8E1F33;">12 sep 03:00</span></div>
+            <div style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 12px; font-weight: 600; color: #5C4F55;">Hora de medida</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;">12 sep 02:58</span></div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #F7DADF;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #8E1F33;"></span>
+              <span style="font-size: 12px; color: #8E1F33;">Fallo técnico, no normalidad del depósito. Revisar conexión antes de reasignar.</span>
+            </div>
+            <div style="margin-top: auto; height: 44px; border-radius: 14px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Reasignar con fecha efectiva</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 900px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;"><span>9:41</span><span>UI27 · móvil</span></div>
+          <span style="font-size: 17px; font-weight: 600;">Sensores</span>
+        </div>
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="background: #FFFFFF; border: 1px solid #F0D9DE; border-radius: 15px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 13.5px;">S-021-T · DEP-021</span><span style="font-size: 11.5px; color: #8E1F33;">Sin conexión desde 12 sep</span></div>
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #8E1F33;"></span>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 15px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 13.5px;">S-007-T · DEP-007</span><span style="font-size: 11.5px; color: #8A4715;">Lectura atrasada</span></div>
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #8A4715;"></span>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 15px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 13.5px;">S-014-T · DEP-014</span><span style="font-size: 11.5px; color: #1F5C3A;">Correcta</span></div>
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #1F5C3A;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen-label="UI28" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI28</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Cuenta, notificaciones y sincronización</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Marcar leído no resuelve nada · conflicto exige revisión visible</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+      <div style="width: 1280px; flex: 0 0 auto; height: 900px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 20px 26px 0; display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-size: 20px; font-weight: 600;">Cuenta y notificaciones</span>
+          <div style="display: flex; gap: 22px;">
+            <span style="font-size: 13.5px; font-weight: 500; color: #5C4F55; padding-bottom: 12px;">Cuenta</span>
+            <span style="font-size: 13.5px; font-weight: 600; color: #6D4656; padding-bottom: 12px; border-bottom: 2.5px solid #6D4656;">Notificaciones</span>
+            <span style="font-size: 13.5px; font-weight: 500; color: #5C4F55; padding-bottom: 12px;">Sincronización</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 22px 26px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; min-height: 0;">
+
+          <div style="min-height: 0; background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 15px; font-weight: 600;">Avisos</span>
+              <span style="font-size: 12.5px; font-weight: 600; color: #6D4656;">Marcar todos como leídos</span>
+            </div>
+            <div style="background: #F3E7EE; border-radius: 14px; padding: 13px 15px; display: flex; align-items: center; gap: 12px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #6D4656; flex: 0 0 auto;"></span>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <span style="font-size: 13.5px;">Incidencia crítica en DEP-014 · acidez volátil</span>
+                <span style="font-size: 11.5px; color: #6D4656;">hace 10 min</span>
+              </div>
+              <span style="font-size: 12.5px; font-weight: 600; color: #6D4656; flex: 0 0 auto;">Abrir</span>
+            </div>
+            <div style="border-radius: 14px; padding: 13px 15px; display: flex; align-items: center; gap: 12px; opacity: 0.7;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #D6C6CE; flex: 0 0 auto;"></span>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <span style="font-size: 13.5px;">Tarea completada por Jordi Ferrer</span>
+                <span style="font-size: 11.5px; color: #6F6169;">hace 2 h · leído</span>
+              </div>
+              <span style="font-size: 12.5px; font-weight: 600; color: #6D4656; flex: 0 0 auto;">Abrir</span>
+            </div>
+            <div style="border-radius: 14px; padding: 13px 15px; display: flex; align-items: center; gap: 12px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #6D4656; flex: 0 0 auto;"></span>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <span style="font-size: 13.5px;">Importación de analíticas finalizada con 2 avisos</span>
+                <span style="font-size: 11.5px; color: #6F6169;">hoy 08:10</span>
+              </div>
+              <span style="font-size: 12.5px; font-weight: 600; color: #6D4656; flex: 0 0 auto;">Abrir</span>
+            </div>
+            <div style="margin-top: auto; font-size: 12px; color: #6F6169;">Marcar como leído solo afecta al aviso personal; no resuelve la incidencia ni completa la tarea.</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 14px; font-weight: 600;">Silenciar ≠ suspender regla</span>
+              <span style="font-size: 12.5px; line-height: 1.5; color: #5C4F55;">Silenciar un aviso pausa tus notificaciones personales. Suspender una regla detiene la evaluación para todos y requiere permiso de reglas.</span>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 14px; font-weight: 600;">Sincronización</span>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-radius: 13px; background: #F5EED0;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #6B5A10;"></span>
+                <span style="font-size: 12.5px; color: #6B5A10;">1 muestra en conflicto: valores locales frente a servidor</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-radius: 13px; background: #DCEADF;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #1F5C3A;"></span>
+                <span style="font-size: 12.5px; color: #1F5C3A;">3 registros enviados correctamente</span>
+              </div>
+              <div style="height: 42px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Revisar conflicto</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 900px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;"><span>9:41</span><span>UI28 · móvil</span></div>
+          <span style="font-size: 17px; font-weight: 600;">Notificaciones</span>
+          <div style="display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 12px; background: #F5EED0;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #6B5A10;"></span>
+            <span style="font-size: 12px; color: #6B5A10;">2 registros sin enviar</span>
+          </div>
+        </div>
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="background: #F3E7EE; border-radius: 15px; padding: 13px 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 13.5px;">Incidencia crítica en DEP-014</span>
+            <span style="font-size: 11.5px; color: #6D4656;">hace 10 min</span>
+          </div>
+          <div style="border-radius: 15px; padding: 13px 14px; display: flex; flex-direction: column; gap: 4px; opacity: 0.7;">
+            <span style="font-size: 13.5px;">Tarea completada por Jordi Ferrer</span>
+            <span style="font-size: 11.5px; color: #6F6169;">hace 2 h · leído</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #F2EEF1; }
+  a { color: #6D4656; text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { color: #452833; }
+</style>
+</helmet>
+
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #2E262A; padding: 44px; display: flex; flex-direction: column; gap: 44px;">
+
+  <div style="display: flex; flex-direction: column; gap: 10px; max-width: 820px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6F6169;">MIRIV · seguimiento enológico · P0</div>
+    <h1 style="margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.025em;">UI21 · escritorio y móvil</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #5C4F55; text-wrap: pretty;">Planes y plantillas de elaboración: objetivos por fase, controles vinculados y asignación a unidades sin sobrescribir planes ya vigentes. Editar una plantilla no actualiza automáticamente los planes ya asignados.</p>
+  </div>
+
+  <section data-screen-label="UI21" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI21</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Planes y plantillas de elaboración</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Editor de plan vigente · unidades afectadas visibles</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+
+      <div style="width: 1280px; flex: 0 0 auto; height: 960px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="width: 232px; flex: 0 0 auto; background: #FDFBFC; border-right: 1px solid #EADFE4; padding: 22px 16px; display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 0 6px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #DCC8D4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: #6D4656;">M</div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; letter-spacing: 0.18em; color: #3D2F36; text-indent: 0.18em;">MIRIV</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Inicio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Bodega</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Laboratorio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Seguimiento</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Actividad</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Incidencias<span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">3</span></div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Tareas</div>
+            <div style="height: 42px; border-radius: 13px; background: #F3E7EE; color: #6D4656; font-size: 14px; font-weight: 600; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #6D4656;"></span>Elaboración</div>
+          </div>
+          <div style="margin-top: auto; border-radius: 16px; background: #F7F0F4; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 12.5px; font-weight: 600;">María Solana</span>
+            <span style="font-size: 12px; color: #6F6169;">Enóloga · Centro Norte</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; display: flex; min-width: 0;">
+
+          <div style="width: 300px; flex: 0 0 auto; background: #FDFBFC; border-right: 1px solid #EADFE4; display: flex; flex-direction: column; min-width: 0;">
+            <div style="padding: 18px 20px 0;">
+              <div style="display: flex; gap: 18px; border-bottom: 1px solid #EADFE4; padding-bottom: 12px;">
+                <span style="font-size: 13.5px; font-weight: 600; color: #6D4656; padding-bottom: 10px; border-bottom: 2.5px solid #6D4656;">Planes asignados</span>
+                <span style="font-size: 13.5px; font-weight: 500; color: #5C4F55; padding-bottom: 10px;">Plantillas</span>
+              </div>
+            </div>
+            <div style="flex: 1; overflow: hidden; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;">
+              <div style="border-radius: 14px; background: #F3E7EE; padding: 13px 14px; display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;"><span style="font-size: 13.5px; font-weight: 600; color: #6D4656;">Tinto reserva</span><span style="font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #DCEADF; color: #1F5C3A;">Vigente</span></div>
+                <span style="font-size: 12px; color: #6D4656;">v3 · 4 unidades · resp. María Solana</span>
+              </div>
+              <div style="border-radius: 14px; padding: 13px 14px; display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;"><span style="font-size: 13.5px;">Blanco joven</span><span style="font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #DCEADF; color: #1F5C3A;">Vigente</span></div>
+                <span style="font-size: 12px; color: #6F6169;">v2 · 6 unidades</span>
+              </div>
+              <div style="border-radius: 14px; padding: 13px 14px; display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;"><span style="font-size: 13.5px;">Rosado fresco</span><span style="font-size: 10.5px; font-weight: 500; padding: 3px 8px; border-radius: 999px; background: #E3E3EF; color: #43435C;">Borrador</span></div>
+                <span style="font-size: 12px; color: #6F6169;">v1 · sin asignar</span>
+              </div>
+              <div style="border-radius: 14px; padding: 13px 14px; display: flex; flex-direction: column; gap: 4px; opacity: 0.65;">
+                <div style="display: flex; align-items: center; justify-content: space-between;"><span style="font-size: 13.5px;">Tinto joven 2025</span><span style="font-size: 10.5px; font-weight: 500; padding: 3px 8px; border-radius: 999px; background: #E9E4EE; color: #5C4F55;">Sustituido</span></div>
+                <span style="font-size: 12px; color: #6F6169;">v2 · histórico</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+            <div style="height: 68px; flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; display: flex; align-items: center; gap: 14px; padding: 0 26px;">
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 16px; font-weight: 600;">Tinto reserva</span>
+                <span style="font-size: 12px; color: #6F6169;">v3 vigente desde 1 sep · 4 unidades afectadas</span>
+              </div>
+              <div style="margin-left: auto; display: flex; gap: 9px;">
+                <div style="height: 40px; padding: 0 15px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center;">Historial de versiones</div>
+                <div style="height: 40px; padding: 0 15px; border-radius: 13px; background: #6D4656; color: #FFF8FB; font-size: 13px; font-weight: 600; display: flex; align-items: center;">Aprobar nueva versión</div>
+              </div>
+            </div>
+
+            <div style="flex: 1; overflow: hidden; padding: 24px 26px; display: flex; flex-direction: column; gap: 18px; min-height: 0;">
+
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <span style="height: 34px; padding: 0 13px; border-radius: 11px; background: #F3E7EE; color: #6D4656; font-size: 12.5px; font-weight: 600; display: flex; align-items: center;">Identificación</span>
+                <span style="height: 34px; padding: 0 13px; border-radius: 11px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; display: flex; align-items: center;">Alcohólica</span>
+                <span style="height: 34px; padding: 0 13px; border-radius: 11px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; display: flex; align-items: center;">Maloláctica</span>
+                <span style="height: 34px; padding: 0 13px; border-radius: 11px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; display: flex; align-items: center;">Temperatura</span>
+                <span style="height: 34px; padding: 0 13px; border-radius: 11px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; display: flex; align-items: center;">Muestreo</span>
+                <span style="height: 34px; padding: 0 13px; border-radius: 11px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; display: flex; align-items: center;">Finalización</span>
+              </div>
+
+              <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                <span style="font-size: 15px; font-weight: 600;">Identificación</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <span style="font-size: 12px; font-weight: 600; color: #5C4F55;">Nombre del plan</span>
+                    <div style="height: 44px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FBF8FA; display: flex; align-items: center; padding: 0 14px; font-size: 14px;">Tinto reserva</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <span style="font-size: 12px; font-weight: 600; color: #5C4F55;">Destino</span>
+                    <div style="height: 44px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FBF8FA; display: flex; align-items: center; padding: 0 14px; font-size: 14px;">Crianza 14 meses</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <span style="font-size: 12px; font-weight: 600; color: #5C4F55;">Responsable</span>
+                    <div style="height: 44px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FBF8FA; display: flex; align-items: center; padding: 0 14px; font-size: 14px;">María Solana</div>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 12px; font-weight: 600; color: #5C4F55;">Estrategia</span>
+                  <div style="height: 66px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FBF8FA; padding: 12px 14px; font-size: 13.5px; color: #5C4F55;">Maceración extendida, fermentación maloláctica completa antes de trasiego a barrica.</div>
+                </div>
+              </div>
+
+              <div style="flex: 1; min-height: 0; background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-size: 15px; font-weight: 600;">Rangos por etapa · objetivo de azúcares</span>
+                  <span style="font-size: 12px; color: #6F6169;">unidad junto a cada magnitud</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr; gap: 10px; padding: 9px 4px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6D4656; border-bottom: 1px solid #EFE6EA;">
+                  <span>Etapa</span><span>Mín.</span><span>Objetivo</span><span>Máx.</span><span>Periodicidad</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr; gap: 10px; padding: 9px 4px; font-size: 13px; align-items: center;">
+                  <span>Fermentación alcohólica</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace;">0,990</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600;">0,995</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace;">1,000</span>
+                  <span>diaria</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr; gap: 10px; padding: 9px 4px; font-size: 13px; align-items: center; background: #FFFFFF; border-radius: 10px;">
+                  <span>Maloláctica</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace;">0,0 g/L</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600;">— (completa)</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace;">0,3 g/L</span>
+                  <span>cada 3 d</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr; gap: 10px; padding: 9px 4px; font-size: 13px; align-items: center;">
+                  <span>Crianza</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace;">14 ºC</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600;">16 ºC</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace;">18 ºC</span>
+                  <span>semanal</span>
+                </div>
+                <div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #F5EED0;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #6B5A10;"></span>
+                  <span style="font-size: 12.5px; color: #6B5A10;">Intención maloláctica: Pendiente de decisión. Limita las evaluaciones que dependen de ella.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="width: 260px; flex: 0 0 auto; background: #FDFBFC; border-left: 1px solid #EADFE4; padding: 20px 18px; display: flex; flex-direction: column; gap: 16px;">
+            <span style="font-size: 14px; font-weight: 600;">Unidades afectadas</span>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="border: 1px solid #EFE6EA; border-radius: 13px; padding: 11px 13px; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">C-2026-101</span>
+                <span style="font-size: 11.5px; color: #6F6169;">DEP-007 · sin diferencias</span>
+              </div>
+              <div style="border: 1px solid #EFE6EA; border-radius: 13px; padding: 11px 13px; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">C-2026-108</span>
+                <span style="font-size: 11.5px; color: #6F6169;">DEP-011 · sin diferencias</span>
+              </div>
+              <div style="border: 1px solid #F0D9DE; border-radius: 13px; padding: 11px 13px; display: flex; flex-direction: column; gap: 3px; background: #FDF6F7;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8E1F33;">C-2026-114</span>
+                <span style="font-size: 11.5px; color: #8E1F33;">Difiere en umbral de crianza (16→15 ºC)</span>
+              </div>
+              <div style="border: 1px solid #EFE6EA; border-radius: 13px; padding: 11px 13px; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">C-2026-119</span>
+                <span style="font-size: 11.5px; color: #6F6169;">DEP-018 · sin diferencias</span>
+              </div>
+            </div>
+            <div style="margin-top: auto; font-size: 11.5px; line-height: 1.5; color: #6F6169;">Asignar esta versión no cambia automáticamente las unidades ya vinculadas a v2.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 960px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">
+            <span>9:41</span><span>UI21 · móvil</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 17px; font-weight: 600; letter-spacing: -0.015em;">Tinto reserva</span>
+            <span style="margin-left: auto; font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #DCEADF; color: #1F5C3A;">Vigente</span>
+          </div>
+          <span style="font-size: 12px; color: #6F6169;">v3 · 4 unidades afectadas</span>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 11px;">
+          <div style="display: flex; gap: 8px; overflow: hidden;">
+            <span style="height: 32px; padding: 0 12px; border-radius: 10px; background: #F3E7EE; color: #6D4656; font-size: 12px; font-weight: 600; display: flex; align-items: center; white-space: nowrap;">Identificación</span>
+            <span style="height: 32px; padding: 0 12px; border-radius: 10px; border: 1px solid #E0D2D9; font-size: 12px; font-weight: 500; display: flex; align-items: center; white-space: nowrap;">Alcohólica</span>
+            <span style="height: 32px; padding: 0 12px; border-radius: 10px; border: 1px solid #E0D2D9; font-size: 12px; font-weight: 500; display: flex; align-items: center; white-space: nowrap;">Maloláctica</span>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Estrategia</span>
+            <span style="font-size: 13px; line-height: 1.5; color: #5C4F55;">Maceración extendida, maloláctica completa antes de crianza.</span>
+          </div>
+          <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 9px;">
+            <span style="font-size: 12.5px; font-weight: 600;">Fermentación alcohólica</span>
+            <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 12px; color: #6F6169;">Objetivo</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;">0,995</span></div>
+            <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 12px; color: #6F6169;">Rango</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #6F6169;">0,990 – 1,000</span></div>
+          </div>
+          <div style="background: #FDF6F7; border: 1px solid #F0D9DE; border-radius: 16px; padding: 13px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8E1F33;">C-2026-114</span>
+            <span style="font-size: 12px; color: #8E1F33;">Difiere en umbral de crianza</span>
+          </div>
+        </div>
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-top: 1px solid #EADFE4; padding: 12px 20px 18px; display: flex; gap: 9px;">
+          <div style="flex: 1; height: 48px; border-radius: 15px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Historial</div>
+          <div style="flex: 1; height: 48px; border-radius: 15px; background: #6D4656; color: #FFF8FB; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Aprobar versión</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>

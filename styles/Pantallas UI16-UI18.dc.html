@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #F2EEF1; }
+  a { color: #6D4656; text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { color: #452833; }
+</style>
+</helmet>
+
+<div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #2E262A; padding: 44px; display: flex; flex-direction: column; gap: 44px;">
+
+  <div style="display: flex; flex-direction: column; gap: 10px; max-width: 820px;">
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6F6169;">MIRIV · seguimiento enológico · P0</div>
+    <h1 style="margin: 0; font-size: 34px; font-weight: 600; letter-spacing: -0.025em;">UI16 – UI18 · escritorio y móvil</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #5C4F55; text-wrap: pretty;">Operaciones de bodega con previsto/real separados, bandeja de incidencias por prioridad textual y gestión de episodio con evidencia trazable. El silencio de un aviso no detiene la evaluación ni oculta la fila.</p>
+  </div>
+
+  <section data-screen-label="UI16" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI16</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Operaciones de bodega</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Detalle con instrucción, ejecución real y desviación</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+
+      <div style="width: 1280px; flex: 0 0 auto; height: 960px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="width: 232px; flex: 0 0 auto; background: #FDFBFC; border-right: 1px solid #EADFE4; padding: 22px 16px; display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 0 6px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #DCC8D4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: #6D4656;">M</div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; letter-spacing: 0.18em; color: #3D2F36; text-indent: 0.18em;">MIRIV</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Inicio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Bodega</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Laboratorio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Seguimiento</div>
+            <div style="height: 42px; border-radius: 13px; background: #F3E7EE; color: #6D4656; font-size: 14px; font-weight: 600; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #6D4656;"></span>Actividad</div>
+            <div style="display: flex; flex-direction: column; gap: 2px; padding: 4px 0 6px 32px;">
+              <span style="font-size: 13px; color: #5C4F55;">Movimientos</span>
+              <span style="font-size: 13px; font-weight: 600; color: #6D4656;">Operaciones</span>
+            </div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Incidencias<span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">3</span></div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Tareas</div>
+          </div>
+          <div style="margin-top: auto; border-radius: 16px; background: #F7F0F4; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 12.5px; font-weight: 600;">María Solana</span>
+            <span style="font-size: 12px; color: #6F6169;">Enóloga · Centro Norte</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+          <div style="height: 68px; flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; display: flex; align-items: center; gap: 14px; padding: 0 26px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6F6169;">
+              <span style="font-weight: 600; color: #6D4656;">Actividad</span><span>/</span><span style="font-weight: 600; color: #6D4656;">Operaciones</span><span>/</span><span style="color: #2E262A;">OP-2026-071</span>
+            </div>
+            <div style="margin-left: auto; width: 40px; height: 40px; border-radius: 13px; background: #E8DCEA; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #6D4656;">MS</div>
+          </div>
+
+          <div style="flex: 1; overflow: hidden; padding: 26px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; min-height: 0;">
+
+            <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 500;">OP-2026-071</span>
+                <span style="font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; background: #E8DCEA; color: #55345F;">Sulfitado</span>
+                <span style="font-size: 12px; font-weight: 500; padding: 5px 11px; border-radius: 999px; background: #F5EED0; color: #6B5A10;">Ejecutada con desviación</span>
+              </div>
+              <div style="font-size: 13.5px; color: #5C4F55;">Contenido <span style="font-family: 'IBM Plex Mono', monospace;">C-2026-114</span> · DEP-014 · responsable María Solana</div>
+
+              <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-size: 16px; font-weight: 600;">Instrucción</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Producto</span><span style="font-size: 14px;">Metabisulfito potásico</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Cantidad prevista</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px;">120 g</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Volumen tratado</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px;">18.400 L</span></div>
+                </div>
+                <div style="font-size: 12.5px; color: #6F6169;">Prevista por María Solana · 15 sep 17:00</div>
+              </div>
+
+              <div style="background: #FFFFFF; border: 1px solid #F0D9DE; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-size: 16px; font-weight: 600;">Ejecución real</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Cantidad real</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #8E1F33;">105 g</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Diferencia</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #8E1F33;">−15 g</span></div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Ejecutada</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px;">16 sep 08:30</span></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                  <span style="font-size: 12.5px; font-weight: 600; color: #5C4F55;">Motivo de la diferencia</span>
+                  <span style="font-size: 13.5px; line-height: 1.5;">Stock disponible en bodega inferior al calculado; se completará en el próximo control posterior.</span>
+                </div>
+              </div>
+
+              <div style="flex: 1; min-height: 0; background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 15px; font-weight: 600;">Control posterior</span>
+                <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #F5EED0;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: #6B5A10;"></span>
+                  <span style="font-size: 12.5px; color: #6B5A10;">Pendiente: verificar sulfuroso libre tras la corrección de cantidad.</span>
+                </div>
+                <div style="height: 40px; align-self: flex-start; padding: 0 15px; border-radius: 13px; background: #F3E7EE; color: #6D4656; font-size: 13px; font-weight: 600; display: flex; align-items: center;">Añadir control posterior</div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+              <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 14px; font-weight: 600;">Ubicación en la ejecución</span>
+                <span style="font-size: 13px; color: #5C4F55;">DEP-014 coincide con el lugar previsto. Ningún trasiego intermedio desde el registro.</span>
+              </div>
+              <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-size: 14px; font-weight: 600;">Analíticas posteriores</span>
+                <span style="font-size: 13px; color: #5C4F55;">Sulfuroso libre — última toma 14 sep, previa a la corrección de cantidad.</span>
+                <span style="font-size: 13px; font-weight: 600; color: #6D4656;">Ver curva</span>
+              </div>
+              <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+                <div style="height: 46px; border-radius: 15px; background: #6D4656; color: #FFF8FB; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Editar registro</div>
+                <div style="height: 46px; border-radius: 15px; border: 1px solid #E0D2D9; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Ver contenido C-2026-114</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 960px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">
+            <span>9:41</span><span>UI16 · móvil</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 500;">OP-2026-071</span>
+            <span style="margin-left: auto; font-size: 11px; font-weight: 500; padding: 4px 9px; border-radius: 999px; background: #F5EED0; color: #6B5A10;">Con desviación</span>
+          </div>
+          <div style="font-size: 12.5px; color: #5C4F55;">Sulfitado · C-2026-114 · DEP-014</div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 18px; padding: 15px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 13.5px; font-weight: 600;">Previsto</span>
+            <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 12.5px; color: #5C4F55;">Producto</span><span style="font-size: 13px;">Metabisulfito</span></div>
+            <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 12.5px; color: #5C4F55;">Cantidad</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">120 g</span></div>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #F0D9DE; border-radius: 18px; padding: 15px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 13.5px; font-weight: 600;">Real</span>
+            <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 12.5px; color: #5C4F55;">Cantidad</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8E1F33;">105 g</span></div>
+            <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 12.5px; color: #5C4F55;">Diferencia</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #8E1F33;">−15 g</span></div>
+            <span style="font-size: 12px; color: #6F6169;">Stock insuficiente en bodega.</span>
+          </div>
+          <div style="background: #F5EED0; border-radius: 16px; padding: 13px; font-size: 12.5px; color: #6B5A10;">Control posterior pendiente: sulfuroso libre.</div>
+        </div>
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-top: 1px solid #EADFE4; padding: 12px 20px 18px; display: flex; gap: 9px;">
+          <div style="flex: 1; height: 50px; border-radius: 15px; background: #6D4656; color: #FFF8FB; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Añadir control</div>
+          <div style="flex: 1; height: 50px; border-radius: 15px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Editar</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section data-screen-label="UI17" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI17</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Bandeja de incidencias</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Episodios, no evaluaciones · silenciado que no oculta la fila</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+
+      <div style="width: 1280px; flex: 0 0 auto; height: 940px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="width: 232px; flex: 0 0 auto; background: #FDFBFC; border-right: 1px solid #EADFE4; padding: 22px 16px; display: flex; flex-direction: column; gap: 22px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 0 6px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid #DCC8D4; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: #6D4656;">M</div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 500; letter-spacing: 0.18em; color: #3D2F36; text-indent: 0.18em;">MIRIV</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Inicio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Bodega</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Laboratorio</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Seguimiento</div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Actividad</div>
+            <div style="height: 42px; border-radius: 13px; background: #F3E7EE; color: #6D4656; font-size: 14px; font-weight: 600; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #6D4656;"></span>Incidencias<span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">3</span></div>
+            <div style="height: 42px; border-radius: 13px; color: #5C4F55; font-size: 14px; font-weight: 500; display: flex; align-items: center; padding: 0 14px; gap: 10px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D6C6CE;"></span>Tareas</div>
+          </div>
+          <div style="margin-top: auto; border-radius: 16px; background: #F7F0F4; padding: 14px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 12.5px; font-weight: 600;">María Solana</span>
+            <span style="font-size: 12px; color: #6F6169;">Enóloga · Centro Norte</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+          <div style="height: 68px; flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; display: flex; align-items: center; gap: 14px; padding: 0 26px;">
+            <div style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 13px; background: #F3E7EE; font-size: 13.5px; font-weight: 600; color: #6D4656;">Centro Norte</div>
+            <div style="flex: 1; max-width: 320px; height: 40px; border: 1px solid #E0D2D9; border-radius: 13px; background: #FBF8FA; display: flex; align-items: center; padding: 0 14px; font-size: 13.5px; color: #7B6D74;">Buscar incidencia o depósito</div>
+            <div style="margin-left: auto; width: 40px; height: 40px; border-radius: 13px; background: #E8DCEA; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #6D4656;">MS</div>
+          </div>
+
+          <div style="flex: 1; overflow: hidden; padding: 26px; display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+            <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                <div style="font-size: 26px; font-weight: 600; letter-spacing: -0.02em;">Incidencias</div>
+                <div style="font-size: 13.5px; color: #6F6169;">6 episodios activos · resumen por episodio, no por evaluación</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 22px; border-bottom: 1px solid #EADFE4;">
+              <span style="font-size: 14px; font-weight: 600; color: #6D4656; padding-bottom: 12px; border-bottom: 2.5px solid #6D4656;">Activas <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">6</span></span>
+              <span style="font-size: 14px; font-weight: 500; color: #5C4F55; padding-bottom: 12px;">En seguimiento <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">4</span></span>
+              <span style="font-size: 14px; font-weight: 500; color: #5C4F55; padding-bottom: 12px;">Cerradas <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">21</span></span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="height: 40px; padding: 0 14px; border-radius: 13px; background: #6D4656; color: #FFF8FB; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px;">Sin asignar<span style="opacity: 0.7;">✕</span></span>
+              <span style="height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; color: #5C4F55; display: flex; align-items: center;">Prioridad</span>
+              <span style="height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; color: #5C4F55; display: flex; align-items: center;">Regla</span>
+              <span style="height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; color: #5C4F55; display: flex; align-items: center;">Zona</span>
+              <span style="height: 40px; padding: 0 14px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 12.5px; font-weight: 500; color: #5C4F55; display: flex; align-items: center;">Antigüedad</span>
+            </div>
+
+            <div style="flex: 1; min-height: 0; background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;">
+              <div style="display: grid; grid-template-columns: 0.55fr 1.5fr 0.85fr 1.1fr 0.85fr 0.9fr; gap: 12px; padding: 12px 20px; background: #F7F0F4; font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #6D4656;">
+                <span>Prioridad</span><span>Condición detectada</span><span>Depósito</span><span>Última evidencia</span><span>Apertura</span><span>Responsable</span>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 0.55fr 1.5fr 0.85fr 1.1fr 0.85fr 0.9fr; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFE6EA; background: #FFFFFF; align-items: center;">
+                <span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #F7DADF; color: #8E1F33; justify-self: start;">Crítica</span>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-size: 13.5px;">Acidez volátil sobre umbral</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">C-2026-114 · L-2026-031</span>
+                </div>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">DEP-014</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">0,72 g/L · 14 sep</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5C4F55;">hace 2 d</span>
+                <span style="font-size: 13px; font-weight: 600; color: #6D4656;">Sin asignar</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.55fr 1.5fr 0.85fr 1.1fr 0.85fr 0.9fr; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFE6EA; background: #FDFBFC; align-items: center;">
+                <span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #FAE3D3; color: #8A4715; justify-self: start;">Alta</span>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-size: 13.5px;">Fin de fermentación propuesto sin confirmar</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">C-2026-101 · L-2026-009 · 5 evaluaciones</span>
+                </div>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">DEP-007</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">densidad 0,995 · 15 sep</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5C4F55;">hace 1 d</span>
+                <span style="font-size: 13px; color: #5C4F55;">María Solana</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.55fr 1.5fr 0.85fr 1.1fr 0.85fr 0.9fr; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFE6EA; background: #FFFFFF; align-items: center;">
+                <span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #F5EED0; color: #6B5A10; justify-self: start;">Media</span>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-size: 13.5px; color: #43435C;">Datos insuficientes para evaluar tendencia</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">C-2026-090 · calidad de dato</span>
+                </div>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">DEP-003</span>
+                <span style="font-size: 13px; color: #5C4F55;">sensor sin lectura desde el 12 sep</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5C4F55;">hace 4 d</span>
+                <span style="font-size: 13px; color: #5C4F55;">Jordi Ferrer</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.55fr 1.5fr 0.85fr 1.1fr 0.85fr 0.9fr; gap: 12px; padding: 14px 20px; border-top: 1px solid #EFE6EA; background: #FDFBFC; align-items: center;">
+                <span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #F5EED0; color: #6B5A10; justify-self: start;">Media</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 13.5px;">Control vencido</span>
+                  <span style="font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #E3E3EF; color: #43435C;">Silenciada hasta 20 sep</span>
+                </div>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">DEP-021</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">sin analítica · 14 d</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #5C4F55;">hace 14 d</span>
+                <span style="font-size: 13px; color: #5C4F55;">Jordi Ferrer</span>
+              </div>
+
+              <div style="margin-top: auto; padding: 13px 20px; border-top: 1px solid #EFE6EA; background: #FDFBFC; font-size: 12.5px; color: #6F6169;">El silencio no retira la fila ni detiene la evaluación: solo pausa sus notificaciones hasta la fecha indicada.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 940px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">
+            <span>9:41</span><span>UI17 · móvil</span>
+          </div>
+          <div style="font-size: 21px; font-weight: 600; letter-spacing: -0.02em;">Incidencias</div>
+          <div style="display: flex; gap: 14px; border-bottom: 1px solid #EFE6EA;">
+            <span style="font-size: 13px; font-weight: 600; color: #6D4656; padding-bottom: 9px; border-bottom: 2.5px solid #6D4656; white-space: nowrap;">Activas 6</span>
+            <span style="font-size: 13px; font-weight: 500; color: #5C4F55; padding-bottom: 9px; white-space: nowrap;">Seguimiento 4</span>
+            <span style="font-size: 13px; font-weight: 500; color: #5C4F55; padding-bottom: 9px; white-space: nowrap;">Cerradas 21</span>
+          </div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 11px;">
+          <div style="background: #FFFFFF; border: 1px solid #F0D9DE; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">Crítica</span>
+              <span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">hace 2 d</span>
+            </div>
+            <span style="font-size: 13.5px;">Acidez volátil sobre umbral</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">DEP-014 · C-2026-114</span>
+            <div style="height: 42px; border-radius: 13px; background: #6D4656; color: #FFF8FB; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Abrir</div>
+          </div>
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #FAE3D3; color: #8A4715;">Alta</span>
+              <span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">hace 1 d</span>
+            </div>
+            <span style="font-size: 13.5px;">Fin de fermentación sin confirmar</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6F6169;">DEP-007 · C-2026-101</span>
+            <div style="height: 42px; border-radius: 13px; background: #6D4656; color: #FFF8FB; font-size: 12.5px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Abrir</div>
+          </div>
+          <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 999px; background: #F5EED0; color: #6B5A10;">Media</span>
+              <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: #E3E3EF; color: #43435C;">Silenciada</span>
+            </div>
+            <span style="font-size: 13px; color: #5C4F55;">Control vencido · DEP-021</span>
+          </div>
+        </div>
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-top: 1px solid #EADFE4; padding: 10px 14px 18px; display: flex; gap: 6px;">
+          <div style="flex: 1; height: 52px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #D6C6CE;"></span>
+            <span style="font-size: 11.5px; font-weight: 500; color: #5C4F55;">Inicio</span>
+          </div>
+          <div style="flex: 1; height: 52px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #D6C6CE;"></span>
+            <span style="font-size: 11.5px; font-weight: 500; color: #5C4F55;">Bodega</span>
+          </div>
+          <div style="flex: 1; height: 52px; border-radius: 15px; background: #F3E7EE; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #6D4656;"></span>
+            <span style="font-size: 11.5px; font-weight: 600; color: #6D4656;">Incid.</span>
+          </div>
+          <div style="flex: 1; height: 52px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #D6C6CE;"></span>
+            <span style="font-size: 11.5px; font-weight: 500; color: #5C4F55;">Más</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section data-screen-label="UI18" style="display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 999px; background: #6D4656; color: #FFF8FB;">UI18</span>
+      <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Gestión de incidencia</h2>
+      <span style="font-size: 13.5px; color: #5C4F55;">Por qué se generó · resolver y descartar exigen motivo y evidencia</span>
+    </div>
+
+    <div style="display: flex; gap: 28px; align-items: flex-start;">
+
+      <div style="width: 1280px; flex: 0 0 auto; height: 960px; border-radius: 24px; overflow: hidden; border: 1px solid #EADFE4; background: #F2EEF1; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+
+        <div style="flex: 0 0 auto; background: #FFFFFF; border-bottom: 1px solid #EADFE4; padding: 20px 26px; display: flex; align-items: center; gap: 20px;">
+          <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 11px;">
+              <span style="font-size: 22px; font-weight: 600; letter-spacing: -0.015em;">Acidez volátil sobre umbral</span>
+              <span style="font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">Crítica</span>
+              <span style="font-size: 11.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px; background: #E3E3EF; color: #43435C;">Activa</span>
+            </div>
+            <div style="font-size: 13px; color: #5C4F55;">Unidad actual <span style="font-family: 'IBM Plex Mono', monospace;">C-2026-114</span> · DEP-014 · sin asignar</div>
+          </div>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 9px; flex: 0 0 auto;">
+            <div style="height: 42px; padding: 0 15px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600; display: flex; align-items: center;">Asignarme</div>
+            <div style="height: 42px; padding: 0 15px; border-radius: 13px; border: 1px solid #E0D2D9; font-size: 13.5px; font-weight: 600; display: flex; align-items: center;">Silenciar</div>
+            <div style="height: 42px; padding: 0 15px; border-radius: 13px; background: #F3E7EE; color: #6D4656; font-size: 13.5px; font-weight: 600; display: flex; align-items: center;">Crear tarea</div>
+          </div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 22px 26px; display: grid; grid-template-columns: 1.55fr 1fr; gap: 20px; min-height: 0;">
+
+          <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+            <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <span style="font-size: 16px; font-weight: 600;">Por qué se ha generado</span>
+              <div style="font-size: 13.5px; line-height: 1.55;">Acidez volátil <span style="font-family: 'IBM Plex Mono', monospace;">0,72 g/L</span> supera el límite <span style="font-family: 'IBM Plex Mono', monospace;">0,60 g/L</span> de la regla RN-AV-02, versión 3, vigente desde el 1 jun 2026.</div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Detectada</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;">14 sep 09:40</span></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Tendencia</span><span style="font-size: 13.5px;">Ascendente · 3 lecturas</span></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 11.5px; color: #6F6169;">Datos faltantes</span><span style="font-size: 13.5px; color: #5C4F55;">Ninguno</span></div>
+              </div>
+            </div>
+
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 16px; font-weight: 600;">Evidencia</span>
+                <span style="font-size: 12px; color: #6F6169;">puntos usados por la regla</span>
+              </div>
+              <svg viewBox="0 0 800 180" style="width: 100%; height: 160px;" preserveAspectRatio="none">
+                <line x1="50" y1="10" x2="50" y2="150" stroke="#EADFE4" stroke-width="1.5"></line>
+                <line x1="50" y1="150" x2="770" y2="150" stroke="#EADFE4" stroke-width="1.5"></line>
+                <line x1="50" y1="90" x2="770" y2="90" stroke="#D6C6CE" stroke-width="1.5" stroke-dasharray="4 4"></line>
+                <text x="770" y="85" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10" fill="#7A4A22">umbral 0,60</text>
+                <polyline points="90,120 300,105 520,55 700,28" fill="none" stroke="#6D4656" stroke-width="2.5"></polyline>
+                <circle cx="90" cy="120" r="4.5" fill="#FFFFFF" stroke="#6D4656" stroke-width="2"></circle>
+                <circle cx="300" cy="105" r="4.5" fill="#FFFFFF" stroke="#6D4656" stroke-width="2"></circle>
+                <circle cx="520" cy="55" r="5.5" fill="#F7DADF" stroke="#8E1F33" stroke-width="2.5"></circle>
+                <circle cx="700" cy="28" r="5.5" fill="#F7DADF" stroke="#8E1F33" stroke-width="2.5"></circle>
+              </svg>
+              <div style="display: grid; grid-template-columns: 0.8fr 0.8fr 0.9fr 1fr; gap: 12px; padding: 10px 4px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #6D4656; border-top: 1px solid #EFE6EA;">
+                <span>Fecha</span><span>Valor</span><span>Método</span><span>Origen</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.8fr 0.8fr 0.9fr 1fr; gap: 12px; padding: 8px 4px; font-size: 13px; align-items: center;">
+                <span style="font-family: 'IBM Plex Mono', monospace;">2 sep</span><span style="font-family: 'IBM Plex Mono', monospace;">0,38 g/L</span><span>Infrarrojo</span><span style="color: #6D4656;">Análisis MU-0388</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.8fr 0.8fr 0.9fr 1fr; gap: 12px; padding: 8px 4px; font-size: 13px; align-items: center;">
+                <span style="font-family: 'IBM Plex Mono', monospace;">9 sep</span><span style="font-family: 'IBM Plex Mono', monospace;">0,58 g/L</span><span>Infrarrojo</span><span style="color: #6D4656;">Análisis MU-0402</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 0.8fr 0.8fr 0.9fr 1fr; gap: 12px; padding: 8px 4px; font-size: 13px; align-items: center; background: #FDF6F7; border-radius: 10px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; color: #8E1F33;">14 sep</span><span style="font-family: 'IBM Plex Mono', monospace; color: #8E1F33;">0,72 g/L</span><span>Infrarrojo</span><span style="color: #6D4656;">Análisis MU-0412 · corregido</span>
+              </div>
+              <div style="padding-top: 8px; font-size: 12px; color: #6F6169;">El valor del 14 sep fue corregido en UI11 (0,72 desde 0,38). La conclusión de esta incidencia se apoya en la versión vigente.</div>
+            </div>
+
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 15px; font-weight: 600;">Recomendaciones aprobadas</span>
+              <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #F3E7EE;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #6D4656;"></span>
+                <span style="font-size: 13px; color: #5C4F55;">Verificar sulfitación y programar analítica de control en 48 h.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 14px; font-weight: 600;">Tareas asociadas</span>
+              <div style="border: 1px solid #EFE6EA; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 3px;">
+                <span style="font-size: 13px;">Analítica de control completa</span>
+                <span style="font-size: 12px; color: #7A4A22;">Vence hoy · sin asignar</span>
+              </div>
+            </div>
+
+            <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 14px; font-weight: 600;">Historial de evaluaciones</span>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 9px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169; flex: 0 0 auto;">14 sep 09:40</span><span style="font-size: 12.5px;">Episodio abierto · lectura 0,72 g/L</span></div>
+                <div style="display: flex; gap: 9px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169; flex: 0 0 auto;">14 sep 10:05</span><span style="font-size: 12.5px;">Actualizado tras corrección de UI11</span></div>
+                <div style="display: flex; gap: 9px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169; flex: 0 0 auto;">9 sep</span><span style="font-size: 12.5px; color: #5C4F55;">Lectura previa dentro de objetivo</span></div>
+              </div>
+            </div>
+
+            <div style="margin-top: auto; background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="height: 46px; border-radius: 15px; background: #6D4656; color: #FFF8FB; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Resolver con motivo</div>
+              <div style="height: 46px; border-radius: 15px; border: 1px solid #E0D2D9; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Descartar con motivo</div>
+              <span style="font-size: 12px; color: #6F6169; text-align: center;">Ambas abren el diálogo con motivo y evidencia; ninguna cierra sin ellos.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="width: 390px; flex: 0 0 auto; height: 960px; border-radius: 34px; border: 1px solid #EADFE4; background: #F2EEF1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 44px -34px rgba(70, 40, 55, 0.5);">
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-bottom: 1px solid #EADFE4; padding: 14px 20px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">
+            <span>9:41</span><span>UI18 · móvil</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px; font-weight: 600; letter-spacing: -0.015em;">Acidez volátil</span>
+            <span style="margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #F7DADF; color: #8E1F33;">Crítica</span>
+          </div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #6F6169;">DEP-014 · C-2026-114 · sin asignar</div>
+        </div>
+
+        <div style="flex: 1; overflow: hidden; padding: 14px 20px; display: flex; flex-direction: column; gap: 11px;">
+          <div style="background: #FFFFFF; border: 1px solid #EADFE4; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-size: 13px; font-weight: 600;">Por qué</span>
+            <span style="font-size: 12.5px; line-height: 1.5;">0,72 g/L supera el límite 0,60 (RN-AV-02 v3) desde el 14 sep.</span>
+          </div>
+          <div style="background: #FDF6F7; border-radius: 16px; padding: 13px; display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-size: 12.5px; font-weight: 600; color: #8E1F33;">14 sep · 0,72 g/L</span>
+            <span style="font-size: 11.5px; color: #7A2033;">Corregido desde 0,38 en UI11</span>
+          </div>
+          <div style="background: #F3E7EE; border-radius: 16px; padding: 13px; font-size: 12.5px; color: #5C4F55;">Verificar sulfitación y programar control en 48 h.</div>
+          <div style="background: #FDFBFC; border: 1px solid #EADFE4; border-radius: 16px; padding: 13px; display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 13px; font-weight: 600;">Tarea</span>
+            <span style="font-size: 12.5px; color: #7A4A22;">Analítica de control · vence hoy</span>
+          </div>
+        </div>
+
+        <div style="flex: 0 0 auto; background: #FDFBFC; border-top: 1px solid #EADFE4; padding: 12px 20px 18px; display: flex; flex-direction: column; gap: 9px;">
+          <div style="display: flex; gap: 9px;">
+            <div style="flex: 1; height: 48px; border-radius: 15px; border: 1px solid #E0D2D9; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Asignarme</div>
+            <div style="flex: 1; height: 48px; border-radius: 15px; background: #F3E7EE; color: #6D4656; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Crear tarea</div>
+          </div>
+          <div style="height: 50px; border-radius: 15px; background: #6D4656; color: #FFF8FB; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center;">Resolver con motivo</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>
