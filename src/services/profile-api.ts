@@ -13,15 +13,29 @@ export interface CurrentUserProfile {
   zones: string[]
 }
 
-const mockProfile: CurrentUserProfile = {
-  username: 'm.solana', email: 'm.solana@miriv.coop', firstName: 'María', lastName: 'Solana',
-  displayName: 'María Solana', jobTitle: 'Enóloga', centerCode: 'CENTRO-NORTE', centerName: 'Centro Norte', zones: ['Nave A', 'Nave B'],
+export interface UpdateProfileRequest {
+  firstName: string
+  lastName?: string
+  jobTitle?: string
+  avatarUrl?: string
+  centerCode?: string
+}
+
+export interface CenterOption {
+  code: string
+  name: string
 }
 
 export const profileApi = {
   getCurrentProfile() {
-    return import.meta.env.VITE_API_MODE === 'mock'
-      ? Promise.resolve(mockProfile)
-      : apiRequest<CurrentUserProfile>('/api/account/me')
+    return apiRequest<CurrentUserProfile>('/api/account/me')
+  },
+
+  updateProfile(request: UpdateProfileRequest) {
+    return apiRequest<CurrentUserProfile>('/api/account/me', { method: 'PATCH', body: JSON.stringify(request) })
+  },
+
+  getCenters() {
+    return apiRequest<CenterOption[]>('/api/account/centers')
   },
 }

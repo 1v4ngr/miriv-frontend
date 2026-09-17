@@ -1,28 +1,5 @@
-import { initialIncidents } from '../data/mock-incidents'
 import type { Incident, IncidentResolution } from '../types'
 import { apiRequest } from '../../../services/api-client'
-
-let incidents = initialIncidents.map((incident) => ({ ...incident, evidence: [...incident.evidence], history: [...incident.history] }))
-
-const wait = () => new Promise<void>((resolve) => window.setTimeout(resolve, 120))
-
-const mockIncidentsApi = {
-  async getAll() { await wait(); return incidents.map((incident) => ({ ...incident, evidence: [...incident.evidence], history: [...incident.history] })) },
-  async getById(id: string) { await wait(); return incidents.find((incident) => incident.id === id) },
-  async assign(id: string, responsible: string) {
-    await wait()
-    incidents = incidents.map((incident) => incident.id === id ? { ...incident, responsible, history: [{ date: 'Ahora', note: `Asignada a ${responsible}` }, ...incident.history] } : incident)
-  },
-  async toggleSilenced(id: string) {
-    await wait()
-    incidents = incidents.map((incident) => incident.id === id ? { ...incident, silencedUntil: incident.silencedUntil ? undefined : '20 sep 2026', history: [{ date: 'Ahora', note: incident.silencedUntil ? 'Silenciamiento retirado' : 'Silenciada hasta 20 sep 2026' }, ...incident.history] } : incident)
-  },
-  async resolve(id: string, resolution: IncidentResolution, reason: string) {
-    await wait()
-    if (!reason.trim()) throw new Error('Indica el motivo y la evidencia de la decisión.')
-    incidents = incidents.map((incident) => incident.id === id ? { ...incident, status: 'closed', resolution, resolutionReason: reason.trim(), history: [{ date: 'Ahora', note: `${resolution}: ${reason.trim()}` }, ...incident.history] } : incident)
-  },
-}
 
 interface BackendIncident {
   code: string
@@ -54,7 +31,7 @@ function mapIncident(item: BackendIncident): Incident {
   }
 }
 
-const realIncidentsApi = {
+export const incidentsApi = {
   async getAll() { return (await apiRequest<BackendIncident[]>('/api/incidents')).map(mapIncident) },
   async getById(id: string) { try { return mapIncident(await apiRequest<BackendIncident>(`/api/incidents/${encodeURIComponent(id)}`)) } catch (error) { if ((error as { status?: number }).status === 404) return undefined; throw error } },
   async assign(id: string, responsible: string) { await apiRequest(`/api/incidents/${encodeURIComponent(id)}/assign`, { method: 'POST', body: JSON.stringify({ responsible }) }) },
@@ -64,5 +41,3 @@ const realIncidentsApi = {
     await apiRequest(`/api/incidents/${encodeURIComponent(id)}/${endpoint}`, { method: 'POST', body: JSON.stringify({ reason, ...(resolution === 'Descartada' ? { discardCategory: 'FALSE_POSITIVE' } : {}) }) })
   },
 }
-
-export const incidentsApi = import.meta.env.VITE_API_MODE === 'mock' ? mockIncidentsApi : realIncidentsApi

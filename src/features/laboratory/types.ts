@@ -16,6 +16,7 @@ export interface Sample {
   status: SampleStatus
   responsible: string
   overdue?: boolean
+  panelParameters: PanelParameter[]
   results: SampleResult[]
   observations?: string
   processedAt?: string
@@ -23,6 +24,12 @@ export interface Sample {
   equipment?: string
   method?: string
   validationNote?: string
+}
+
+export interface PanelParameter {
+  parameter: string
+  unit: string
+  required: boolean
 }
 
 export interface SampleResult {

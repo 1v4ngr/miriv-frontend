@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowLeft, BellOff, CheckCircle2, ClipboardPlus, UserRound, X } from 'lucide-react'
 import { incidentsApi } from '../services/incidents-api'
+import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import type { Incident, IncidentResolution } from '../types'
 
 interface Props { id: string; onBack: () => void; onOpenContent: (code: string) => void }
@@ -10,10 +11,11 @@ export function IncidentDetailPage({ id, onBack, onOpenContent }: Props) {
   const [incident, setIncident] = useState<Incident>()
   const [dialog, setDialog] = useState<IncidentResolution>()
   const [notice, setNotice] = useState('')
+  const profile = useCurrentProfile()
   const load = () => { incidentsApi.getById(id).then(setIncident) }
   useEffect(load, [id])
   if (!incident) return <p className="p-6 text-center text-xs text-muted">Cargando incidencia…</p>
-  const assign = async () => { await incidentsApi.assign(id, 'María Solana'); setNotice('Incidencia asignada a María Solana.'); load() }
+  const assign = async () => { if (!profile) return; await incidentsApi.assign(id, profile.displayName); setNotice(`Incidencia asignada a ${profile.displayName}.`); load() }
   const silence = async () => { await incidentsApi.toggleSilenced(id); setNotice(incident.silencedUntil ? 'Silenciamiento retirado.' : 'Incidencia silenciada hasta el 20 sep 2026.'); load() }
   return <div className="mx-auto max-w-6xl space-y-4 pb-6"><button onClick={onBack} className="flex items-center gap-1 text-xs font-semibold text-plum"><ArrowLeft className="size-4" />Volver a incidencias</button>
     <header className="rounded-2xl border border-border bg-white p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><h1 className="text-[22px] font-semibold">{incident.title}</h1><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${priorityClass[incident.priority]}`}>{incident.priority}</span><span className="rounded-full bg-[#e3e3ef] px-2.5 py-1 text-[10px] font-semibold text-[#43435c]">{incident.status === 'active' ? 'Activa' : incident.status === 'monitoring' ? 'En seguimiento' : 'Cerrada'}</span></div><p className="mt-2 text-xs text-copy">Unidad actual <button onClick={() => incident.contentCode !== '—' && onOpenContent(incident.contentCode)} className="font-mono text-plum underline">{incident.contentCode}</button> · <span className="font-mono">{incident.depositCode}</span> · {incident.responsible ?? 'sin asignar'}</p></div>{incident.status !== 'closed' && <div className="flex flex-wrap gap-2"><button onClick={assign} className="min-h-9 rounded-xl border border-border px-3 text-xs font-semibold"><UserRound className="mr-1 inline size-3.5" />Asignarme</button><button onClick={silence} className="min-h-9 rounded-xl border border-border px-3 text-xs font-semibold"><BellOff className="mr-1 inline size-3.5" />{incident.silencedUntil ? 'Reactivar aviso' : 'Silenciar'}</button><button onClick={() => setNotice('Tarea de control creada en la demostración.')} className="min-h-9 rounded-xl bg-plum-soft px-3 text-xs font-semibold text-plum"><ClipboardPlus className="mr-1 inline size-3.5" />Crear tarea</button></div>}</div></header>

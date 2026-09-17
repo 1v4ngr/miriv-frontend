@@ -1,3 +1,5 @@
+import { apiRequest, saveAccessToken } from './api-client'
+
 export interface LoginRequest {
   username: string
   password: string
@@ -40,51 +42,7 @@ export interface AuthApi {
   requestPasswordReset(request: PasswordRecoveryRequest): Promise<PasswordRecoveryResponse>
 }
 
-const MOCK_PASSWORD = 'miriv2026'
-const MOCK_LATENCY_MS = 650
-
-function wait(milliseconds: number) {
-  return new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds))
-}
-
-const mockAuthApi: AuthApi = {
-  async login({ username, password }) {
-    await wait(MOCK_LATENCY_MS)
-
-    if (username.trim().toLowerCase() === 'm.solana@miriv.coop' && password === MOCK_PASSWORD) {
-      return {
-        ok: true,
-        user: {
-          id: 'usr_maria_solana',
-          name: 'María Solana',
-          role: 'Enóloga',
-          center: 'Centro Norte',
-        },
-      }
-    }
-
-    return {
-      ok: false,
-      message: 'Credenciales no aceptadas.',
-      attemptsRemaining: 3,
-    }
-  },
-
-  async requestPasswordReset({ usernameOrEmail }) {
-    await wait(MOCK_LATENCY_MS)
-
-    if (!usernameOrEmail.trim()) {
-      return { ok: false, message: 'Introduce tu usuario o correo.' }
-    }
-
-    return {
-      ok: true,
-      message: 'Si existe una cuenta asociada, recibirás un correo con los siguientes pasos.',
-    }
-  },
-}
-
-const realAuthApi: AuthApi = {
+export const authApi: AuthApi = {
   async login(request) {
     const response = await apiRequest<BackendLoginResponse>('/api/auth/login', {
       method: 'POST',
@@ -111,9 +69,3 @@ const realAuthApi: AuthApi = {
     })
   },
 }
-
-const useMockApi = import.meta.env.VITE_API_MODE === 'mock'
-
-export const apiMode = useMockApi ? 'mock' : 'real'
-export const authApi: AuthApi = useMockApi ? mockAuthApi : realAuthApi
-import { apiRequest, saveAccessToken } from './api-client'

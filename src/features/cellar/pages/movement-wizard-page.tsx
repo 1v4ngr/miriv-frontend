@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Check } from 'lucide-react'
 import { cellarApi } from '../services/cellar-api'
+import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import type { Deposit, MovementType, NewMovement } from '../types'
 import { activeOccupation, formatLiters } from '../utils'
 
@@ -25,9 +26,12 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState<NewMovement>({ type: 'Trasiego', effectiveDate: today, effectiveTime: nowTime, responsible: 'María Solana', reason: '', sourceDeposit: sourceCode, destinationDeposit: '', volumeLiters: 0, lossLiters: 0 })
+  const [form, setForm] = useState<NewMovement>({ type: 'Trasiego', effectiveDate: today, effectiveTime: nowTime, responsible: '', reason: '', sourceDeposit: sourceCode, destinationDeposit: '', volumeLiters: 0, lossLiters: 0 })
+  const profile = useCurrentProfile()
 
   useEffect(() => { cellarApi.getDeposits().then((items) => { setDeposits(items); const occupation = activeOccupation(items.find((deposit) => deposit.code === sourceCode) as Deposit); if (occupation) setForm((current) => ({ ...current, volumeLiters: occupation.volumeLiters })) }).finally(() => setLoading(false)) }, [sourceCode])
+
+  useEffect(() => { if (profile) setForm((current) => (current.responsible ? current : { ...current, responsible: profile.displayName })) }, [profile])
 
   if (loading) return <p className="p-6 text-center text-xs text-muted">Cargando datos del movimiento…</p>
   const source = deposits.find((deposit) => deposit.code === sourceCode)

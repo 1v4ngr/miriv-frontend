@@ -1,0 +1,3 @@
+import { apiRequest } from '../../../services/api-client'
+export interface AdminCenter { code: string; name: string }
+export const adminCentersApi = { list: () => apiRequest<AdminCenter[]>('/api/admin/centers'), create: (input: AdminCenter) => apiRequest<AdminCenter>('/api/admin/centers', { method: 'POST', body: JSON.stringify(input) }), update: (code: string, input: AdminCenter) => apiRequest<AdminCenter>(`/api/admin/centers/${encodeURIComponent(code)}`, { method: 'PUT', body: JSON.stringify(input) }), remove: (code: string) => apiRequest<void>(`/api/admin/centers/${encodeURIComponent(code)}`, { method: 'DELETE' }) }
