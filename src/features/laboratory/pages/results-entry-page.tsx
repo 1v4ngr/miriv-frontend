@@ -18,7 +18,7 @@ export function ResultsEntryPage({ code, onBack, onReview }: Props) {
   const parameters = sample?.panelParameters ?? []
   const getEntry = (parameter: string, unit: string) => entries.find((entry) => entry.parameter === parameter) ?? { parameter, value: '', unit }
   const updateEntry = (next: ResultEntry) => setEntries((previous) => [...previous.filter((entry) => entry.parameter !== next.parameter), next])
-  const completed = entries.filter((entry) => entry.value || entry.qualifier).length
+  const completed = parameters.filter((parameter) => parameter.required && entries.some((entry) => entry.parameter === parameter.parameter && (entry.value || entry.qualifier))).length
   const improbable = entries.some((entry) => entry.parameter === 'SO2 libre' && Number(entry.value) > 150)
   const handleSave = async (send: boolean) => { if (!sample) return; setError(''); setNotice(''); try { const updated = await laboratoryApi.saveResults(code, { results: entries, status: send ? 'Pendiente validar' : 'Borrador', processedAt, laboratory, equipment, method, observations }); setSample(updated); setEntries(updated.results.map(({ parameter, value, unit, qualifier, limit }) => ({ parameter, value, unit, qualifier, limit }))); setNotice(send && updated.status === 'Pendiente validar' ? 'Resultados enviados a validación.' : 'Borrador parcial guardado.'); if (send && updated.status === 'Pendiente validar') onReview(code) } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se han podido guardar los resultados.') } }
   if (!sample) return <p className="p-6 text-center text-xs text-muted">Cargando muestra…</p>
