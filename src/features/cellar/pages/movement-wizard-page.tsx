@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, Check } from 'lucide-react'
 import { cellarApi } from '../services/cellar-api'
 import { profileApi, type CenterMember } from '../../../services/profile-api'
+import { ApiRequestError } from '../../../services/api-client'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import type { Deposit, MovementType, NewMovement } from '../types'
 import { activeOccupation, formatLiters } from '../utils'
@@ -28,7 +29,7 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState<NewMovement>({ type: 'Trasiego', effectiveDate: today, effectiveTime: nowTime, responsible: '', reason: '', sourceDeposit: sourceCode, destinationDeposit: '', volumeLiters: 0, lossLiters: 0 })
+  const [form, setForm] = useState<NewMovement>({ type: 'Trasiego', effectiveDate: today, effectiveTime: nowTime, responsible: '', reason: '', sourceDeposit: sourceCode, destinationDeposit: '', volumeLiters: 0, lossLiters: 0, authorizeMixture: false, idempotencyKey: crypto.randomUUID() })
   const profile = useCurrentProfile()
 
   useEffect(() => { cellarApi.getDeposits().then((items) => { setDeposits(items); const occupation = activeOccupation(items.find((deposit) => deposit.code === sourceCode) as Deposit); if (occupation) setForm((current) => ({ ...current, volumeLiters: occupation.volumeLiters })) }).finally(() => setLoading(false)) }, [sourceCode])
@@ -54,13 +55,33 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
   const field = 'mt-1.5 min-h-10 w-full rounded-xl border border-border bg-white px-3 py-2 text-xs outline-none focus:border-[#b9899c]'
   const canAdvanceStep1 = form.effectiveDate && form.responsible.trim() && form.reason.trim()
   const canAdvanceStep2 = form.type === 'Salida' ? form.volumeLiters > 0 : Boolean(form.destinationDeposit) && form.volumeLiters > 0
-  const canAdvanceStep3 = sourceFinal >= 0 && (form.type === 'Salida' || Boolean(destination))
+  const canAdvanceStep3 = sourceFinal >= 0 && (form.type === 'Salida' || Boolean(destination)) && (!becameMixture || form.authorizeMixture)
 
+  const [uncertain, setUncertain] = useState(false)
   const handleConfirm = async () => {
-    setSaving(true); setError('')
+    setSaving(true); setError(''); setUncertain(false)
     try { const result = await cellarApi.registerMovement(form); onDone(result.destinationContentCode) }
-    catch (cause) { setError(cause instanceof Error ? cause.message : 'No se ha podido registrar el movimiento.') }
+    catch (cause) {
+      if (cause instanceof ApiRequestError && cause.uncertain) {
+        setError('No sabemos si el movimiento se registró. Revisa el depósito antes de repetir.')
+        setUncertain(true)
+      } else {
+        setError(cause instanceof Error ? cause.message : 'No se ha podido registrar el movimiento.')
+      }
+    }
     finally { setSaving(false) }
+  }
+
+  const checkDeposit = async () => {
+    setSaving(true)
+    try {
+      const items = await cellarApi.getDeposits()
+      setDeposits(items)
+      const refreshed = items.find((deposit) => deposit.code === sourceCode)
+      const occupation = refreshed ? activeOccupation(refreshed) : undefined
+      if (occupation && occupation.volumeLiters !== sourceOccupation.volumeLiters) onDone(form.destinationDeposit)
+      else { setUncertain(false); setError('') }
+    } finally { setSaving(false) }
   }
 
   return <div className="mx-auto max-w-4xl space-y-4 pb-6">
@@ -82,7 +103,7 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
       {step === 1 && <div className="mt-5 space-y-4">
         <div className="rounded-xl bg-plum-soft p-3 text-xs text-plum">Origen: <strong className="font-mono">{sourceCode}</strong> · {sourceOccupation.contentCode} · {formatLiters(sourceOccupation.volumeLiters)} L disponibles</div>
         <div className="grid gap-3 sm:grid-cols-2">
-          {form.type !== 'Salida' && <label className="text-xs font-semibold">Depósito de destino *<select required value={form.destinationDeposit} onChange={(event) => setForm({ ...form, destinationDeposit: event.target.value })} className={field}><option value="">Selecciona un depósito</option>{deposits.filter((deposit) => deposit.code !== sourceCode && deposit.status !== 'maintenance' && deposit.status !== 'cleaning').map((deposit) => <option key={deposit.code} value={deposit.code}>{deposit.code} · {activeOccupation(deposit) ? `ocupado (${activeOccupation(deposit)?.contentCode})` : 'vacío'}</option>)}</select></label>}
+          {form.type !== 'Salida' && <label className="text-xs font-semibold">Depósito de destino *<select required value={form.destinationDeposit} onChange={(event) => setForm({ ...form, destinationDeposit: event.target.value, authorizeMixture: event.target.value ? form.authorizeMixture : false })} className={field}><option value="">Selecciona un depósito</option>{deposits.filter((deposit) => deposit.code !== sourceCode && deposit.status !== 'maintenance' && deposit.status !== 'cleaning').map((deposit) => <option key={deposit.code} value={deposit.code}>{deposit.code} · {activeOccupation(deposit) ? `ocupado (${activeOccupation(deposit)?.contentCode})` : 'vacío'}</option>)}</select></label>}
           <label className="text-xs font-semibold">Volumen a mover (L) *<input required type="number" min="1" max={sourceOccupation.volumeLiters} value={form.volumeLiters} onChange={(event) => setForm({ ...form, volumeLiters: Number(event.target.value) })} className={field} /></label>
           <label className="text-xs font-semibold">Merma identificada (L)<input type="number" min="0" value={form.lossLiters} onChange={(event) => setForm({ ...form, lossLiters: Number(event.target.value) })} className={field} /></label>
         </div>
@@ -90,7 +111,7 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
       </div>}
 
       {step === 2 && <div className="mt-5 space-y-4">
-        {becameMixture && <div className="rounded-2xl bg-[#f3e7ee] p-4"><p className="text-sm font-semibold text-plum">{form.destinationDeposit} ya está ocupado: este flujo se convierte en mezcla</p><p className="mt-1 text-[12px] text-copy">Añadir {formatLiters(form.volumeLiters)} L de {sourceOccupation.contentCode} al contenido existente de {form.destinationDeposit} crea una nueva unidad. Las dos procedencias quedan visibles en la genealogía.</p></div>}
+        {becameMixture && <div className="rounded-2xl bg-[#f3e7ee] p-4"><p className="text-sm font-semibold text-plum">{form.destinationDeposit} ya está ocupado: este flujo se convierte en mezcla</p><p className="mt-1 text-[12px] text-copy">Añadir {formatLiters(form.volumeLiters)} L de {sourceOccupation.contentCode} al contenido existente de {form.destinationDeposit} crea una nueva unidad. Las dos procedencias quedan visibles en la genealogía.</p><label className="mt-3 flex items-start gap-2 text-[12px] text-copy"><input type="checkbox" checked={form.authorizeMixture} onChange={(event) => setForm({ ...form, authorizeMixture: event.target.checked })} />Autorizo la mezcla: se creará un lote y una unidad de contenido nuevos con las dos procedencias.</label></div>}
         <div className="rounded-2xl border border-border bg-[#fdfbfc] p-4">
           <h2 className="text-sm font-semibold">Balance de volumen</h2>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -110,6 +131,7 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
       {step === 3 && <div className="mt-5 space-y-4">
         <div className="rounded-2xl border border-border bg-[#fdfbfc] p-4"><h2 className="text-sm font-semibold">Resumen del movimiento</h2><div className="mt-3 space-y-2 text-xs">
           <div className="flex justify-between"><span className="text-muted">Tipo</span><span>{form.type}{becameMixture ? ' (reclasificado a mezcla)' : ''}</span></div>
+          {becameMixture && <div className="flex justify-between"><span className="text-muted">Mezcla autorizada</span><span>{form.authorizeMixture ? 'Sí' : 'No'}</span></div>}
           <div className="flex justify-between"><span className="text-muted">Fecha efectiva</span><span className="font-mono">{form.effectiveDate} {form.effectiveTime}</span></div>
           <div className="flex justify-between"><span className="text-muted">Responsable</span><span>{form.responsible}</span></div>
           <div className="flex justify-between"><span className="text-muted">Motivo</span><span>{form.reason}</span></div>
@@ -118,13 +140,14 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
         </div></div>
         <p className="text-[11px] text-muted">Se comprobará concurrencia justo antes de confirmar.</p>
         {error && <p role="alert" className="text-xs text-[#8e1f33]">{error}</p>}
+        {uncertain && <button type="button" onClick={checkDeposit} disabled={saving} className="rounded-xl border border-[#b9899c] px-3 py-2 text-xs font-semibold text-plum disabled:opacity-60">{saving ? 'Comprobando…' : 'Comprobar depósito'}</button>}
       </div>}
 
       <div className="mt-6 flex justify-between gap-2">
         <button type="button" disabled={step === 0} onClick={() => setStep(step - 1)} className="min-h-10 rounded-xl border border-border px-4 text-xs font-semibold disabled:opacity-40">Atrás</button>
         {step < 3
           ? <button type="button" disabled={(step === 0 && !canAdvanceStep1) || (step === 1 && !canAdvanceStep2) || (step === 2 && !canAdvanceStep3)} onClick={() => setStep(step + 1)} className="min-h-10 rounded-xl bg-plum px-4 text-xs font-semibold text-white disabled:opacity-40">Continuar</button>
-          : <button type="button" disabled={saving} onClick={handleConfirm} className="min-h-10 rounded-xl bg-plum px-4 text-xs font-semibold text-white disabled:opacity-60">{saving ? 'Confirmando…' : 'Confirmar movimiento'}</button>}
+          : <button type="button" disabled={saving || uncertain} onClick={handleConfirm} className="min-h-10 rounded-xl bg-plum px-4 text-xs font-semibold text-white disabled:opacity-60">{saving ? 'Confirmando…' : 'Confirmar movimiento'}</button>}
       </div>
     </section>
   </div>

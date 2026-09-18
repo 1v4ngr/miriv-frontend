@@ -84,6 +84,8 @@ export interface NewMovement {
   destinationDeposit: string
   volumeLiters: number
   lossLiters: number
+  authorizeMixture: boolean
+  idempotencyKey: string
 }
 
 export interface MovementResult {
