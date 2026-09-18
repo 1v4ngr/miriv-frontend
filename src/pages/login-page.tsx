@@ -164,10 +164,6 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isRecoveryOpen, setIsRecoveryOpen] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
-  const [recoverySent, setRecoverySent] = useState(false)
-  const [recoveryEmail, setRecoveryEmail] = useState('')
-  const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false)
-  const [recoveryError, setRecoveryError] = useState('')
 
   const handleChange = (field: keyof LoginForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -198,28 +194,6 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
 
   const handleRecovery = () => {
     setIsRecoveryOpen(true)
-    setRecoverySent(false)
-    setRecoveryError('')
-    setRecoveryEmail(form.username)
-  }
-
-  const handleRecoverySubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setIsRecoverySubmitting(true)
-    setRecoveryError('')
-
-    try {
-      const response = await authApi.requestPasswordReset({ usernameOrEmail: recoveryEmail })
-      if (!response.ok) {
-        setRecoveryError(response.message)
-        return
-      }
-      setRecoverySent(true)
-    } catch (error) {
-      setRecoveryError(error instanceof Error ? error.message : 'No se ha podido solicitar la recuperación.')
-    } finally {
-      setIsRecoverySubmitting(false)
-    }
   }
 
   return (
@@ -244,20 +218,9 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
             <button type="button" onClick={() => setIsRecoveryOpen(false)} className="mb-7 flex items-center gap-2 text-[13px] font-semibold text-plum hover:text-plum-dark"><ArrowLeft className="size-4" />Volver al acceso</button>
             <div className="mb-6 space-y-2">
               <h2 id="recovery-title" className="text-[25px] font-semibold tracking-[-0.02em]">Recuperar acceso</h2>
-              <p className="text-[14px] leading-[1.6] text-copy">Te enviaremos las instrucciones al correo asociado a tu cuenta.</p>
+              <p className="text-[14px] leading-[1.6] text-copy">Para restablecer tu contraseña, contacta con el administrador de tu centro. Por seguridad, las contraseñas no se envían por correo.</p>
             </div>
-            {recoverySent ? (
-              <div className="rounded-[15px] bg-[#dceadf] p-4 text-[13px] leading-5 text-[#1f5c3a]" role="status">Si existe una cuenta asociada, recibirás un correo con los siguientes pasos.</div>
-            ) : (
-              <form className="space-y-4" onSubmit={handleRecoverySubmit}>
-                <div className="space-y-2">
-                  <label className="block text-[12.5px] font-semibold text-copy" htmlFor="recovery-email">Usuario o correo</label>
-                  <input id="recovery-email" type="text" required value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} className="h-12 w-full rounded-[14px] border border-[#e0d2d9] bg-field px-4 text-[15px] outline-none transition focus:border-[#b9899c] focus:bg-white focus:ring-4 focus:ring-[#f3e7ee]" />
-                </div>
-                {recoveryError && <div className="text-[12.5px] text-[#8e3b4a]" role="alert">{recoveryError}</div>}
-                <button type="submit" disabled={isRecoverySubmitting} className="flex h-[50px] w-full items-center justify-center rounded-[15px] bg-plum text-[15px] font-semibold text-[#fff8fb] transition hover:bg-plum-dark disabled:cursor-wait disabled:opacity-70">{isRecoverySubmitting ? 'Enviando…' : 'Enviar instrucciones'}</button>
-              </form>
-            )}
+            <button type="button" onClick={() => setIsRecoveryOpen(false)} className="flex h-[50px] w-full items-center justify-center rounded-[15px] bg-plum text-[15px] font-semibold text-[#fff8fb] transition hover:bg-plum-dark">Entendido</button>
           </section>
         </div>
       )}
