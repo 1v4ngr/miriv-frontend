@@ -36,5 +36,7 @@ export function useAccount() {
 
 export function useCan(permission: string): boolean {
   const account = useAccount()
-  return account?.permissions.some((entry) => entry.code === permission) ?? false
+  if (!account) return false
+  const permissions = account.permissions ?? []
+  return permissions.some((entry) => entry.code === permission)
 }

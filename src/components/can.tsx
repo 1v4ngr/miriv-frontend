@@ -8,6 +8,6 @@ interface CanProps {
 }
 
 export function Can({ permission, fallback = null, children }: CanProps) {
-  if (!permission) return <>{children}</>
-  return useCan(permission) ? <>{children}</> : <>{fallback}</>
+  const allowed = permission ? useCan(permission) : true
+  return <>{allowed ? children : fallback}</>
 }
