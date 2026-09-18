@@ -44,6 +44,7 @@ export interface Lot {
   varieties: string[]
   archived: boolean
   contentCodes: string[]
+  activeContentCodes: string[]
 }
 
 export interface NewDeposit {
