@@ -15,7 +15,7 @@ export interface CellarApi {
   updateDeposit(code: string, input: Pick<NewDeposit, 'zone' | 'position' | 'capacityLiters' | 'material' | 'refrigerated'>): Promise<Deposit>
   getLots(): Promise<Lot[]>
   getLot(code: string): Promise<Lot | undefined>
-  updateLot(code: string, input: Pick<Lot, 'destination' | 'responsible' | 'origin' | 'variety'>): Promise<Lot>
+  updateLot(code: string, input: Pick<Lot, 'destination' | 'responsible' | 'origin' | 'varieties'>): Promise<Lot>
   createLot(input: NewLot, entry?: NewEntry): Promise<Lot>
   archiveLot(code: string, reason: string): Promise<Lot>
   registerMovement(input: NewMovement): Promise<MovementResult>

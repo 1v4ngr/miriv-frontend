@@ -41,6 +41,7 @@ export interface Lot {
   entryDate: string
   origin: string
   variety: string
+  varieties: string[]
   archived: boolean
   contentCodes: string[]
 }
@@ -63,7 +64,7 @@ export interface NewLot {
   responsible: string
   entryDate: string
   origin: string
-  variety: string
+  varieties: string[]
 }
 
 export interface NewEntry {
