@@ -252,7 +252,7 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
               <form className="space-y-4" onSubmit={handleRecoverySubmit}>
                 <div className="space-y-2">
                   <label className="block text-[12.5px] font-semibold text-copy" htmlFor="recovery-email">Usuario o correo</label>
-                  <input id="recovery-email" type="email" required value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} className="h-12 w-full rounded-[14px] border border-[#e0d2d9] bg-field px-4 text-[15px] outline-none transition focus:border-[#b9899c] focus:bg-white focus:ring-4 focus:ring-[#f3e7ee]" />
+                  <input id="recovery-email" type="text" required value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} className="h-12 w-full rounded-[14px] border border-[#e0d2d9] bg-field px-4 text-[15px] outline-none transition focus:border-[#b9899c] focus:bg-white focus:ring-4 focus:ring-[#f3e7ee]" />
                 </div>
                 {recoveryError && <div className="text-[12.5px] text-[#8e3b4a]" role="alert">{recoveryError}</div>}
                 <button type="submit" disabled={isRecoverySubmitting} className="flex h-[50px] w-full items-center justify-center rounded-[15px] bg-plum text-[15px] font-semibold text-[#fff8fb] transition hover:bg-plum-dark disabled:cursor-wait disabled:opacity-70">{isRecoverySubmitting ? 'Enviando…' : 'Enviar instrucciones'}</button>
