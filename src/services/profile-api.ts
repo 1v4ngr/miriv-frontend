@@ -26,6 +26,12 @@ export interface CenterOption {
   name: string
 }
 
+export interface CenterMember {
+  username: string
+  displayName: string
+  email: string
+}
+
 export const profileApi = {
   getCurrentProfile() {
     return apiRequest<CurrentUserProfile>('/api/account/me')
@@ -37,5 +43,9 @@ export const profileApi = {
 
   getCenters() {
     return apiRequest<CenterOption[]>('/api/account/centers')
+  },
+
+  listCenterMembers() {
+    return apiRequest<CenterMember[]>('/api/account/center-members')
   },
 }

@@ -14,7 +14,7 @@ export function DepositCard({ deposit, onOpen }: DepositCardProps) {
 
   return (
     <article className="rounded-2xl border border-border bg-white p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2"><button type="button" onClick={() => onOpen(deposit.code)} className="font-mono text-[14px] font-medium text-plum hover:underline">{deposit.code}</button><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusClass(deposit)}`}>{statusLabel(deposit)}</span></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><button type="button" onClick={() => onOpen(deposit.code)} className="font-mono text-[14px] font-medium text-plum hover:underline">{deposit.code}</button><span className={`shrink-0 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-tight tracking-wide ${statusClass(deposit)}`}>{statusLabel(deposit)}</span></div>
       <p className="mb-0 mt-2 text-[12px] text-muted">{deposit.zone} · {deposit.position}</p>
       <p className="my-2 text-[13px] font-semibold">{occupation ? `${occupation.category} · ${occupation.lotCode}` : 'Sin contenido actual'}</p>
       <div className="flex justify-between text-[11.5px] text-copy"><span>{formatLiters(volume)} / {formatLiters(deposit.capacityLiters)} L</span><span>{fill} % llenado</span></div>

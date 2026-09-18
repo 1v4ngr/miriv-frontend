@@ -1,6 +1,698 @@
 import { useEffect, useState } from 'react'
 import { adminCentersApi, type AdminCenter } from '../services/admin-centers-api'
-import { catalogApi, type CatalogItem } from '../../../services/catalog-api'
-import { adminUsersApi, type AdminUser } from '../services/admin-users-api'
-const card='rounded-2xl border border-border bg-white p-4'
-export function AdministrationManagementPage(){const [tab,setTab]=useState<'centers'|'catalogs'>('centers');const [centers,setCenters]=useState<AdminCenter[]>([]);const [open,setOpen]=useState('');const [form,setForm]=useState<AdminCenter>({code:'',name:''});const [items,setItems]=useState<Record<string,CatalogItem[]>>({});const load=()=>adminCentersApi.list().then(setCenters);useEffect(()=>{load()},[]);const save=async()=>{if(!form.code||!form.name)return;await (centers.some(c=>c.code===form.code)?adminCentersApi.update(form.code,form):adminCentersApi.create(form));setForm({code:'',name:''});load()};return <div className="mx-auto max-w-5xl"><header className={card}><h1 className="text-lg font-semibold">Administración</h1><div className="mt-3 flex gap-2"><button onClick={()=>setTab('centers')} className={`rounded-xl px-3 py-2 text-xs font-semibold ${tab==='centers'?'bg-plum-soft text-plum':'border border-border'}`}>Centros</button><button onClick={()=>setTab('catalogs')} className={`rounded-xl px-3 py-2 text-xs font-semibold ${tab==='catalogs'?'bg-plum-soft text-plum':'border border-border'}`}>Catálogos</button></div></header>{tab==='centers'?<section className={`mt-4 ${card}`}><h2 className="text-sm font-semibold">Centros</h2><div className="mt-4 flex gap-2"><input placeholder="Código" value={form.code} onChange={e=>setForm({...form,code:e.target.value})} className="rounded-xl border border-border p-2 text-xs"/><input placeholder="Nombre" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="flex-1 rounded-xl border border-border p-2 text-xs"/><button onClick={save} className="rounded-xl bg-plum px-3 text-xs font-semibold text-white">{form.code&&centers.some(c=>c.code===form.code)?'Modificar':'Añadir'}</button></div><div className="mt-4 space-y-2">{centers.map(c=><div key={c.code} className="flex items-center justify-between rounded-xl border border-border p-3 text-xs"><span><b>{c.name}</b><span className="ml-2 font-mono text-muted">{c.code}</span></span><span className="flex gap-2"><button onClick={()=>setForm(c)} className="text-plum">Modificar</button><button onClick={async()=>{if(confirm(`¿Eliminar ${c.name}?`)){await adminCentersApi.remove(c.code);load()}}} className="text-[#8e1f33]">Eliminar</button></span></div>)}</div></section>:<section className={`mt-4 ${card}`}><h2 className="text-sm font-semibold">Catálogos</h2>{[['Variedades',catalogApi.getVarieties],['Categorías internas',catalogApi.getInternalCategories],['Tipos de producto',catalogApi.getProductTypes]].map(([label,fn])=><div key={label as string} className="mt-3 rounded-xl border border-border"><button className="flex w-full justify-between p-3 text-xs font-semibold" onClick={()=>{const key=label as string;setOpen(open===key?'':key);if(!items[key])(fn as ()=>Promise<CatalogItem[]>)().then(v=>setItems({...items,[key]:v}))}}>{label as string}<span>{open===label?'−':'+'}</span></button>{open===label&&<div className="border-t border-border p-3 text-xs">{(items[label as string]??[]).map(i=><div key={i.id} className="flex justify-between border-b border-border py-2"><span>{i.name}</span><span className="font-mono text-muted">{i.code}</span></div>)}</div>}</div>)}</section>}</div>}
+import { catalogApi, catalogResources, type CatalogItem, type CatalogResource } from '../../../services/catalog-api'
+import { adminUsersApi, type AdminUser, type CreateAdminUserInput } from '../services/admin-users-api'
+import { adminZonesApi, type AdminZone, type AdminZoneInput } from '../services/admin-zones-api'
+
+const card = 'rounded-2xl border border-border bg-white p-4'
+
+type Tab = 'centers' | 'catalogs' | 'users'
+
+export function AdministrationManagementPage() {
+  const [tab, setTab] = useState<Tab>('centers')
+
+  return (
+    <div className="mx-auto max-w-5xl">
+      <header className={card}>
+        <h1 className="text-lg font-semibold">Administración</h1>
+        <p className="mt-1 text-xs text-muted">Configuración general de la bodega y gestión de cuentas.</p>
+        <div className="mt-3 flex max-w-full gap-2 overflow-x-auto pb-1">
+          <TabButton active={tab === 'centers'} onClick={() => setTab('centers')}>Centros</TabButton>
+          <TabButton active={tab === 'catalogs'} onClick={() => setTab('catalogs')}>Catálogos</TabButton>
+          <TabButton active={tab === 'users'} onClick={() => setTab('users')}>Usuarios</TabButton>
+        </div>
+      </header>
+      {tab === 'centers' && <CentersTab />}
+      {tab === 'catalogs' && <CatalogsTab />}
+      {tab === 'users' && <UsersTab />}
+    </div>
+  )
+}
+
+function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`h-9 shrink-0 whitespace-nowrap rounded-xl px-3 text-[12px] font-semibold ${
+        active ? 'bg-plum-soft text-plum' : 'border border-border'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function CentersTab() {
+  const [centers, setCenters] = useState<AdminCenter[]>([])
+  const [form, setForm] = useState<AdminCenter>({ code: '', name: '' })
+  const load = () => adminCentersApi.list().then(setCenters)
+  useEffect(() => { load() }, [])
+  const save = async () => {
+    if (!form.code || !form.name) return
+    await (centers.some((c) => c.code === form.code)
+      ? adminCentersApi.update(form.code, form)
+      : adminCentersApi.create(form))
+    setForm({ code: '', name: '' })
+    load()
+  }
+  return (
+    <>
+      <section className={`mt-4 ${card}`}>
+        <h2 className="text-sm font-semibold">Centros</h2>
+        <div className="mt-4 flex gap-2">
+        <input
+          placeholder="Código"
+          value={form.code}
+          onChange={(event) => setForm({ ...form, code: event.target.value })}
+          className="rounded-xl border border-border p-2 text-xs"
+        />
+        <input
+          placeholder="Nombre"
+          value={form.name}
+          onChange={(event) => setForm({ ...form, name: event.target.value })}
+          className="flex-1 rounded-xl border border-border p-2 text-xs"
+        />
+        <button onClick={save} className="rounded-xl bg-plum px-3 text-xs font-semibold text-white">
+          {form.code && centers.some((c) => c.code === form.code) ? 'Modificar' : 'Añadir'}
+        </button>
+      </div>
+      <div className="mt-4 space-y-2">
+        {centers.map((center) => (
+          <div key={center.code} className="flex items-center justify-between rounded-xl border border-border p-3 text-xs">
+            <span>
+              <b>{center.name}</b>
+              <span className="ml-2 font-mono text-muted">{center.code}</span>
+            </span>
+            <span className="flex gap-2">
+              <button onClick={() => setForm(center)} className="text-plum">Modificar</button>
+              <button
+                onClick={async () => {
+                  if (confirm(`¿Eliminar ${center.name}?`)) {
+                    await adminCentersApi.remove(center.code)
+                    load()
+                  }
+                }}
+                className="text-[#8e1f33]"
+              >
+                Eliminar
+              </button>
+            </span>
+          </div>
+        ))}
+      </div>
+      </section>
+      <ZonesPanel centers={centers} />
+    </>
+  )
+}
+
+function ZonesPanel({ centers }: { centers: AdminCenter[] }) {
+  const [zones, setZones] = useState<AdminZone[]>([])
+  const [selectedCenter, setSelectedCenter] = useState<string>('')
+  const [editingCode, setEditingCode] = useState<string | undefined>()
+  const [form, setForm] = useState<AdminZoneInput>({ code: '', name: '', centerCode: '' })
+  const [notice, setNotice] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const loadZones = () => adminZonesApi.list().then(setZones).catch((cause) => setError(cause instanceof Error ? cause.message : 'No se han podido cargar las zonas.'))
+
+  useEffect(() => { loadZones() }, [])
+
+  useEffect(() => {
+    if (centers.length > 0 && !selectedCenter) setSelectedCenter(centers[0].code)
+  }, [centers, selectedCenter])
+
+  useEffect(() => {
+    setForm((current) => ({ ...current, centerCode: selectedCenter }))
+  }, [selectedCenter])
+
+  const zonesForCenter = zones.filter((zone) => zone.centerCode === selectedCenter)
+
+  const reset = () => {
+    setEditingCode(undefined)
+    setForm({ code: '', name: '', centerCode: selectedCenter })
+    setNotice('')
+    setError('')
+  }
+
+  const choose = (zone: AdminZone) => {
+    setEditingCode(zone.code)
+    setSelectedCenter(zone.centerCode)
+    setForm({ code: zone.code, name: zone.name, centerCode: zone.centerCode })
+    setNotice('')
+    setError('')
+  }
+
+  const save = async () => {
+    if (!selectedCenter) {
+      setError('Selecciona un centro para la zona.')
+      return
+    }
+    if (!form.code.trim() || !form.name.trim()) {
+      setError('Rellena código y nombre.')
+      return
+    }
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      const payload: AdminZoneInput = { code: form.code.trim(), name: form.name.trim(), centerCode: selectedCenter }
+      if (editingCode) {
+        await adminZonesApi.update(editingCode, payload)
+        setNotice('Zona actualizada.')
+      } else {
+        await adminZonesApi.create(payload)
+        setNotice('Zona creada.')
+      }
+      await loadZones()
+      reset()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se ha podido guardar la zona.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const remove = async (zone: AdminZone) => {
+    if (!confirm(`¿Eliminar la zona ${zone.code}?`)) return
+    setError('')
+    setNotice('')
+    try {
+      await adminZonesApi.remove(zone.code)
+      await loadZones()
+      if (editingCode === zone.code) reset()
+      setNotice('Zona eliminada.')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se ha podido eliminar la zona.')
+    }
+  }
+
+  return (
+    <section className={`mt-4 ${card}`}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">Zonas por centro</h2>
+          <p className="mt-1 text-xs text-muted">
+            Crea, renombra o elimina las zonas (naves, salas…) que pertenecen a un centro.
+          </p>
+        </div>
+        <label className="text-xs font-semibold">
+          Centro
+          <select
+            value={selectedCenter}
+            onChange={(event) => { setSelectedCenter(event.target.value); reset() }}
+            className="ml-2 rounded-xl border border-border bg-field px-3 py-2 text-xs font-semibold text-ink"
+          >
+            {centers.map((center) => (
+              <option key={center.code} value={center.code}>{center.name}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {error && <p role="alert" className="mt-3 rounded-xl bg-[#f7e0e6] p-3 text-xs text-[#8e1f33]">{error}</p>}
+      {notice && <p role="status" className="mt-3 rounded-xl bg-[#dceadf] p-3 text-xs text-[#1f5c3a]">{notice}</p>}
+      <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div>
+          <h3 className="text-xs font-semibold">{editingCode ? `Editar zona ${editingCode}` : 'Nueva zona'}</h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="text-xs font-semibold">
+              Código
+              <input
+                value={form.code}
+                onChange={(event) => setForm({ ...form, code: event.target.value })}
+                placeholder="NAVE-A"
+                className="mt-1 w-full rounded-xl border border-border p-2 text-xs"
+              />
+            </label>
+            <label className="text-xs font-semibold">
+              Nombre
+              <input
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+                placeholder="Nave A"
+                className="mt-1 w-full rounded-xl border border-border p-2 text-xs"
+              />
+            </label>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button
+              disabled={busy}
+              onClick={save}
+              className="rounded-xl bg-plum px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+            >
+              {editingCode ? 'Guardar cambios' : 'Crear zona'}
+            </button>
+            {editingCode && (
+              <button onClick={reset} className="rounded-xl border border-border px-3 py-2 text-xs font-semibold">
+                Cancelar
+              </button>
+            )}
+          </div>
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold">Zonas del centro</h3>
+          <div className="mt-3 space-y-2">
+            {zonesForCenter.length === 0 && (
+              <p className="rounded-xl border border-border p-3 text-xs text-muted">
+                Este centro aún no tiene zonas definidas.
+              </p>
+            )}
+            {zonesForCenter.map((zone) => (
+              <div key={zone.code} className="flex items-center justify-between rounded-xl border border-border p-3 text-xs">
+                <span>
+                  <b>{zone.name}</b>
+                  <span className="ml-2 font-mono text-muted">{zone.code}</span>
+                </span>
+                <span className="flex gap-2">
+                  <button onClick={() => choose(zone)} className="text-plum">Modificar</button>
+                  <button onClick={() => remove(zone)} className="text-[#8e1f33]">Eliminar</button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CatalogsTab() {
+  return (
+    <section className={`mt-4 ${card}`}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">Catálogos</h2>
+          <p className="mt-1 text-xs text-muted">
+            Crea, desactiva o elimina los valores de los catálogos. Las entradas desactivadas dejan de
+            mostrarse en el selector, pero pueden restaurarse desde aquí.
+          </p>
+        </div>
+      </div>
+      <p className="mt-3 rounded-xl bg-[#f5eed0] p-3 text-[11px] text-[#6b5a10]">
+        Para modificar el nombre o el código de una entrada existente, desactívala y crea una nueva con
+        los valores correctos: el backend no expone un endpoint de renombrado.
+      </p>
+      <div className="mt-4 space-y-4">
+        {catalogResources.map((resource) => (
+          <CatalogPanel key={resource.path} resource={resource} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+interface CatalogPanelProps {
+  resource: (typeof catalogResources)[number]
+}
+
+function CatalogPanel({ resource }: CatalogPanelProps) {
+  const [items, setItems] = useState<CatalogItem[]>([])
+  const [form, setForm] = useState({ code: '', name: '', description: '' })
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [error, setError] = useState('')
+
+  const load = () => catalogApi.list(resource.path).then(setItems).catch((cause) => setError(cause instanceof Error ? cause.message : 'No se ha podido cargar el catálogo.'))
+
+  useEffect(() => {
+    load()
+  }, [resource.path])
+
+  const reset = () => {
+    setForm({ code: '', name: '', description: '' })
+    setNotice('')
+    setError('')
+  }
+
+  const create = async () => {
+    if (!form.code.trim() || !form.name.trim()) {
+      setError('Rellena código y nombre.')
+      return
+    }
+    if (resource.hasDescription && !form.description.trim()) {
+      setError('Rellena la descripción.')
+      return
+    }
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      await catalogApi.create(resource.path, {
+        code: form.code.trim(),
+        name: form.name.trim(),
+        description: resource.hasDescription ? form.description.trim() : undefined,
+      })
+      setNotice('Entrada creada.')
+      reset()
+      await load()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se ha podido crear la entrada.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const toggleActive = async (item: CatalogItem) => {
+    setError('')
+    setNotice('')
+    try {
+      await catalogApi.setActive(resource.path, item.id, !item.active)
+      setNotice(item.active ? 'Entrada desactivada.' : 'Entrada reactivada.')
+      await load()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se ha podido cambiar el estado.')
+    }
+  }
+
+  const remove = async (item: CatalogItem) => {
+    if (!confirm(`¿Eliminar definitivamente ${item.name}? Esta acción no se puede deshacer.`)) return
+    setError('')
+    setNotice('')
+    try {
+      await catalogApi.remove(resource.path, item.id)
+      setNotice('Entrada eliminada.')
+      await load()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se ha podido eliminar la entrada.')
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border p-3">
+        <h3 className="text-sm font-semibold">{resource.label}</h3>
+        <span className="text-[10.5px] text-muted">{items.length} activas</span>
+      </div>
+      <div className="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="text-[11px] font-semibold text-muted">
+            Código
+            <input
+              value={form.code}
+              onChange={(event) => setForm({ ...form, code: event.target.value })}
+              placeholder="Ej. TEMPRANILLO"
+              className="mt-1 w-full rounded-xl border border-border p-2 text-xs font-mono"
+            />
+          </label>
+          <label className="text-[11px] font-semibold text-muted">
+            Nombre
+            <input
+              value={form.name}
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
+              placeholder="Ej. Tempranillo"
+              className="mt-1 w-full rounded-xl border border-border p-2 text-xs"
+            />
+          </label>
+          {resource.hasDescription && (
+            <label className="text-[11px] font-semibold text-muted">
+              Descripción
+              <input
+                value={form.description}
+                onChange={(event) => setForm({ ...form, description: event.target.value })}
+                placeholder="Detalle breve"
+                className="mt-1 w-full rounded-xl border border-border p-2 text-xs"
+              />
+            </label>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={create}
+          disabled={busy}
+          className="min-h-9 rounded-xl bg-plum px-3 text-[12px] font-semibold text-white hover:bg-plum-dark disabled:opacity-50"
+        >
+          Añadir
+        </button>
+      </div>
+      {(error || notice) && (
+        <div className="mx-3 mb-3">
+          {error && <p role="alert" className="rounded-xl bg-[#f7e0e6] p-2 text-[11.5px] text-[#8e1f33]">{error}</p>}
+          {notice && <p role="status" className="rounded-xl bg-[#dceadf] p-2 text-[11.5px] text-[#1f5c3a]">{notice}</p>}
+        </div>
+      )}
+      <div className="border-t border-border">
+        {items.length === 0 ? (
+          <p className="p-3 text-[11.5px] text-muted">Sin entradas activas.</p>
+        ) : (
+          <ul>
+            {items.map((item, index) => (
+              <li
+                key={item.id}
+                className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs ${index > 0 ? 'border-t border-border' : ''}`}
+              >
+                <span className="flex flex-wrap items-center gap-2">
+                  <b>{item.name}</b>
+                  <span className="font-mono text-muted">{item.code}</span>
+                  {item.description && <span className="text-muted">— {item.description}</span>}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span
+                    className={`shrink-0 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold leading-tight tracking-wide ${
+                      item.active ? 'bg-[#dceadf] text-[#1f5c3a]' : 'bg-[#efeff5] text-[#43435c]'
+                    }`}
+                  >
+                    {item.active ? 'Activa' : 'Inactiva'}
+                  </span>
+                  <button type="button" onClick={() => toggleActive(item)} className="text-plum hover:underline">
+                    {item.active ? 'Desactivar' : 'Reactivar'}
+                  </button>
+                  {resource.deletable && (
+                    <button type="button" onClick={() => remove(item)} className="text-[#8e1f33] hover:underline">
+                      Eliminar
+                    </button>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function UsersTab() {
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [centers, setCenters] = useState<AdminCenter[]>([])
+  const [selected, setSelected] = useState<AdminUser | undefined>()
+  const [editing, setEditing] = useState<AdminUser | undefined>()
+  const [selectedCenters, setSelectedCenters] = useState<string[]>([])
+  const [form, setForm] = useState<CreateAdminUserInput>({
+    username: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    jobTitle: '',
+    password: '',
+    centerCodes: [],
+  })
+  const [notice, setNotice] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const load = () =>
+    Promise.all([adminUsersApi.list(), adminCentersApi.list()]).then(([list, centerList]) => {
+      setUsers(list)
+      setCenters(centerList)
+    })
+
+  useEffect(() => { load() }, [])
+
+  const choose = (user: AdminUser) => {
+    setSelected(user)
+    setEditing(user)
+    setSelectedCenters(user.centers.map((c) => c.code))
+    setNotice('')
+    setError('')
+  }
+
+  const resetForm = () => {
+    setEditing(undefined)
+    setSelected(undefined)
+    setSelectedCenters([])
+    setForm({ username: '', email: '', firstName: '', lastName: '', jobTitle: '', password: '', centerCodes: [] })
+    setNotice('')
+    setError('')
+  }
+
+  const save = async () => {
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      if (editing) {
+        if (selectedCenters.length === 0) {
+          setError('Selecciona al menos un centro.')
+          return
+        }
+        const updated = await adminUsersApi.updateCenters(editing.username, selectedCenters)
+        setUsers((items) => items.map((item) => (item.username === updated.username ? updated : item)))
+        setSelected(updated)
+        setEditing(updated)
+        setNotice('Centros actualizados.')
+      } else {
+        if (!form.username || !form.email || !form.firstName || !form.password) {
+          setError('Rellena usuario, email, nombre y contraseña.')
+          return
+        }
+        if (form.centerCodes.length === 0) {
+          setError('Selecciona al menos un centro.')
+          return
+        }
+        const created = await adminUsersApi.create(form)
+        await load()
+        setSelected(created)
+        setEditing(created)
+        setSelectedCenters(created.centers.map((c) => c.code))
+        setNotice('Usuario creado.')
+      }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se ha podido guardar.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const allCentersUnique = Array.from(
+    new Map(users.flatMap((user) => user.centers).map((center) => [center.code, center])).values(),
+  )
+  const availableCenters = centers.length > 0 ? centers : allCentersUnique
+
+  return (
+    <section className={`mt-4 ${card}`}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">Usuarios</h2>
+          <p className="mt-1 text-xs text-muted">
+            Gestión de todas las cuentas de la aplicación. Solo accesible para administradores.
+          </p>
+        </div>
+        <button onClick={resetForm} className="rounded-xl bg-plum px-3 py-2 text-xs font-semibold text-white">
+          + Nuevo usuario
+        </button>
+      </div>
+      {error && <p role="alert" className="mt-3 rounded-xl bg-[#f7e0e6] p-3 text-xs text-[#8e1f33]">{error}</p>}
+      {notice && <p role="status" className="mt-3 rounded-xl bg-[#dceadf] p-3 text-xs text-[#1f5c3a]">{notice}</p>}
+      <div className="mt-4 grid gap-4 md:grid-cols-[240px_minmax(0,1fr)]">
+        <div className="space-y-1">
+          {users.length === 0 && <p className="text-xs text-muted">Sin usuarios registrados.</p>}
+          {users.map((user) => (
+            <button
+              key={user.username}
+              onClick={() => choose(user)}
+              className={`w-full rounded-xl p-3 text-left text-xs ${
+                selected?.username === user.username ? 'bg-plum-soft text-plum' : 'hover:bg-field'
+              }`}
+            >
+              {user.displayName}
+              <span className="mt-1 block text-[10px] text-muted">
+                {user.email}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="rounded-xl border border-border p-4">
+          {editing ? (
+            <div>
+              <p className="font-semibold text-sm">{editing.displayName}</p>
+              <p className="mt-1 text-xs text-muted">{editing.email}</p>
+              <h3 className="mt-5 text-xs font-semibold">Centros asignados</h3>
+              <div className="mt-2 space-y-2">
+                {availableCenters.map((center) => (
+                  <label key={center.code} className="flex items-center gap-2 rounded-lg border border-border p-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={selectedCenters.includes(center.code)}
+                      onChange={(event) =>
+                        setSelectedCenters((current) =>
+                          event.target.checked
+                            ? [...current, center.code]
+                            : current.filter((code) => code !== center.code),
+                        )
+                      }
+                    />
+                    {center.name}
+                  </label>
+                ))}
+              </div>
+              <button
+                disabled={busy || selectedCenters.length === 0}
+                onClick={save}
+                className="mt-4 rounded-xl bg-plum px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                Guardar centros
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-xs font-semibold text-muted">Crear nueva cuenta</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Field label="Usuario" value={form.username} onChange={(value) => setForm({ ...form, username: value })} />
+                <Field label="Email" type="email" value={form.email} onChange={(value) => setForm({ ...form, email: value })} />
+                <Field label="Nombre" value={form.firstName} onChange={(value) => setForm({ ...form, firstName: value })} />
+                <Field label="Apellidos" value={form.lastName ?? ''} onChange={(value) => setForm({ ...form, lastName: value })} />
+                <Field label="Puesto" value={form.jobTitle ?? ''} onChange={(value) => setForm({ ...form, jobTitle: value })} />
+                <Field label="Contraseña" type="password" value={form.password} onChange={(value) => setForm({ ...form, password: value })} />
+              </div>
+              <h3 className="mt-5 text-xs font-semibold">Centros asignados</h3>
+              <div className="mt-2 space-y-2">
+                {availableCenters.map((center) => (
+                  <label key={center.code} className="flex items-center gap-2 rounded-lg border border-border p-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={form.centerCodes.includes(center.code)}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          centerCodes: event.target.checked
+                            ? [...form.centerCodes, center.code]
+                            : form.centerCodes.filter((code) => code !== center.code),
+                        })
+                      }
+                    />
+                    {center.name}
+                  </label>
+                ))}
+              </div>
+              <button
+                disabled={busy}
+                onClick={save}
+                className="mt-5 rounded-xl bg-plum px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                Crear usuario
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] text-muted">
+        El primer centro seleccionado se conserva como centro principal de acceso.
+      </p>
+    </section>
+  )
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = 'text',
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  type?: string
+}) {
+  return (
+    <label className="text-xs font-semibold">
+      {label}
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 w-full rounded-xl border border-border p-2 text-xs"
+      />
+    </label>
+  )
+}

@@ -53,6 +53,7 @@ export interface NewSample {
   takenDate: string
   panel: string
   responsible: string
+  laboratoryCode?: string
   observations?: string
 }
 
