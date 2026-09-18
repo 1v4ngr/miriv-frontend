@@ -1,8 +1,6 @@
 import type { Deposit } from './types'
 
-export function formatLiters(value: number): string {
-  return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(value)
-}
+export { formatLiters } from '../../lib/format'
 
 export function activeOccupation(deposit: Deposit) {
   return deposit.occupations.find((occupation) => !occupation.exitDate)
