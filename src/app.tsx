@@ -30,7 +30,11 @@ function getRoute(): string {
 }
 
 export function App() {
-  const [route, setRoute] = useState(() => !hasActiveSession() ? 'login' : getRoute())
+  const initialHash = getRoute()
+  const [route, setRoute] = useState(() => {
+    if (!hasActiveSession() && initialHash && initialHash !== 'login') sessionStorage.setItem('miriv:return-to', initialHash)
+    return !hasActiveSession() ? 'login' : initialHash
+  })
   const [cellarSearch, setCellarSearch] = useState('')
 
   useEffect(() => {
@@ -42,6 +46,8 @@ export function App() {
   useEffect(() => {
     const handleExpiredSession = () => {
       clearAccessToken()
+      const intended = getRoute()
+      if (intended && intended !== 'login') sessionStorage.setItem('miriv:return-to', intended)
       window.location.hash = 'login'
     }
     window.addEventListener('miriv:session-expired', handleExpiredSession)
@@ -58,7 +64,7 @@ export function App() {
   const openLot = (code: string) => navigate(`lots/${encodeURIComponent(code)}`)
   const openLaboratory = (code?: string) => { navigate('laboratory'); setCellarSearch(code ?? '') }
 
-  if (route === 'login') return <LoginPage onLoginSuccess={() => navigate('home')} />
+  if (route === 'login') return <LoginPage onLoginSuccess={() => { const next = sessionStorage.getItem('miriv:return-to'); sessionStorage.removeItem('miriv:return-to'); navigate(next && next !== 'login' ? next : 'home') }} />
   if (route === 'deposits' || (route.startsWith('deposits/') && !route.includes('/movement'))) return <CellarShell search={cellarSearch} onSearchChange={(value) => { setCellarSearch(value); if (route !== 'deposits' && value) navigate('deposits') }} activeSubsection="Depósitos" onNavigate={navigate}>{route === 'deposits' ? <DepositsPage search={cellarSearch} onOpenDeposit={openDeposit} /> : <DepositDetailPage code={decodeURIComponent(route.slice('deposits/'.length))} onBack={() => navigate('deposits')} onOpenLots={() => navigate('lots')} onOpenContent={openContent} onRegisterMovement={(code) => navigate(`deposits/${encodeURIComponent(code)}/movement`)} />}</CellarShell>
   if (route.startsWith('deposits/') && route.includes('/movement')) { const code = decodeURIComponent(route.slice('deposits/'.length, route.indexOf('/movement'))); return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Depósitos" onNavigate={navigate}><MovementWizardPage sourceCode={code} onBack={() => openDeposit(code)} onDone={() => openDeposit(code)} /></CellarShell> }
   if (route === 'lots' || route.startsWith('lots/')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Lotes" onNavigate={navigate}>{route === 'lots' ? <LotsPage search={cellarSearch} onOpenLot={openLot} /> : <LotDetailPage code={decodeURIComponent(route.slice('lots/'.length))} onBack={() => navigate('lots')} onOpenContent={openContent} />}</CellarShell>
