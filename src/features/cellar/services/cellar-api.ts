@@ -18,6 +18,7 @@ export interface CellarApi {
   updateLot(code: string, input: Pick<Lot, 'destination' | 'responsible' | 'origin' | 'varieties'>): Promise<Lot>
   createLot(input: NewLot, entry?: NewEntry): Promise<Lot>
   archiveLot(code: string, reason: string): Promise<Lot>
+  reopenLot(code: string, reason: string): Promise<Lot>
   registerMovement(input: NewMovement): Promise<MovementResult>
   clearContent(code: string, reason: string, responsible: string): Promise<void>
   startCleaning(code: string): Promise<Deposit>
@@ -35,8 +36,8 @@ export const cellarApi: CellarApi = {
   createLot(input, entry) { return apiRequest<Lot>('/api/lots', { method: 'POST', body: JSON.stringify({ lot: input, entry: entry ?? null }) }) },
   registerMovement(input) { return apiRequest<MovementResult>('/api/movements', { method: 'POST', body: JSON.stringify(input) }) },
   clearContent(code: string, reason: string, responsible: string) {
-    return apiRequest<void>(`/api/movements/deposits/${encodeURIComponent(code)}/content`, {
-      method: 'DELETE',
+    return apiRequest<void>(`/api/movements/deposits/${encodeURIComponent(code)}/content-clearance`, {
+      method: 'POST',
       body: JSON.stringify({ reason, responsible }),
     })
   },
@@ -50,6 +51,9 @@ export const cellarApi: CellarApi = {
     })
   },
   archiveLot(code: string, reason: string) {
-    return apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}`, { method: 'DELETE', body: JSON.stringify({ reason }) })
+    return apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}/archive`, { method: 'POST', body: JSON.stringify({ reason }) })
+  },
+  reopenLot(code: string, reason: string) {
+    return apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}/reopen`, { method: 'POST', body: JSON.stringify({ reason }) })
   },
 }
