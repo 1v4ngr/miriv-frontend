@@ -7,6 +7,7 @@ interface BackendTask {
   depositCode?: string
   contentCode?: string
   responsible?: string
+  responsibleUsername?: string
   dueAt: string
   priority: string
   status: string
@@ -23,7 +24,7 @@ function mapTask(item: BackendTask): Task {
   const priority = item.priority === 'HIGH' ? 'Alta' : item.priority === 'LOW' ? 'Baja' : item.priority === 'MEDIUM' ? 'Media' : 'Sin prioridad'
   return {
     id: item.code, title: item.title, depositCode: item.depositCode, contentCode: item.contentCode,
-    responsible: item.responsible, priority, group, dueLabel: item.dueAt,
+    responsible: item.responsible, responsibleUsername: item.responsibleUsername, priority, group, dueLabel: item.dueAt,
     detail: item.completionCriterion ?? '', completionCriterion: item.completionCriterion,
     execution: item.executedAt ? { executedAt: item.executedAt, samplePoint: '', notes: item.observations ?? item.result ?? '' } : undefined,
     history: [],

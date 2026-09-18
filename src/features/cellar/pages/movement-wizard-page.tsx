@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Check } from 'lucide-react'
 import { cellarApi } from '../services/cellar-api'
+import { profileApi, type CenterMember } from '../../../services/profile-api'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import type { Deposit, MovementType, NewMovement } from '../types'
 import { activeOccupation, formatLiters } from '../utils'
@@ -23,6 +24,7 @@ function Stepper({ current }: { current: number }) {
 export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
   const [step, setStep] = useState(0)
   const [deposits, setDeposits] = useState<Deposit[]>([])
+  const [centerMembers, setCenterMembers] = useState<CenterMember[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -31,7 +33,9 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
 
   useEffect(() => { cellarApi.getDeposits().then((items) => { setDeposits(items); const occupation = activeOccupation(items.find((deposit) => deposit.code === sourceCode) as Deposit); if (occupation) setForm((current) => ({ ...current, volumeLiters: occupation.volumeLiters })) }).finally(() => setLoading(false)) }, [sourceCode])
 
-  useEffect(() => { if (profile) setForm((current) => (current.responsible ? current : { ...current, responsible: profile.displayName })) }, [profile])
+  useEffect(() => { profileApi.listCenterMembers().then(setCenterMembers).catch(() => undefined) }, [])
+
+  useEffect(() => { if (profile) setForm((current) => (current.responsible ? current : { ...current, responsible: profile.username ?? profile.displayName })) }, [profile])
 
   if (loading) return <p className="p-6 text-center text-xs text-muted">Cargando datos del movimiento…</p>
   const source = deposits.find((deposit) => deposit.code === sourceCode)
@@ -68,7 +72,7 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
       {step === 0 && <div className="mt-5 space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-xs font-semibold">Tipo de movimiento *<select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as MovementType })} className={field}><option>Trasiego</option><option>Trasvase</option><option>Salida</option></select></label>
-          <label className="text-xs font-semibold">Responsable *<input required value={form.responsible} onChange={(event) => setForm({ ...form, responsible: event.target.value })} className={field} /></label>
+          <label className="text-xs font-semibold">Responsable *<select required value={form.responsible} onChange={(event) => setForm({ ...form, responsible: event.target.value })} className={field}><option value="">Selecciona un responsable</option>{centerMembers.map((member) => <option key={member.username} value={member.username}>{member.displayName || member.username}</option>)}</select></label>
           <label className="text-xs font-semibold">Fecha efectiva *<input required type="date" max={today} value={form.effectiveDate} onChange={(event) => setForm({ ...form, effectiveDate: event.target.value })} className={field} /></label>
           <label className="text-xs font-semibold">Hora *<input required type="time" value={form.effectiveTime} onChange={(event) => setForm({ ...form, effectiveTime: event.target.value })} className={field} /></label>
         </div>

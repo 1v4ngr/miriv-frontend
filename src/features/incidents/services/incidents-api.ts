@@ -9,6 +9,7 @@ interface BackendIncident {
   priority: string
   status: string
   responsible?: string
+  responsibleUsername?: string
   openedAt: string
   silencedUntil?: string
   resolution?: string
@@ -22,7 +23,8 @@ function mapIncident(item: BackendIncident): Incident {
   const status = item.status === 'RESOLVED' || item.status === 'DISCARDED' ? 'closed' : item.status === 'MONITORING' ? 'monitoring' : 'active'
   return {
     id: item.code, title: item.title, depositCode: item.depositCode, contentCode: item.contentCode,
-    lotCode: '', priority, status, responsible: item.responsible, silencedUntil: item.silencedUntil,
+    lotCode: '', priority, status, responsible: item.responsible, responsibleUsername: item.responsibleUsername,
+    silencedUntil: item.silencedUntil,
     openedAgo: item.openedAt, detectedAt: item.openedAt, lastEvidence: item.evidence.at(-1) ?? 'Sin evidencias',
     reasonDetail: '', evidence: item.evidence.map((value) => ({ date: item.openedAt, value, method: '', source: 'API' })),
     history: item.events.map((event) => ({ date: event.createdAt, note: event.note })),

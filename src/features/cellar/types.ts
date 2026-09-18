@@ -37,6 +37,7 @@ export interface Lot {
   category: string
   destination: string
   responsible: string
+  responsibleUsername?: string
   entryDate: string
   origin: string
   variety: string

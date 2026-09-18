@@ -26,6 +26,7 @@ export interface Incident {
   lastEvidence: string
   openedAgo: string
   responsible?: string
+  responsibleUsername?: string
   silencedUntil?: string
   ruleName?: string
   ruleVersion?: string

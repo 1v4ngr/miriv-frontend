@@ -12,6 +12,7 @@ export interface Task {
   lotCode?: string
   detail: string
   responsible?: string
+  responsibleUsername?: string
   origin?: string
   completionCriterion?: string
   history: { date: string; note: string }[]
