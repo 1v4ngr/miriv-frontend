@@ -1,6 +1,13 @@
 import type { Deposit, Lot, MovementResult, NewDeposit, NewEntry, NewLot, NewMovement } from '../types'
 import { apiRequest } from '../../../services/api-client'
 
+export interface CleaningAction {
+  action: string
+  result: string
+  notes?: string
+  approved: boolean
+}
+
 export interface CellarApi {
   getDeposits(): Promise<Deposit[]>
   getDeposit(code: string): Promise<Deposit | undefined>
@@ -10,7 +17,11 @@ export interface CellarApi {
   getLot(code: string): Promise<Lot | undefined>
   updateLot(code: string, input: Pick<Lot, 'destination' | 'responsible' | 'origin' | 'variety'>): Promise<Lot>
   createLot(input: NewLot, entry?: NewEntry): Promise<Lot>
+  archiveLot(code: string, reason: string): Promise<Lot>
   registerMovement(input: NewMovement): Promise<MovementResult>
+  clearContent(code: string, reason: string, responsible: string): Promise<void>
+  startCleaning(code: string): Promise<Deposit>
+  completeCleaning(code: string, input: CleaningAction): Promise<Deposit>
 }
 
 export const cellarApi: CellarApi = {
@@ -21,6 +32,24 @@ export const cellarApi: CellarApi = {
   getLots() { return apiRequest<Lot[]>('/api/lots') },
   async getLot(code) { try { return await apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}`) } catch (error) { if ((error as { status?: number }).status === 404) return undefined; throw error } },
   updateLot(code, input) { return apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}`, { method: 'PATCH', body: JSON.stringify(input) }) },
-  createLot(input, entry) { return apiRequest<Lot>('/api/lots', { method: 'POST', body: JSON.stringify({ lot: input, entry }) }) },
+  createLot(input, entry) { return apiRequest<Lot>('/api/lots', { method: 'POST', body: JSON.stringify({ lot: input, entry: entry ?? null }) }) },
   registerMovement(input) { return apiRequest<MovementResult>('/api/movements', { method: 'POST', body: JSON.stringify({ ...input, authorizeMixture: false }) }) },
+  clearContent(code: string, reason: string, responsible: string) {
+    return apiRequest<void>(`/api/movements/deposits/${encodeURIComponent(code)}/content`, {
+      method: 'DELETE',
+      body: JSON.stringify({ reason, responsible }),
+    })
+  },
+  startCleaning(code) {
+    return apiRequest<Deposit>(`/api/deposits/${encodeURIComponent(code)}/cleaning/start`, { method: 'POST' })
+  },
+  completeCleaning(code, input) {
+    return apiRequest<Deposit>(`/api/deposits/${encodeURIComponent(code)}/cleaning/complete`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+  archiveLot(code: string, reason: string) {
+    return apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}`, { method: 'DELETE', body: JSON.stringify({ reason }) })
+  },
 }
