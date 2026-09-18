@@ -92,7 +92,7 @@ function CleaningTab({ deposit, onChanged, profile }: { deposit: Deposit; onChan
   }
 
   const status = deposit.status
-  const isPending = status === 'cleaning'
+  const isPending = status === 'pending_cleaning'
   const inCleaning = status === 'cleaning'
 
   return (
@@ -101,7 +101,7 @@ function CleaningTab({ deposit, onChanged, profile }: { deposit: Deposit; onChan
         <h3 className="text-[14px] font-semibold">Estado del depósito</h3>
         <p className="mt-1 text-muted">Estado actual: <strong className="text-ink">{statusLabel(deposit)}</strong>{isPending && ' — pendiente de iniciar la limpieza.'}{inCleaning && ' — limpieza en curso.'}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" disabled={busy || status !== 'cleaning'} onClick={start} className="min-h-9 rounded-xl bg-plum px-3 text-[12px] font-semibold text-white disabled:opacity-60">{busy ? '…' : 'Iniciar limpieza'}</button>
+          <button type="button" disabled={busy || !isPending} onClick={start} className="min-h-9 rounded-xl bg-plum px-3 text-[12px] font-semibold text-white disabled:opacity-60">{busy ? '…' : 'Iniciar limpieza'}</button>
         </div>
       </section>
 
@@ -115,9 +115,9 @@ function CleaningTab({ deposit, onChanged, profile }: { deposit: Deposit; onChan
         </div>
         <label className="mt-3 flex items-center gap-2 text-[12px]"><input type="checkbox" checked={approved} onChange={(event) => setApproved(event.target.checked)} />Aprobar la limpieza (liberar el depósito a AVAILABLE)</label>
         <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" disabled={busy || status !== 'cleaning'} onClick={complete} className="min-h-10 rounded-xl bg-plum px-4 text-[12px] font-semibold text-white disabled:opacity-60">{busy ? 'Guardando…' : approved ? 'Aprobar y liberar' : 'Devolver a PENDING_CLEANING'}</button>
+          <button type="button" disabled={busy || (!isPending && !inCleaning)} onClick={complete} className="min-h-10 rounded-xl bg-plum px-4 text-[12px] font-semibold text-white disabled:opacity-60">{busy ? 'Guardando…' : approved ? 'Aprobar y liberar' : 'Devolver a PENDING_CLEANING'}</button>
         </div>
-        {status !== 'cleaning' && <p className="mt-3 text-muted">Disponible cuando el depósito esté en PENDING_CLEANING (usa "Eliminar contenido" o una salida para volver a ese estado).</p>}
+        {!isPending && !inCleaning && <p className="mt-3 text-muted">Disponible cuando el depósito esté pendiente de limpieza (tras vaciarlo).</p>}
       </section>
 
       <section className="rounded-xl border border-border bg-white p-4 text-[12px]">

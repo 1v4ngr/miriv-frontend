@@ -1,4 +1,4 @@
-export type DepositStatus = 'occupied' | 'available' | 'maintenance' | 'cleaning'
+export type DepositStatus = 'occupied' | 'available' | 'maintenance' | 'pending_cleaning' | 'cleaning'
 export type CellarPriority = 'critical' | 'overdue' | 'high' | 'none'
 
 export interface Occupation {
