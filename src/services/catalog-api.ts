@@ -37,8 +37,9 @@ export const catalogResources: Array<{
 ]
 
 export const catalogApi = {
-  list(path: CatalogResource) {
-    return apiRequest<CatalogItem[]>(`/api/catalogs/${path}`)
+  list(path: CatalogResource, options?: { includeInactive?: boolean }) {
+    const params = options?.includeInactive ? '?includeInactive=true' : ''
+    return apiRequest<CatalogItem[]>(`/api/catalogs/${path}${params}`)
   },
   listLaboratories() {
     return apiRequest<CatalogItem[]>('/api/catalogs/laboratories')

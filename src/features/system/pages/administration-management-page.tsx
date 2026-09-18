@@ -313,7 +313,7 @@ function CatalogPanel({ resource }: CatalogPanelProps) {
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
 
-  const load = () => catalogApi.list(resource.path).then(setItems).catch((cause) => setError(cause instanceof Error ? cause.message : 'No se ha podido cargar el catálogo.'))
+  const load = () => catalogApi.list(resource.path, { includeInactive: true }).then(setItems).catch((cause) => setError(cause instanceof Error ? cause.message : 'No se ha podido cargar el catálogo.'))
 
   useEffect(() => {
     load()
@@ -382,7 +382,7 @@ function CatalogPanel({ resource }: CatalogPanelProps) {
     <div className="rounded-2xl border border-border">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border p-3">
         <h3 className="text-sm font-semibold">{resource.label}</h3>
-        <span className="text-[10.5px] text-muted">{items.length} activas</span>
+        <span className="text-[10.5px] text-muted">{items.filter((item) => item.active).length} activas de {items.length}</span>
       </div>
       <div className="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <div className="grid gap-3 sm:grid-cols-3">
