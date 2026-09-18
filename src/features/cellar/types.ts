@@ -16,7 +16,8 @@ export interface Deposit {
   id: string
   code: string
   center: string
-  zone: string
+  // F2-03: zone can be null for deposits that have not been assigned a zone yet.
+  zone?: string | null
   position: string
   capacityLiters: number
   nominalCapacityLiters?: number
@@ -34,8 +35,10 @@ export interface Deposit {
 export interface Lot {
   code: string
   campaign: number
-  category: string
-  destination: string
+  // F2-03: category and destination are null when the lot does not yet have one assigned;
+  // the front renders "Sin categoría" / "Sin destino" in those cases.
+  category?: string | null
+  destination?: string | null
   responsible: string
   responsibleUsername?: string
   entryDate: string
@@ -88,6 +91,11 @@ export interface NewMovement {
   lossLiters: number
   authorizeMixture: boolean
   idempotencyKey: string
+  // F2-06: balance snapshot the wizard took when the user confirmed. If the server
+  // finds a different volume when the request arrives, it rejects with STALE_BALANCE
+  // instead of overwriting the change that happened behind our back.
+  expectedSourceLiters?: number
+  expectedDestinationLiters?: number
 }
 
 export interface MovementResult {

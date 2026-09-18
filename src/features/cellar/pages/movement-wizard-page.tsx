@@ -58,11 +58,29 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
   const canAdvanceStep3 = sourceFinal >= 0 && (form.type === 'Salida' || Boolean(destination)) && (!becameMixture || form.authorizeMixture)
 
   const [uncertain, setUncertain] = useState(false)
+  const [staleBalance, setStaleBalance] = useState<{ deposit: string; expected: number; current: number } | null>(null)
+
   const handleConfirm = async () => {
-    setSaving(true); setError(''); setUncertain(false)
-    try { const result = await cellarApi.registerMovement(form); onDone(result.destinationContentCode) }
+    setSaving(true); setError(''); setUncertain(false); setStaleBalance(null)
+    // F2-06: stamp the balance we observed at confirmation time so the server can detect
+    // a concurrent write and refuse the move instead of silently overwriting the new value.
+    const payload = {
+      ...form,
+      expectedSourceLiters: sourceOccupation.volumeLiters,
+      expectedDestinationLiters: destinationOccupation?.volumeLiters ?? 0,
+    }
+    try { const result = await cellarApi.registerMovement(payload); onDone(result.destinationContentCode) }
     catch (cause) {
-      if (cause instanceof ApiRequestError && cause.uncertain) {
+      if (cause instanceof ApiRequestError && cause.code === 'STALE_BALANCE') {
+        const details = cause.details ?? {}
+        const expected = Number(details.expected ?? sourceOccupation.volumeLiters)
+        const current = Number(details.current ?? 0)
+        const deposit = String(details.depositCode ?? sourceCode)
+        setStaleBalance({ deposit, expected, current })
+        // Refresh deposits so the next step picks up the new real numbers.
+        cellarApi.getDeposits().then(setDeposits).catch(() => undefined)
+        setStep(2)
+      } else if (cause instanceof ApiRequestError && cause.uncertain) {
         setError('No sabemos si el movimiento se registró. Revisa el depósito antes de repetir.')
         setUncertain(true)
       } else {
@@ -139,6 +157,13 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
           {form.type !== 'Salida' && <div className="flex justify-between"><span className="text-muted">Destino</span><span className="font-mono">{form.destinationDeposit} · {formatLiters(form.volumeLiters)} L aportados</span></div>}
         </div></div>
         <p className="text-[11px] text-muted">Se comprobará concurrencia justo antes de confirmar.</p>
+        {staleBalance && (
+          <div role="alert" className="space-y-2 rounded-2xl border border-[#f1c1c8] bg-[#fdebee] p-3 text-xs text-[#8e1f33]">
+            <p className="font-semibold">El balance de {staleBalance.deposit} ha cambiado mientras confirmabas.</p>
+            <p>Esperábamos {formatLiters(staleBalance.expected)} L y el servidor nos dice que ahora hay {formatLiters(staleBalance.current)} L. Revisa el paso de balance antes de reintentar.</p>
+            <button type="button" onClick={() => { setStaleBalance(null); setStep(2) }} className="rounded-xl border border-[#b9899c] px-3 py-1.5 font-semibold text-plum">Volver al balance</button>
+          </div>
+        )}
         {error && <p role="alert" className="text-xs text-[#8e1f33]">{error}</p>}
         {uncertain && <button type="button" onClick={checkDeposit} disabled={saving} className="rounded-xl border border-[#b9899c] px-3 py-2 text-xs font-semibold text-plum disabled:opacity-60">{saving ? 'Comprobando…' : 'Comprobar depósito'}</button>}
       </div>}

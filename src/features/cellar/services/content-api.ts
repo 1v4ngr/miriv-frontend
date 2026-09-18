@@ -8,9 +8,10 @@ export interface ContentRecord {
   deposit: Deposit
   occupation: Occupation
   active: boolean
-  plan: string
-  alcoholic: { estimate: string; confirmation: string; date: string }
-  malolactic: { estimate: string; confirmation: string; intention: string; date: string }
+  // F2-03: plan can be null when the content does not yet have an elaboration plan.
+  plan: string | null
+  alcoholic: { estimate: string | null; confirmation: string | null; date: string | null }
+  malolactic: { estimate: string | null; confirmation: string | null; intention: string | null; date: string | null }
   samples: Sample[]
 }
 

@@ -12,6 +12,7 @@ import { useNavigationBadges } from '../hooks/use-navigation-badges'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import { workHomeApi } from '../services/work-home-api'
 import type { AttentionItem, DashboardMetric, WorkHomeData } from '../types'
+import { label as localize, metricLabels } from '../../../lib/labels'
 
 interface WorkHomePageProps {
   onOpenLogin?: () => void
@@ -28,11 +29,13 @@ interface DetailPanel {
 }
 
 function MetricCard({ metric }: { metric: DashboardMetric }) {
+  // F2-03: the backend sends a code (e.g. URGENT_INCIDENTS); the label map turns it into Spanish.
+  const displayLabel = localize(metricLabels, metric.label, metric.label)
   return (
     <article className="flex min-h-[106px] flex-col justify-between rounded-2xl border border-border bg-white p-4">
-      <span className="text-[12px] font-semibold text-copy">{metric.label}</span>
+      <span className="text-[12px] font-semibold text-copy">{displayLabel}</span>
       <span className="font-mono text-[25px] leading-none text-ink">{metric.value}</span>
-      <span className={`text-[11.5px] ${metric.tone === 'warning' ? 'text-[#7a4a22]' : 'text-muted'}`}>{metric.detail}</span>
+      {metric.detail && <span className={`text-[11.5px] ${metric.tone === 'warning' ? 'text-[#7a4a22]' : 'text-muted'}`}>{metric.detail}</span>}
     </article>
   )
 }
@@ -43,7 +46,8 @@ function TasksCard({ data, loading, onRetry }: { data: WorkHomeData['ownTasks'];
     <article className={`flex min-h-[106px] flex-col justify-between rounded-2xl border p-4 ${isAvailable ? 'border-border bg-white' : 'border-[#dedeeb] bg-[#efeff5]'}`}>
       <span className="text-[12px] font-semibold text-[#43435c]">Tareas propias</span>
       <span className={`${isAvailable ? 'font-mono text-[25px]' : 'text-[16px] font-semibold'} leading-none text-[#43435c]`}>{isAvailable ? data.count : 'No disponible'}</span>
-      {isAvailable ? <span className="text-[11.5px] text-[#4a4a66]">{data.detail}</span> : <button type="button" disabled={loading} onClick={onRetry} className="flex items-center gap-1 text-left text-[11.5px] font-semibold text-[#4a4a66] hover:text-plum disabled:opacity-60"><RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />{loading ? 'Cargando…' : 'Reintentar'}</button>}
+      {isAvailable && <span className="text-[11.5px] text-[#4a4a66]">{data.count} abiertas</span>}
+      {!isAvailable && <button type="button" disabled={loading} onClick={onRetry} className="flex items-center gap-1 text-left text-[11.5px] font-semibold text-[#4a4a66] hover:text-plum disabled:opacity-60"><RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />{loading ? 'Cargando…' : 'Reintentar'}</button>}
     </article>
   )
 }
