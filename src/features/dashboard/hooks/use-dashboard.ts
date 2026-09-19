@@ -35,10 +35,10 @@ export function useDashboard(requestedId?: string) {
   const [dashboard, setDashboard] = useState<Dashboard>()
   const [status, setStatus] = useState<SaveStatus>('loading')
   const [error, setError] = useState('')
-  const latest = useRef<Dashboard>()
+  const latest = useRef<Dashboard | undefined>(undefined)
   const dirty = useRef(false)
   const blocked = useRef(false)
-  const timer = useRef<number>()
+  const timer = useRef<number | undefined>(undefined)
   const [reloadToken, setReloadToken] = useState(0)
 
   const flush = useCallback(async () => {

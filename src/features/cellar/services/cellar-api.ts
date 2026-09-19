@@ -20,6 +20,7 @@ export interface CellarApi {
   archiveLot(code: string, reason: string): Promise<Lot>
   reopenLot(code: string, reason: string): Promise<Lot>
   registerMovement(input: NewMovement): Promise<MovementResult>
+  executeMovement(code: string): Promise<MovementResult>
   clearContent(code: string, reason: string, responsible: string): Promise<void>
   startCleaning(code: string): Promise<Deposit>
   completeCleaning(code: string, input: CleaningAction): Promise<Deposit>

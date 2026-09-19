@@ -4,9 +4,14 @@ import { simulateBlend } from './engine'
 import type { Addition, ComponentReading, ParameterMeta, WineComponent } from './types'
 
 const catalog: ParameterMeta[] = ['TOTAL_SO2', 'REDUCING_SUGARS', 'ETHANOL', 'PH', 'FREE_SO2'].map((code) => ({ code, name: code, unit: null, decimals: 2 }))
-function wine(depositCode: string, volumeLiters: number, patch: Partial<WineComponent> & { readings?: Record<string, Partial<ComponentReading>> } = {}): WineComponent {
-  const readings = Object.fromEntries(Object.entries({ ETHANOL: 13, ...(patch.readings ?? {}) }).map(([code, value]) => [code, { value: 13, qualifier: 'NONE', limit: null, daysAgo: 0, validated: true, ...(typeof value === 'object' ? value : { value }) }]))
-  return { kind: 'wine', id: `C-${depositCode}`, label: depositCode, depositCode, categoryCode: 'RED', lotCode: 'L-1', availableLiters: 1000, volumeLiters, ...patch, readings: readings as Record<string, ComponentReading> }
+type ReadingSpec = number | Partial<ComponentReading>
+function wine(depositCode: string, volumeLiters: number, patch: Partial<Omit<WineComponent, 'readings'>> & { readings?: Record<string, ReadingSpec> } = {}): WineComponent {
+  const { readings: extra = {}, ...rest } = patch
+  const specs: Record<string, ReadingSpec> = { ETHANOL: 13, ...extra }
+  const readings: Record<string, ComponentReading> = Object.fromEntries(Object.entries(specs).map(([code, spec]) => [code, {
+    value: 13, qualifier: 'NONE', limit: null, daysAgo: 0, validated: true, ...(typeof spec === 'number' ? { value: spec } : spec),
+  } satisfies ComponentReading]))
+  return { kind: 'wine', id: `C-${depositCode}`, label: depositCode, depositCode, categoryCode: 'RED', lotCode: 'L-1', availableLiters: 1000, volumeLiters, ...rest, readings }
 }
 const run = (components: WineComponent[], additions: Addition[] = [], destination: Destination | null = null) => {
   const result = simulateBlend(components, additions, catalog)

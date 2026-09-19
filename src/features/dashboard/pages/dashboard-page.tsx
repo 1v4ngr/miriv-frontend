@@ -152,7 +152,7 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
     const widget = newWidget(type)
     update((current) => ({ ...current, widgets: [...current.widgets, widget], layouts: placeWidget(current.layouts, widget) }))
     setAdding(false)
-    setEditing(true)
+    setLocked(false)
   }
 
   const guarded = async (action: () => Promise<void>) => {

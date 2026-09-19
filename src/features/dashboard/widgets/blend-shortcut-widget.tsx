@@ -1,10 +1,11 @@
 import { useResource } from '../../../hooks/use-resource'
 import { formatDateTime } from '../../../lib/format'
 import { blendApi } from '../../blend/services/blend-api'
+import type { BlendShortcutWidget } from '../types'
 import type { WidgetProps } from './types'
 
 /** Entry point to the blend simulator, with the latest saved simulations one click away. */
-export function BlendShortcutView({ onNavigate }: WidgetProps) {
+export function BlendShortcutView({ onNavigate }: WidgetProps<BlendShortcutWidget>) {
   const list = useResource(() => blendApi.list(), [])
   const recent = (list.data ?? []).slice(0, 5)
   return (
