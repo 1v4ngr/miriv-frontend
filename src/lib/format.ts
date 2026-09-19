@@ -70,3 +70,9 @@ export function localDateTimeToIso(value: string): string {
 export function formatLiters(value: number): string {
   return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(value)
 }
+
+/** "0,72" — Spanish decimal comma with a fixed number of decimals. */
+export function formatNumber(value: number | null | undefined, decimals = 2, fallback = '—'): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return fallback
+  return new Intl.NumberFormat('es-ES', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(value)
+}

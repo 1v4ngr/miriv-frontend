@@ -1,27 +1,248 @@
-import { useEffect, useRef, useState } from 'react'
-import type { ECharts } from 'echarts'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, Download, Star, Trash2 } from 'lucide-react'
+import { useResource } from '../../../hooks/use-resource'
+import { ErrorState, LoadingState } from '../../../components/ui/page-state'
+import { MultiSelect } from '../components/multi-select'
+import { SeriesChart, type ChartSeries } from '../components/series-chart'
+import { DataTable, DateComparison, LatestComparison } from '../components/comparison-tables'
+import { downloadCsv, seriesToCsv } from '../export'
+import { loadFavorites, saveFavorites, type Axis, type Favorite, type Mode, type Period } from '../favorites'
+import { trackingApi, type SeriesResponse } from '../services/tracking-api'
+import { contentColors } from '../utils'
 
-interface Props { contentCode: string; onBack: () => void }
-const data = [['18 ago', 0.30], ['24 ago', 0.41], ['9 sep', 0.58], ['12 sep', null], ['14 sep', 0.72]] as [string, number | null][]
+interface Props {
+  /** "tracking/C-2026-001" (one content) or "tracking/compare?c=A,B&p=PH,DENSITY&…" (shareable comparison). */
+  route: string
+  onBack: () => void
+  onNavigate: (path: string) => void
+}
 
-export function CurvesPage({ contentCode, onBack }: Props) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [period, setPeriod] = useState('Últimos 30 días')
-  const [parameter, setParameter] = useState('Acidez volátil')
-  const [table, setTable] = useState(false)
+interface ViewState { contents: string[]; parameters: string[]; period: Period; mode: Mode; axis: Axis }
+
+const DEFAULT_PARAMETERS = ['DENSITY', 'VOLATILE_ACIDITY', 'PH']
+const EMPTY: SeriesResponse = { contents: [], parameters: [], points: [], targets: [] }
+const PERIODS: Array<{ value: Period; label: string }> = [
+  { value: '7', label: 'Últimos 7 días' }, { value: '30', label: 'Últimos 30 días' },
+  { value: '90', label: 'Últimos 90 días' }, { value: 'all', label: 'Campaña completa' },
+]
+const card = 'rounded-2xl border border-border bg-white p-4'
+const select = 'rounded-xl border border-border bg-white px-2 py-1.5 text-xs'
+
+function parseRoute(route: string): ViewState {
+  const rest = route.replace(/^tracking\/?/, '')
+  const [path, query = ''] = rest.split('?')
+  const params = new URLSearchParams(query)
+  const list = (key: string) => (params.get(key) ?? '').split(',').map((item) => item.trim()).filter(Boolean)
+  const contents = path.startsWith('compare') ? list('c') : path ? [decodeURIComponent(path)] : []
+  const period = params.get('per') as Period | null
+  return {
+    contents,
+    parameters: list('p').length ? list('p') : DEFAULT_PARAMETERS,
+    period: period && PERIODS.some((option) => option.value === period) ? period : '30',
+    mode: params.get('mode') === 'overlay' ? 'overlay' : 'grid',
+    axis: params.get('axis') === 'days' ? 'days' : 'date',
+  }
+}
+
+function toQuery(view: ViewState): string {
+  return `c=${view.contents.join(',')}&p=${view.parameters.join(',')}&per=${view.period}&mode=${view.mode}&axis=${view.axis}`
+}
+
+function periodStart(period: Period): string | undefined {
+  return period === 'all' ? undefined : new Date(Date.now() - Number(period) * 86_400_000).toISOString()
+}
+
+export function CurvesPage({ route, onBack, onNavigate }: Props) {
+  const [view, setView] = useState<ViewState>(() => parseRoute(route))
+  const [showEvents, setShowEvents] = useState(true)
+  const [showTargets, setShowTargets] = useState(true)
+  const [includeAncestors, setIncludeAncestors] = useState(false)
+  const [showRate, setShowRate] = useState(false)
+  const [showTable, setShowTable] = useState(false)
+  const [favorites, setFavorites] = useState<Favorite[]>(() => loadFavorites())
+  const [favoriteName, setFavoriteName] = useState('')
+  const patch = (next: Partial<ViewState>) => setView((current) => ({ ...current, ...next }))
+
+  // Keep the URL shareable without re-running the router (replaceState does not fire hashchange).
   useEffect(() => {
-    if (!ref.current) return
-    let disposed = false
-    let chart: ECharts | undefined
-    const resize = () => chart?.resize()
-    void import('echarts').then((echarts) => {
-      if (!ref.current || disposed) return
-      chart = echarts.init(ref.current)
-      chart.setOption({ grid: { left: 46, right: 20, top: 28, bottom: 42 }, tooltip: { trigger: 'axis' }, xAxis: { type: 'category', data: data.map(([date]) => date), boundaryGap: false }, yAxis: { type: 'value', name: parameter === 'Acidez volátil' ? 'g/L' : '', min: 0.2, max: 0.8, splitLine: { lineStyle: { color: '#eadfe4' } } }, series: [{ type: 'line', data: data.map(([, value]) => value), connectNulls: false, symbolSize: 9, lineStyle: { color: '#6d4656', width: 3 }, itemStyle: { color: '#6d4656' }, markLine: { silent: true, symbol: 'none', label: { formatter: 'umbral 0,60', color: '#8e1f33' }, lineStyle: { color: '#bf6878', type: 'dashed' }, data: [{ yAxis: 0.6 }] }, markPoint: { data: [{ coord: ['9 sep', 0.58], value: 'Trasiego', symbolSize: 1, label: { show: true, position: 'top', color: '#6f6169' } }] } }] })
-      window.addEventListener('resize', resize)
-    })
-    return () => { disposed = true; window.removeEventListener('resize', resize); chart?.dispose() }
-  }, [parameter])
-  return <div className="mx-auto max-w-5xl space-y-4 pb-6"><button onClick={onBack} className="flex items-center gap-1 text-xs font-semibold text-plum"><ArrowLeft className="size-4" />Volver</button><header><p className="text-[11px] text-muted">Seguimiento / {contentCode}</p><h1 className="mt-1 font-mono text-[23px] font-semibold">{contentCode}</h1></header><section className="rounded-2xl border border-border bg-white p-4"><div className="flex flex-wrap gap-2"><label className="text-xs font-semibold">Parámetro<select value={parameter} onChange={(event) => setParameter(event.target.value)} className="ml-2 rounded-lg border border-border bg-white px-2 py-2 text-xs"><option>Acidez volátil</option><option>pH</option><option>Densidad</option></select></label><label className="text-xs font-semibold">Periodo<select value={period} onChange={(event) => setPeriod(event.target.value)} className="ml-2 rounded-lg border border-border bg-white px-2 py-2 text-xs"><option>Últimos 30 días</option><option>Últimos 7 días</option><option>Campaña completa</option></select></label><span className="rounded-lg bg-plum-soft px-3 py-2 text-xs text-plum">Origen: laboratorio</span><button onClick={() => setTable(!table)} className="ml-auto rounded-lg border border-border px-3 py-2 text-xs font-semibold">{table ? 'Ocultar tabla' : 'Ver tabla de datos'}</button></div><h2 className="mt-5 text-sm font-semibold">{parameter} · {parameter === 'Acidez volátil' ? 'g/L' : 'unidad explícita'}</h2><div ref={ref} className="h-[310px] w-full" aria-label={`Gráfica de ${parameter}`} /><p className="mt-2 text-xs text-muted">Los dos últimos puntos superan el umbral de 0,60 g/L. El hueco representa ausencia de muestreo, no una interpolación.</p></section>{table && <section className="overflow-hidden rounded-2xl border border-border bg-white"><div className="p-4"><h2 className="text-sm font-semibold">Tabla equivalente</h2><p className="mt-1 text-[11px] text-muted">Datos de laboratorio y eventos que afectan a su interpretación.</p></div><table className="w-full text-left text-xs"><thead className="bg-field text-[11px] text-muted"><tr><th className="px-4 py-3">Fecha</th><th className="px-4 py-3">Valor</th><th className="px-4 py-3">Origen</th><th className="px-4 py-3">Acción</th></tr></thead><tbody>{data.map(([date, value]) => <tr key={date} className="border-t border-border"><td className="px-4 py-3">{date}</td><td className="px-4 py-3">{value === null ? 'Sin muestra' : `${value} g/L`}</td><td className="px-4 py-3">{value === null ? '—' : 'Laboratorio'}</td><td className="px-4 py-3">{value === null ? '—' : <button className="text-plum underline">Abrir análisis <ExternalLink className="inline size-3" /></button>}</td></tr>)}</tbody></table></section>}<section className="rounded-2xl border border-border bg-white p-4"><h2 className="text-sm font-semibold">Comparación tabular · dos análisis</h2><p className="mt-1 text-[11px] text-muted">pH usa diferencia absoluta; los métodos incompatibles no producen una diferencia artificial.</p><div className="mt-3 overflow-x-auto"><table className="w-full min-w-[500px] text-left text-xs"><thead className="bg-field text-muted"><tr>{['Parámetro', 'Anterior', 'Actual', 'Diferencia', 'Tiempo'].map((item) => <th key={item} className="px-3 py-2">{item}</th>)}</tr></thead><tbody>{[['Acidez volátil', '0,58 g/L', '0,72 g/L', '+0,14', '2 d 4 h'], ['pH', '3,40', '3,42', '+0,02 absoluta', '2 d 4 h'], ['Sulfuroso libre', '28 mg/L', 'Menor que 0,05 g/L', 'Métodos incompatibles', '—']].map((row) => <tr key={row[0]} className="border-t border-border">{row.map((cell) => <td key={cell} className="px-3 py-2">{cell}</td>)}</tr>)}</tbody></table></div></section><p className="text-xs text-muted">No se muestra un porcentaje de progreso ni una predicción: no existe un método aprobado para ello.</p></div>
+    if (view.contents.length) window.history.replaceState(null, '', `#tracking/compare?${toQuery(view)}`)
+  }, [view])
+
+  const overview = useResource(() => trackingApi.overview(['DENSITY']), [])
+  const parameterList = useResource(() => trackingApi.parameters(), [])
+
+  const contentsKey = view.contents.join(',')
+  const parametersKey = view.parameters.join(',')
+  const series = useResource(
+    () => (view.contents.length && view.parameters.length
+      ? trackingApi.series({ contents: view.contents, parameters: view.parameters, from: periodStart(view.period), includeAncestors })
+      : Promise.resolve(EMPTY)),
+    [contentsKey, parametersKey, view.period, includeAncestors],
+  )
+  const data = series.data ?? EMPTY
+  const codes = data.contents.map((content) => content.code)
+  const events = useResource(
+    () => (showEvents && codes.length ? trackingApi.events(codes, periodStart(view.period)) : Promise.resolve([])),
+    [codes.join(','), showEvents, view.period],
+  )
+
+  const contentOptions = useMemo(() => {
+    const options = (overview.data?.rows ?? []).map((row) => ({ value: row.content, label: `${row.deposit} · ${row.content}`, hint: row.category ?? undefined }))
+    for (const code of view.contents) if (!options.some((option) => option.value === code)) options.push({ value: code, label: code, hint: undefined })
+    return options
+  }, [overview.data, view.contents])
+  const parameterOptions = useMemo(
+    () => (parameterList.data ?? []).map((parameter) => ({ value: parameter.code, label: parameter.name, hint: parameter.unit ?? undefined })),
+    [parameterList.data],
+  )
+
+  const chartSeries = useMemo<ChartSeries[]>(() => {
+    const colorOf = new Map<string, string>()
+    data.contents.filter((content) => !content.ancestor).forEach((content, index) => colorOf.set(content.code, contentColors[index % contentColors.length]))
+    return data.contents.flatMap((content) => data.parameters.map((parameter) => ({
+      content,
+      parameter,
+      color: colorOf.get(content.ancestor ? content.descendantCode ?? '' : content.code) ?? contentColors[0],
+      points: data.points.filter((point) => point.content === content.code && point.parameter === parameter.code),
+      target: data.targets.find((target) => target.content === content.code && target.parameter === parameter.code),
+    })))
+  }, [data])
+
+  const distinctUnits = new Set(data.parameters.map((parameter) => parameter.unit ?? '')).size
+  const mode: Mode = view.mode === 'overlay' && distinctUnits <= 2 ? 'overlay' : 'grid'
+  const eventList = events.data ?? []
+  const hasPoints = data.points.length > 0
+
+  const saveFavorite = () => {
+    const name = favoriteName.trim()
+    if (!name) return
+    const next = [...favorites.filter((favorite) => favorite.name !== name), { name, ...view }]
+    setFavorites(next); saveFavorites(next); setFavoriteName('')
+  }
+  const removeFavorite = (name: string) => {
+    const next = favorites.filter((favorite) => favorite.name !== name)
+    setFavorites(next); saveFavorites(next)
+  }
+
+  const title = view.contents.length === 1 ? view.contents[0] : 'Comparador analítico'
+  return (
+    <div className="mx-auto max-w-6xl space-y-4 pb-6">
+      <button type="button" onClick={onBack} className="flex items-center gap-1 text-xs font-semibold text-plum"><ArrowLeft className="size-4" />Volver</button>
+      <header>
+        <p className="text-[11px] text-muted">Seguimiento / {view.contents.length === 1 ? view.contents[0] : 'Comparador'}</p>
+        <h1 className="mt-1 text-[23px] font-semibold">{title}</h1>
+      </header>
+
+      <section className={`${card} space-y-3`} aria-label="Selección">
+        <div className="grid gap-3 lg:grid-cols-2">
+          <MultiSelect label="Depósitos / contenidos" options={contentOptions} selected={view.contents} onChange={(contents) => patch({ contents })} placeholder="Elige uno o varios" max={40} />
+          <MultiSelect label="Parámetros" options={parameterOptions} selected={view.parameters} onChange={(parameters) => patch({ parameters })} placeholder="Elige parámetros" bulk max={30} />
+        </div>
+        <div className="flex flex-wrap items-end gap-3 text-xs">
+          <label className="grid gap-1 font-semibold text-muted">Periodo
+            <select value={view.period} onChange={(event) => patch({ period: event.target.value as Period })} className={`${select} font-normal text-copy`}>{PERIODS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+          </label>
+          <label className="grid gap-1 font-semibold text-muted">Eje horizontal
+            <select value={view.axis} onChange={(event) => patch({ axis: event.target.value as Axis })} className={`${select} font-normal text-copy`}>
+              <option value="date">Fecha</option><option value="days">Días desde el inicio (alinea fermentaciones)</option>
+            </select>
+          </label>
+          <div className="grid gap-1 font-semibold text-muted">Vista
+            <div className="flex overflow-hidden rounded-xl border border-border font-normal" role="group" aria-label="Modo de vista">
+              {(['grid', 'overlay'] as Mode[]).map((option) => (
+                <button key={option} type="button" aria-pressed={mode === option} onClick={() => patch({ mode: option })} className={`px-3 py-1.5 ${mode === option ? 'bg-plum-soft font-semibold text-plum' : 'bg-white text-copy'}`}>{option === 'grid' ? 'Un gráfico por parámetro' : 'Superponer'}</button>
+              ))}
+            </div>
+          </div>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <button type="button" disabled={!hasPoints} onClick={() => downloadCsv(`seguimiento-${new Date().toISOString().slice(0, 10)}.csv`, seriesToCsv(data))} className="flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-1.5 font-semibold disabled:opacity-50"><Download className="size-3.5" />Exportar CSV</button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
+          <Toggle checked={showEvents} onChange={setShowEvents} label="Anotar trasiegos, operaciones y revisiones" />
+          <Toggle checked={showTargets} onChange={setShowTargets} label="Mostrar objetivos (aviso / crítico)" />
+          <Toggle checked={includeAncestors} onChange={setIncludeAncestors} label="Incluir origen (contenidos de los que procede)" />
+          <Toggle checked={showRate && mode === 'grid'} disabled={mode !== 'grid'} onChange={setShowRate} label="Velocidad de cambio (Δ/día)" />
+        </div>
+        {view.mode === 'overlay' && distinctUnits > 2 && <p role="status" className="rounded-xl bg-[#f5eed0] p-2 text-[11.5px] text-[#6b5a10]">Superponer admite como máximo 2 unidades distintas; se muestra un gráfico por parámetro.</p>}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs">
+          <Star className="size-3.5 text-muted" aria-hidden="true" />
+          {favorites.length === 0 && <span className="text-muted">Guarda una vista para recuperarla con un clic (se guarda en este navegador).</span>}
+          {favorites.map((favorite) => (
+            <span key={favorite.name} className="flex items-center overflow-hidden rounded-full border border-border">
+              <button type="button" onClick={() => setView({ contents: favorite.contents, parameters: favorite.parameters, period: favorite.period, mode: favorite.mode, axis: favorite.axis })} className="px-3 py-1 font-semibold text-plum hover:bg-plum-soft">{favorite.name}</button>
+              <button type="button" aria-label={`Borrar vista ${favorite.name}`} onClick={() => removeFavorite(favorite.name)} className="border-l border-border px-2 py-1 text-muted hover:text-[#8e1f33]"><Trash2 className="size-3" /></button>
+            </span>
+          ))}
+          <input value={favoriteName} onChange={(event) => setFavoriteName(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') saveFavorite() }} placeholder="Nombre de la vista" className="ml-auto w-44 rounded-xl border border-border px-2 py-1.5" />
+          <button type="button" disabled={!favoriteName.trim() || view.contents.length === 0} onClick={saveFavorite} className="rounded-xl bg-plum px-3 py-1.5 font-semibold text-white disabled:opacity-50">Guardar vista</button>
+        </div>
+      </section>
+
+      {view.contents.length === 0 && <p className={`${card} text-center text-xs text-muted`}>Elige al menos un depósito o contenido para ver su evolución.</p>}
+      {series.loading && view.contents.length > 0 && <LoadingState label="Cargando analíticas…" />}
+      {series.error && <ErrorState message={series.error} onRetry={series.reload} />}
+      {!series.loading && !series.error && view.contents.length > 0 && data.contents.length === 0 && (
+        <p className={`${card} text-center text-xs text-muted`}>No hay datos accesibles para esa selección (puede que el contenido no exista o esté en otra zona).</p>
+      )}
+
+      {!series.loading && !series.error && data.contents.length > 0 && (
+        <>
+          {!hasPoints && <p className={`${card} text-center text-xs text-muted`}>Sin analíticas en este periodo para los parámetros elegidos. Prueba con «Campaña completa».</p>}
+          {hasPoints && mode === 'overlay' && (
+            <section className={card}>
+              <SeriesChart series={chartSeries} axis={view.axis} events={eventList} showTargets={showTargets} showRate={false} height={420} label={`Evolución de ${data.parameters.map((parameter) => parameter.name).join(', ')}`} />
+              <ChartNotes hasGaps events={eventList.length} />
+            </section>
+          )}
+          {hasPoints && mode === 'grid' && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {data.parameters.map((parameter) => {
+                const own = chartSeries.filter((item) => item.parameter.code === parameter.code)
+                const any = own.some((item) => item.points.length > 0)
+                return (
+                  <section key={parameter.code} className={card}>
+                    <h2 className="text-sm font-semibold">{parameter.name}<span className="ml-1 text-xs font-normal text-muted">{parameter.unit}</span></h2>
+                    {any
+                      ? <SeriesChart series={own} axis={view.axis} events={eventList} showTargets={showTargets} showRate={showRate} height={300} label={`Evolución de ${parameter.name}`} />
+                      : <p className="py-10 text-center text-xs text-muted">Sin datos de este parámetro.</p>}
+                  </section>
+                )
+              })}
+            </div>
+          )}
+          {hasPoints && mode === 'grid' && <ChartNotes hasGaps events={eventList.length} />}
+          {hasPoints && <LatestComparison series={data} onOpenContent={(code) => onNavigate(`contents/${encodeURIComponent(code)}`)} />}
+          {hasPoints && <DateComparison series={data} />}
+          {hasPoints && (
+            <section className={card}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Datos ({data.points.length})</h2>
+                <button type="button" onClick={() => setShowTable((current) => !current)} className="text-xs font-semibold text-plum">{showTable ? 'Ocultar tabla' : 'Ver tabla de datos'}</button>
+              </div>
+              {showTable && <div className="mt-3"><DataTable series={data} onOpenSample={(code) => onNavigate(`laboratory/review/${encodeURIComponent(code)}`)} /></div>}
+            </section>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function Toggle({ checked, onChange, label, disabled }: { checked: boolean; onChange: (value: boolean) => void; label: string; disabled?: boolean }) {
+  return (
+    <label className={`flex items-center gap-2 ${disabled ? 'opacity-50' : ''}`}>
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onChange(event.target.checked)} className="size-3.5 accent-plum" />{label}
+    </label>
+  )
+}
+
+function ChartNotes({ hasGaps, events }: { hasGaps: boolean; events: number }) {
+  return (
+    <p className="text-[11px] text-muted">
+      {hasGaps && 'Los huecos son ausencia de muestreo: no se interpola. '}
+      Rombo hueco = resultado con calificador («&lt; límite»). {events > 0 && `${events} evento(s) anotados: pasa el ratón por la línea punteada. `}
+      Línea discontinua del mismo color = procedencia del contenido.
+    </p>
+  )
 }
