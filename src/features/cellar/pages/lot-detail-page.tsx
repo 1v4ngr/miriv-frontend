@@ -52,7 +52,7 @@ export function LotDetailPage({ code, onBack, onOpenContent }: Props) {
 }
 
 function EditLot({ lot, onClose, onSaved }: { lot: Lot; onClose: () => void; onSaved: (lot: Lot) => void }) {
-  const [form, setForm] = useState({ destination: lot.destination, responsible: lot.responsibleUsername ?? lot.responsible, origin: lot.origin, varieties: lot.varieties ?? [] })
+  const [form, setForm] = useState({ destination: lot.destination ?? '', responsible: lot.responsibleUsername ?? lot.responsible, origin: lot.origin, varieties: lot.varieties ?? [] })
   const [centerMembers, setCenterMembers] = useState<CenterMember[]>([])
   const [varieties, setVarieties] = useState<CatalogItem[]>([])
   const [error, setError] = useState('')

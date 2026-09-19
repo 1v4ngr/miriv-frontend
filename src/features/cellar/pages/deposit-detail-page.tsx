@@ -19,7 +19,7 @@ type Tab = 'Características' | 'Ocupaciones' | 'Limpieza y mantenimiento'
 const tabs: Tab[] = ['Características', 'Ocupaciones', 'Limpieza y mantenimiento']
 
 function EditDeposit({ deposit, onClose, onSaved }: { deposit: Deposit; onClose: () => void; onSaved: (deposit: Deposit) => void }) {
-  const [form, setForm] = useState<Pick<NewDeposit, 'zone' | 'position' | 'capacityLiters' | 'material' | 'refrigerated'>>({ zone: deposit.zone, position: deposit.position, capacityLiters: deposit.capacityLiters, material: deposit.material, refrigerated: deposit.refrigerated })
+  const [form, setForm] = useState<Pick<NewDeposit, 'zone' | 'position' | 'capacityLiters' | 'material' | 'refrigerated'>>({ zone: deposit.zone ?? '', position: deposit.position, capacityLiters: deposit.capacityLiters, material: deposit.material, refrigerated: deposit.refrigerated })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setSaving(true); setError(''); try { onSaved(await cellarApi.updateDeposit(deposit.code, form)) } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se ha podido guardar.') } finally { setSaving(false) } }

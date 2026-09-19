@@ -43,7 +43,7 @@ interface RateDatum { value: [number, number]; rate: number; series: ChartSeries
 
 export function SeriesChart({ series, axis, events, showTargets, showRate, height = 340, label }: Props) {
   const host = useRef<HTMLDivElement>(null)
-  const chartRef = useRef<ECharts>()
+  const chartRef = useRef<ECharts | undefined>(undefined)
 
   useEffect(() => {
     if (!host.current) return
