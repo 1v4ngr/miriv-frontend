@@ -65,7 +65,13 @@ function LotForm({ deposits, existingLots, defaultResponsibleUsername, initialDe
       setCenterMembers(items)
       setLot((current) => {
         if (current.responsible && items.some((member) => member.username === current.responsible)) return current
-        const fallback = items.find((member) => member.username === defaultResponsibleUsername)
+        // Fallback chain: prefer the explicit default (current user), else any member
+        // whose username matches the default, else the first available member.
+        // Without this last branch, if the profile hook hasn't resolved by the
+        // time the form opens, defaultResponsibleUsername is '' and the select
+        // visually shows the first member but the React state stays empty,
+        // making the validation fail silently.
+        const fallback = items.find((member) => member.username === defaultResponsibleUsername) ?? items[0]
         return fallback ? { ...current, responsible: fallback.username } : current
       })
     }).catch(() => undefined)
