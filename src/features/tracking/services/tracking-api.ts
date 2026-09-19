@@ -75,6 +75,32 @@ export interface TargetInput {
   note: string | null
 }
 
+export interface LatestReading {
+  parameter: string
+  name: string
+  unit: string | null
+  decimals: number
+  value: number | null
+  qualifier: Qualifier
+  limit: number | null
+  takenAt: string
+  daysAgo: number
+  validated: boolean
+  sampleCode: string
+}
+/** Latest reading of every parameter of one content, plus the volume and deposit capacity the blend simulator needs. */
+export interface LatestContent {
+  content: string
+  deposit: string | null
+  depositUsefulCapacityLiters: number | null
+  lot: string
+  categoryCode: string | null
+  category: string | null
+  volumeLiters: number | null
+  alcoholicState: string | null
+  readings: LatestReading[]
+}
+
 export interface SeriesQuery { contents: string[]; parameters: string[]; from?: string; to?: string; includeAncestors?: boolean }
 
 const list = (values: string[]) => encodeURIComponent(values.join(','))
@@ -97,6 +123,7 @@ export const trackingApi = {
   overview(parameters?: string[]) {
     return apiRequest<OverviewResponse>(`/api/tracking/overview${parameters?.length ? `?parameters=${list(parameters)}` : ''}`)
   },
+  latest(contents: string[]) { return apiRequest<LatestContent[]>(`/api/tracking/latest?contents=${list(contents)}`) },
   listTargets() { return apiRequest<TargetView[]>('/api/admin/parameter-targets') },
   createTarget(input: TargetInput) { return apiRequest<TargetView>('/api/admin/parameter-targets', { method: 'POST', body: JSON.stringify(input) }) },
   updateTarget(id: string, input: TargetInput) { return apiRequest<TargetView>(`/api/admin/parameter-targets/${id}`, { method: 'PUT', body: JSON.stringify(input) }) },
