@@ -60,10 +60,11 @@ export function ChartWidgetView({ widget, onChange, globals, onNavigate, openSet
   if (series.error) return <ErrorState message={series.error} onRetry={series.reload} />
   if (data.points.length === 0) return <p className="p-4 text-center text-xs text-muted">Sin analíticas en este periodo para lo elegido.</p>
 
-  const overlayHeight = Math.max(MIN_HEIGHT, size.height - TOOLBAR_HEIGHT)
+  // 16 = the p-2 padding of the chart area; without it the chart is a few pixels too tall and shows scrollbars.
+  const overlayHeight = Math.max(MIN_HEIGHT, size.height - TOOLBAR_HEIGHT - 16)
   return (
     <div ref={size.ref} className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-auto p-2">
+      <div className={`min-h-0 flex-1 p-2 ${mode === 'overlay' ? 'overflow-hidden' : 'overflow-auto'}`}>
         {mode === 'overlay' ? (
           <SeriesChart series={chartSeries} axis={widget.axis} events={eventList} showTargets={widget.showTargets} showRate={widget.showRate}
             height={overlayHeight} label={`Evolución de ${data.parameters.map((parameter) => parameter.name).join(', ')}`}
