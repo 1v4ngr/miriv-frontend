@@ -1,0 +1,218 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Responsive, useContainerWidth } from 'react-grid-layout'
+import 'react-grid-layout/css/styles.css'
+import 'react-resizable/css/styles.css'
+import { Copy, Maximize, Minimize, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { ErrorState, LoadingState } from '../../../components/ui/page-state'
+import { AddWidgetDialog } from '../components/add-widget-dialog'
+import { WidgetFrame } from '../components/widget-frame'
+import { newWidget, placeWidget, removeFromLayouts } from '../defaults'
+import { markSeeded, useDashboard, type SaveStatus } from '../hooks/use-dashboard'
+import { dashboardApi } from '../services/dashboard-api'
+import type { Breakpoint, GlobalFilters, GridItem, Layouts, WidgetConfig, WidgetType } from '../types'
+
+interface Props { dashboardId?: string; onNavigate: (path: string) => void }
+
+const BREAKPOINTS = { lg: 1100, md: 700, sm: 0 }
+const COLS = { lg: 12, md: 8, sm: 1 }
+const DESKTOP_MIN_WIDTH = 700
+const STATUS_LABEL: Record<SaveStatus, string> = {
+  loading: 'Cargando…', saved: 'Guardado ✓', saving: 'Guardando…', error: 'Error al guardar', conflict: 'Cambios en otra ventana',
+}
+const button = 'flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-1.5 text-xs font-semibold hover:bg-plum-soft disabled:opacity-50'
+
+/** Keeps only the fields we persist, so library internals never reach the server. */
+function toLayouts(all: Partial<Record<string, readonly GridItem[]>>): Layouts {
+  const out: Layouts = {}
+  for (const breakpoint of ['lg', 'md', 'sm'] as Breakpoint[]) {
+    const items = all[breakpoint]
+    if (!items) continue
+    out[breakpoint] = items.map((item) => {
+      const entry: GridItem = { i: item.i, x: item.x, y: item.y, w: item.w, h: item.h }
+      if (item.minW !== undefined) entry.minW = item.minW
+      if (item.minH !== undefined) entry.minH = item.minH
+      return entry
+    })
+  }
+  return out
+}
+
+export function DashboardPage({ dashboardId, onNavigate }: Props) {
+  const { summaries, dashboard, status, error, update, flush, retry, reload } = useDashboard(dashboardId)
+  const [editing, setEditing] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [actionError, setActionError] = useState('')
+  const [globals] = useState<GlobalFilters>({ period: '30', contents: [], category: '' })
+  const { width, containerRef, mounted } = useContainerWidth()
+  const canvas = useRef<HTMLDivElement>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+
+  // Real fullscreen when the browser allows it; otherwise the canvas covers the window (Esc leaves it).
+  useEffect(() => {
+    const sync = () => setFullscreen(document.fullscreenElement !== null && document.fullscreenElement === canvas.current)
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [])
+  const [pseudo, setPseudo] = useState(false)
+  useEffect(() => {
+    if (!pseudo) return
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setPseudo(false) }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [pseudo])
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen()
+      else if (pseudo) setPseudo(false)
+      else if (canvas.current?.requestFullscreen) await canvas.current.requestFullscreen()
+      else setPseudo(true)
+    } catch {
+      setPseudo((current) => !current)
+    }
+  }
+  const isFull = fullscreen || pseudo
+
+  const draggable = editing && width >= DESKTOP_MIN_WIDTH
+
+  const changeWidget = useCallback((next: WidgetConfig) => {
+    update((current) => ({ ...current, widgets: current.widgets.map((widget) => (widget.id === next.id ? next : widget)) }))
+  }, [update])
+  const removeWidget = useCallback((id: string) => {
+    update((current) => ({ ...current, widgets: current.widgets.filter((widget) => widget.id !== id), layouts: removeFromLayouts(current.layouts, id) }))
+  }, [update])
+  const duplicateWidget = useCallback((id: string) => {
+    update((current) => {
+      const source = current.widgets.find((widget) => widget.id === id)
+      if (!source) return current
+      const copy = { ...source, id: newWidget(source.type).id, title: `${source.title} (copia)` } as WidgetConfig
+      return { ...current, widgets: [...current.widgets, copy], layouts: placeWidget(current.layouts, copy) }
+    })
+  }, [update])
+  const addWidget = (type: WidgetType) => {
+    const widget = newWidget(type)
+    update((current) => ({ ...current, widgets: [...current.widgets, widget], layouts: placeWidget(current.layouts, widget) }))
+    setAdding(false)
+    setEditing(true)
+  }
+
+  const guarded = async (action: () => Promise<void>) => {
+    setActionError('')
+    try { await action() } catch (cause) { setActionError(cause instanceof Error ? cause.message : 'No se ha podido completar la acción.') }
+  }
+  const create = () => guarded(async () => {
+    const name = prompt('Nombre del nuevo dashboard')?.trim()
+    if (!name) return
+    await flush()
+    const created = await dashboardApi.create(name, { layouts: {}, widgets: [] })
+    markSeeded(created.id)
+    onNavigate(`dashboard/${created.id}`)
+  })
+  const rename = () => {
+    if (!dashboard) return
+    const name = prompt('Nuevo nombre del dashboard', dashboard.name)?.trim()
+    if (name && name !== dashboard.name) update((current) => ({ ...current, name }))
+  }
+  const duplicate = () => guarded(async () => {
+    if (!dashboard) return
+    await flush()
+    const copy = await dashboardApi.duplicate(dashboard.id)
+    markSeeded(copy.id)
+    onNavigate(`dashboard/${copy.id}`)
+  })
+  const remove = () => guarded(async () => {
+    if (!dashboard || !confirm(`¿Eliminar el dashboard «${dashboard.name}»?`)) return
+    await dashboardApi.remove(dashboard.id)
+    onNavigate('dashboard')
+  })
+  const makeDefault = () => guarded(async () => {
+    if (!dashboard) return
+    await flush()
+    await dashboardApi.makeDefault(dashboard.id)
+    reload()
+  })
+
+  const layouts = dashboard?.layouts
+  const onLayoutChange = useCallback((_current: unknown, all: Partial<Record<string, readonly GridItem[]>>) => {
+    if (!editing) return   // viewing only: never save layout changes caused by resizing the window
+    update((current) => {
+      const next = toLayouts(all)
+      return JSON.stringify(next) === JSON.stringify(current.layouts) ? current : { ...current, layouts: next }
+    })
+  }, [editing, update])
+
+  const children = useMemo(() => (dashboard?.widgets ?? []).map((widget) => (
+    <div key={widget.id}>
+      <WidgetFrame widget={widget} editing={draggable} globals={globals} onChange={changeWidget} onDuplicate={duplicateWidget} onRemove={removeWidget} onNavigate={onNavigate} />
+    </div>
+  )), [dashboard?.widgets, draggable, globals, changeWidget, duplicateWidget, removeWidget, onNavigate])
+
+  if (!dashboard) {
+    return status === 'error' ? <ErrorState message={error} onRetry={reload} /> : <LoadingState label="Cargando dashboard…" />
+  }
+
+  return (
+    <div ref={canvas} className={`space-y-3 pb-6 ${isFull ? 'overflow-auto bg-white p-4' : ''} ${pseudo ? 'fixed inset-0 z-40' : ''}`}>
+      {!isFull && (
+        <header>
+          <p className="text-[11px] text-muted">Seguimiento</p>
+          <h1 className="mt-1 text-[23px] font-semibold">Dashboard</h1>
+        </header>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="dashboard-select">Dashboard</label>
+        <select id="dashboard-select" value={dashboard.id} onChange={(event) => onNavigate(`dashboard/${event.target.value}`)} className="rounded-xl border border-border bg-white px-3 py-1.5 text-xs font-semibold">
+          {summaries.map((item) => <option key={item.id} value={item.id}>{item.name}{item.isDefault ? ' ★' : ''}</option>)}
+        </select>
+        <button type="button" className={button} onClick={create}><Plus className="size-3.5" />Nuevo</button>
+        <button type="button" className={button} onClick={rename}><Pencil className="size-3.5" />Renombrar</button>
+        <button type="button" className={button} onClick={duplicate}><Copy className="size-3.5" />Duplicar</button>
+        <button type="button" className={button} disabled={dashboard.isDefault} onClick={makeDefault}><Star className="size-3.5" />{dashboard.isDefault ? 'Predeterminado' : 'Hacer predeterminado'}</button>
+        <button type="button" className={`${button} text-[#8e1f33]`} disabled={summaries.length <= 1} onClick={remove}><Trash2 className="size-3.5" />Eliminar</button>
+        <span role="status" className={`ml-auto text-[11.5px] font-semibold ${status === 'error' || status === 'conflict' ? 'text-[#8e1f33]' : 'text-muted'}`}>
+          {STATUS_LABEL[status]}
+          {status === 'error' && <button type="button" onClick={retry} className="ml-2 underline">Reintentar</button>}
+          {status === 'conflict' && <button type="button" onClick={reload} className="ml-2 underline">Recargar</button>}
+        </span>
+      </div>
+      {(actionError || (status !== 'saved' && status !== 'saving' && status !== 'loading' && error)) && (
+        <p role="alert" className="rounded-xl bg-[#f7e0e6] p-2 text-xs text-[#8e1f33]">{actionError || error}</p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-2 text-xs font-semibold" title="Con «Editar diseño»: arrastra los paneles por su cabecera y redimensiónalos desde la esquina inferior derecha. Con un panel enfocado, las flechas lo mueven y Mayús + flechas lo redimensionan.">
+          <input type="checkbox" checked={editing} onChange={(event) => setEditing(event.target.checked)} className="size-3.5 accent-plum" />Editar diseño
+        </label>
+        <button type="button" className={button} onClick={() => setAdding(true)}><Plus className="size-3.5" />Añadir panel</button>
+        <button type="button" className={`${button} ml-auto`} onClick={toggleFullscreen} aria-pressed={isFull}>
+          {isFull ? <Minimize className="size-3.5" /> : <Maximize className="size-3.5" />}{isFull ? 'Salir de pantalla completa' : 'Pantalla completa'}
+        </button>
+      </div>
+
+      <div id="global-filters" />
+
+      {dashboard.widgets.length === 0 && (
+        <p className="rounded-2xl border border-border bg-white p-8 text-center text-xs text-muted">Este dashboard está vacío. Pulsa «Añadir panel» para empezar.</p>
+      )}
+      <div ref={containerRef}>
+        {mounted && (
+          <Responsive
+            width={width}
+            breakpoints={BREAKPOINTS}
+            cols={COLS}
+            layouts={layouts}
+            rowHeight={40}
+            margin={[12, 12]}
+            dragConfig={{ enabled: draggable, handle: '.widget-drag', cancel: '.widget-no-drag' }}
+            resizeConfig={{ enabled: draggable }}
+            onLayoutChange={onLayoutChange}
+          >
+            {children}
+          </Responsive>
+        )}
+      </div>
+
+      {adding && <AddWidgetDialog onPick={addWidget} onClose={() => setAdding(false)} />}
+    </div>
+  )
+}

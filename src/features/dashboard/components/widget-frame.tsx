@@ -1,0 +1,80 @@
+import { memo, useEffect, useState } from 'react'
+import { Copy, Globe2, GripVertical, Maximize2, Settings2, Trash2, X } from 'lucide-react'
+import type { GlobalFilters, WidgetConfig } from '../types'
+import { WIDGETS } from '../widgets'
+import type { WidgetDefinition } from '../widgets/types'
+import { WidgetErrorBoundary } from './widget-error-boundary'
+import { WidgetSettingsDrawer } from './widget-settings-drawer'
+
+interface Props {
+  widget: WidgetConfig
+  editing: boolean
+  globals: GlobalFilters
+  onChange: (next: WidgetConfig) => void
+  onDuplicate: (id: string) => void
+  onRemove: (id: string) => void
+  onNavigate: (path: string) => void
+}
+
+const icon = 'widget-no-drag flex size-7 items-center justify-center rounded-lg text-muted hover:bg-plum-soft hover:text-plum'
+
+/** Common chrome of every panel: drag handle, editable title, settings, maximize, duplicate, delete. */
+function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNavigate }: Props) {
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [maximized, setMaximized] = useState(false)
+  const [renaming, setRenaming] = useState(false)
+  const [draft, setDraft] = useState(widget.title)
+  const { View } = WIDGETS[widget.type] as unknown as WidgetDefinition<WidgetConfig>
+
+  useEffect(() => {
+    if (!maximized) return
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setMaximized(false) }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [maximized])
+
+  const commitTitle = () => {
+    setRenaming(false)
+    const title = draft.trim()
+    if (title && title !== widget.title) onChange({ ...widget, title })
+    else setDraft(widget.title)
+  }
+  const body = (
+    <WidgetErrorBoundary resetKey={widget.id}>
+      <View widget={widget} onChange={onChange} globals={globals} onNavigate={onNavigate} openSettings={() => setSettingsOpen(true)} />
+    </WidgetErrorBoundary>
+  )
+
+  return (
+    <section role="region" aria-label={widget.title} tabIndex={0} className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-plum">
+      <header className={`widget-drag flex h-10 shrink-0 items-center gap-1 border-b border-border px-2 ${editing ? 'cursor-move bg-[#fbf7f9]' : ''}`}>
+        {editing && <GripVertical className="size-4 shrink-0 text-muted" aria-hidden="true" />}
+        {renaming ? (
+          <input autoFocus value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={commitTitle}
+            onKeyDown={(event) => { if (event.key === 'Enter') commitTitle(); if (event.key === 'Escape') { setRenaming(false); setDraft(widget.title) } }}
+            onMouseDown={(event) => event.stopPropagation()} className="widget-no-drag min-w-0 flex-1 rounded-lg border border-border px-2 py-0.5 text-xs font-semibold" />
+        ) : (
+          <h3 title="Doble clic para renombrar" onDoubleClick={() => { setDraft(widget.title); setRenaming(true) }} className="min-w-0 flex-1 truncate text-xs font-semibold">{widget.title}</h3>
+        )}
+        {widget.followGlobal && <span title="Sigue los filtros globales" className="flex shrink-0 items-center gap-1 rounded-full bg-plum-soft px-2 py-0.5 text-[10px] font-semibold text-plum"><Globe2 className="size-3" aria-hidden="true" />Global</span>}
+        <button type="button" className={icon} aria-label="Ajustes del panel" onMouseDown={(event) => event.stopPropagation()} onClick={() => setSettingsOpen(true)}><Settings2 className="size-4" /></button>
+        <button type="button" className={icon} aria-label="Ampliar panel" onMouseDown={(event) => event.stopPropagation()} onClick={() => setMaximized(true)}><Maximize2 className="size-4" /></button>
+        <button type="button" className={icon} aria-label="Duplicar panel" onMouseDown={(event) => event.stopPropagation()} onClick={() => onDuplicate(widget.id)}><Copy className="size-4" /></button>
+        <button type="button" className={icon} aria-label="Eliminar panel" onMouseDown={(event) => event.stopPropagation()} onClick={() => { if (confirm(`¿Eliminar el panel «${widget.title}»?`)) onRemove(widget.id) }}><Trash2 className="size-4" /></button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto">{body}</div>
+      {settingsOpen && <WidgetSettingsDrawer widget={widget} onChange={onChange} onClose={() => setSettingsOpen(false)} />}
+      {maximized && (
+        <div role="dialog" aria-label={`${widget.title} ampliado`} className="fixed inset-4 z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl">
+          <header className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4">
+            <h3 className="text-sm font-semibold">{widget.title}</h3>
+            <button type="button" onClick={() => setMaximized(false)} className="flex items-center gap-1 text-xs font-semibold text-plum"><X className="size-4" />Cerrar</button>
+          </header>
+          <div className="min-h-0 flex-1 overflow-auto">{body}</div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+export const WidgetFrame = memo(Frame)
