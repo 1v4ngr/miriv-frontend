@@ -11,6 +11,7 @@ import { activeOccupation, formatLiters } from '../utils'
 interface LotsPageProps {
   search: string
   onOpenLot: (code: string) => void
+  openFormForDeposit?: string
 }
 
 interface OriginLine { source: string; reference: string; percentage: string }
@@ -33,7 +34,7 @@ function deriveLotCode(category: string, campaign: number, existing: Lot[]): str
   return `${cat}-${campaign}-${String(next).padStart(3, '0')}`
 }
 
-function LotForm({ deposits, existingLots, defaultResponsibleUsername, onClose, onCreated }: { deposits: Deposit[]; existingLots: Lot[]; defaultResponsibleUsername: string; onClose: () => void; onCreated: (lot: Lot) => void }) {
+function LotForm({ deposits, existingLots, defaultResponsibleUsername, initialDeposit, onClose, onCreated }: { deposits: Deposit[]; existingLots: Lot[]; defaultResponsibleUsername: string; initialDeposit?: string; onClose: () => void; onCreated: (lot: Lot) => void }) {
   const initialCategory = ''
   const initialCampaign = new Date().getFullYear()
   const [step, setStep] = useState(1)
@@ -75,6 +76,11 @@ function LotForm({ deposits, existingLots, defaultResponsibleUsername, onClose, 
     setLot((current) => ({ ...current, code: deriveLotCode(current.category, current.campaign, existingLots) }))
   }, [lot.category, lot.campaign, codeManual, existingLots])
 
+  useEffect(() => {
+    if (!initialDeposit || entry.depositCode === initialDeposit) return
+    setEntry((current) => (current.depositCode ? current : { ...current, depositCode: initialDeposit }))
+  }, [initialDeposit, entry.depositCode])
+
   const [saving, setSaving] = useState(false)
   const selectedDeposit = deposits.find((deposit) => deposit.code === entry.depositCode)
   const availableDeposits = deposits.filter((deposit) => deposit.status === 'available')
@@ -114,7 +120,7 @@ function LotForm({ deposits, existingLots, defaultResponsibleUsername, onClose, 
     </div><div className="flex flex-wrap justify-between gap-2 border-t border-border bg-white px-5 py-3 sm:px-6"><button type="button" onClick={() => step === 1 ? onClose() : setStep(step - 1)} className="flex min-h-10 items-center gap-1 rounded-xl border border-border px-3 text-[11.5px] font-semibold"><ArrowLeft className="size-3.5" />{step === 1 ? 'Cancelar' : 'Volver'}</button>{step < 3 ? <button type="button" onClick={handleNext} className="flex min-h-10 items-center gap-1 rounded-xl bg-plum px-4 text-[11.5px] font-semibold text-white">Continuar<ArrowRight className="size-3.5" /></button> : <div className="flex flex-wrap gap-2"><button type="button" disabled={saving} onClick={() => handleSave(false)} className="min-h-10 rounded-xl border border-border px-3 text-[11.5px] font-semibold disabled:opacity-60">Crear solo el lote</button><button type="button" disabled={saving} onClick={() => handleSave(true)} className="min-h-10 rounded-xl bg-plum px-3 text-[11.5px] font-semibold text-white disabled:opacity-60">{saving ? 'Guardando…' : 'Crear y confirmar entrada'}</button></div>}</div></section></div>
 }
 
-export function LotsPage({ search, onOpenLot }: LotsPageProps) {
+export function LotsPage({ search, onOpenLot, openFormForDeposit }: LotsPageProps) {
   const profile = useCurrentProfile()
   const [lots, setLots] = useState<Lot[]>([])
   const [deposits, setDeposits] = useState<Deposit[]>([])
@@ -124,7 +130,7 @@ export function LotsPage({ search, onOpenLot }: LotsPageProps) {
   useEffect(() => { catalogApi.getInternalCategories().then((items) => setCategoryOptions(['Todas', ...items.map((item) => item.name)])).catch(() => undefined) }, [])
   const [archive, setArchive] = useState('Activos')
   const [campaign, setCampaign] = useState('Todas')
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(Boolean(openFormForDeposit))
   const [notice, setNotice] = useState('')
   const load = () => { setLoading(true); Promise.all([cellarApi.getLots(), cellarApi.getDeposits()]).then(([newLots, newDeposits]) => { setLots(newLots); setDeposits(newDeposits) }).finally(() => setLoading(false)) }
   useEffect(load, [])
@@ -137,6 +143,6 @@ export function LotsPage({ search, onOpenLot }: LotsPageProps) {
 
   return <div className="space-y-4"><div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-[23px] font-semibold tracking-tight">Lotes</h1><p className="mt-1 text-[12px] text-muted">{currentYearLots.length} lotes en campaña {year}</p></div><button type="button" onClick={() => setShowForm(true)} className="flex min-h-10 items-center gap-1 rounded-xl bg-plum px-3.5 text-[12px] font-semibold text-white hover:bg-plum-dark"><Plus className="size-4" />Nuevo lote</button></div><div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-[#fdfbfc] p-3 sm:p-4">{([['Campaña', campaign, setCampaign, campaignOptions], ['Categoría', category, setCategory, categoryOptions], ['Archivo', archive, setArchive, ['Activos', 'Archivados', 'Todos']]] as const).map(([label, value, setter, options]) => <label key={label} className="text-[11px] font-semibold text-muted">{label}<select value={value} onChange={(event) => setter(event.target.value)} className="ml-2 min-h-9 rounded-lg border border-border bg-white px-2 text-[11.5px] font-medium text-ink">{options.map((option) => <option key={option}>{option}</option>)}</select></label>)}</div>{loading ? <p className="p-6 text-center text-[12px] text-muted">Cargando lotes…</p> : filtered.length === 0 ? <div className="rounded-2xl border border-border bg-white p-8 text-center text-[13px] text-muted">No hay lotes con estos filtros.</div> : <div className="overflow-hidden rounded-2xl border border-border bg-white"><div className="hidden grid-cols-[1.35fr_.7fr_.7fr_.8fr_.85fr] gap-3 bg-[#fdfbfc] px-4 py-3 text-[10.5px] font-semibold text-muted sm:grid"><span>Lote</span><span>Categoría</span><span>Unidades</span><span>Volumen total</span><span>Estado</span></div>{filtered.map((lot) => { const activeCount = lot.activeContentCodes.length; const state = lot.archived ? 'Archivado' : activeCount === 0 ? 'Sin contenido' : lot.varieties.length === 0 ? 'Pendiente de variedad' : 'Activo'; return <button key={lot.code} type="button" onClick={() => onOpenLot(lot.code)} className="grid w-full grid-cols-[1.35fr_.7fr_.7fr_.8fr_.85fr] gap-3 border-t border-border px-4 py-3 text-left text-[12px] first:border-t-0 hover:bg-plum-soft"><span><span className="block font-mono font-semibold">{lot.code}</span><span className="text-[10.5px] text-muted">campaña {lot.campaign}</span></span><span>{lot.category}</span><span><strong className="font-semibold">{activeCount}</strong> activas<p className="text-[10.5px] text-muted">{lot.contentCodes.length - activeCount} cerradas</p></span><span>{formatLiters(volumeFor(lot))} L</span><span><span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${state === 'Activo' ? 'bg-[#dceadf] text-[#1f5c3a]' : state === 'Sin contenido' ? 'bg-[#efeff5] text-[#43435c]' : state === 'Pendiente de variedad' ? 'bg-[#f5eed0] text-[#6b5a10]' : 'bg-[#efeff5] text-[#43435c]'}`}>{state}</span></span></button> })}</div>}
     {notice && <div role="status" className="rounded-xl bg-[#dceadf] p-3 text-[12px] text-[#1f5c3a]">{notice}</div>}
-    {showForm && <LotForm deposits={deposits} existingLots={lots} defaultResponsibleUsername={profile?.username ?? ''} onClose={() => setShowForm(false)} onCreated={(lot) => { setShowForm(false); setNotice(`${lot.code} creado${lot.activeContentCodes.length ? ' con entrada confirmada' : ' sin contenido registrado'}.`); load() }} />}
+    {showForm && <LotForm deposits={deposits} existingLots={lots} defaultResponsibleUsername={profile?.username ?? ''} initialDeposit={openFormForDeposit} onClose={() => setShowForm(false)} onCreated={(lot) => { setShowForm(false); setNotice(`${lot.code} creado${lot.activeContentCodes.length ? ' con entrada confirmada' : ' sin contenido registrado'}.`); load() }} />}
   </div>
 }

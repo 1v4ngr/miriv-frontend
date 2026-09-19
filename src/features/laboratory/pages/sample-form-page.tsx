@@ -9,7 +9,7 @@ import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import type { NewSample, Sample } from '../types'
 import { useCan } from '../../../hooks/use-permissions'
 
-interface Props { onBack: () => void; onSaved: (sampleCode: string, introduceResults: boolean) => void }
+interface Props { onBack: () => void; onSaved: (sampleCode: string, introduceResults: boolean) => void; initialDeposit?: string }
 
 function panelInitial(panel: string): string {
   const cleaned = panel.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
@@ -31,7 +31,7 @@ const nowTime = new Date().toTimeString().slice(0, 5)
 const initialYear = new Date().getFullYear()
 const emptyForm = (): NewSample => ({ code: `MUS-${initialYear}-CTL-001`, originDeposit: '', contentCode: '', lotCode: '', category: '', takenAt: `${today}T${nowTime}`, takenDate: today, panel: 'Control', responsible: '', laboratoryCode: '', observations: '' })
 
-export function SampleFormPage({ onBack, onSaved }: Props) {
+export function SampleFormPage({ onBack, onSaved, initialDeposit }: Props) {
   const canEnterResults = useCan('RESULT_ENTER')
   const [form, setForm] = useState(emptyForm)
   const [deposits, setDeposits] = useState<{ code: string; contentCode: string; lotCode: string; category: string }[]>([])
@@ -48,7 +48,7 @@ export function SampleFormPage({ onBack, onSaved }: Props) {
   useEffect(() => { catalogApi.listLaboratories().then((items) => { setLaboratories(items); setForm((current) => ({ ...current, laboratoryCode: current.laboratoryCode || items[0]?.code || '' })) }).catch(() => undefined) }, [])
   useEffect(() => { profileApi.listCenterMembers().then(setCenterMembers).catch(() => undefined) }, [])
   useEffect(() => { if (profile) setForm((current) => (current.responsible ? current : { ...current, responsible: profile.username ?? profile.displayName })) }, [profile])
-  useEffect(() => { if (deposits.length > 0) setForm((current) => (current.originDeposit ? current : { ...current, originDeposit: deposits[0].code, contentCode: deposits[0].contentCode, lotCode: deposits[0].lotCode, category: deposits[0].category })) }, [deposits])
+  useEffect(() => { if (deposits.length === 0) return; if (initialDeposit) { const target = deposits.find((deposit) => deposit.code === initialDeposit); if (target) { setForm((current) => (current.originDeposit === target.code ? current : { ...current, originDeposit: target.code, contentCode: target.contentCode, lotCode: target.lotCode, category: target.category })); return } } setForm((current) => (current.originDeposit ? current : { ...current, originDeposit: deposits[0].code, contentCode: deposits[0].contentCode, lotCode: deposits[0].lotCode, category: deposits[0].category })) }, [deposits, initialDeposit])
   useEffect(() => {
     if (codeManual) return
     setForm((current) => ({ ...current, code: deriveSampleCode(current.panel, initialYear, samples) }))
