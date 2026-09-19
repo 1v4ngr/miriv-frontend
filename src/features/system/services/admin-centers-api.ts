@@ -1,7 +1,15 @@
 import { apiRequest } from '../../../services/api-client'
 export interface AdminCenter { code: string; name: string }
 /** What deleting a center would remove (see CenterPurgeService). */
-export interface CenterImpact { code: string; counts: Record<string, number>; usersDeleted: string[]; canPurge: boolean }
+export interface CenterImpact {
+  code: string
+  counts: Record<string, number>
+  usersDeleted: string[]
+  /** Super administrators are never removed: they move to `fallbackCenter` (null when this is the last center). */
+  superAdminsMoved: string[]
+  fallbackCenter: string | null
+  canPurge: boolean
+}
 const base = (code: string) => `/api/admin/centers/${encodeURIComponent(code)}`
 export const adminCentersApi = {
   list: () => apiRequest<AdminCenter[]>('/api/admin/centers'),

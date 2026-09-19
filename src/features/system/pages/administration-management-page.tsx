@@ -112,7 +112,7 @@ function DeleteCenterPanel({ center, onClose, onDeleted }: { center: AdminCenter
   }, [center.code])
 
   const nonEmpty = impact ? Object.entries(impact.counts).filter(([, count]) => count > 0) : []
-  const empty = !!impact && nonEmpty.length === 0 && impact.usersDeleted.length === 0
+  const empty = !!impact && nonEmpty.length === 0 && impact.usersDeleted.length === 0 && impact.superAdminsMoved.length === 0
   const run = async (action: () => Promise<void>) => {
     setBusy(true); setError('')
     try { await action(); onDeleted() }
@@ -139,6 +139,13 @@ function DeleteCenterPanel({ center, onClose, onDeleted }: { center: AdminCenter
           </ul>
           {impact.usersDeleted.length > 0 && (
             <p className="mt-2">Cuentas sin otro centro que se eliminarán (o se desactivarán si figuran en datos de otro centro): <strong>{impact.usersDeleted.join(', ')}</strong></p>
+          )}
+          {impact.superAdminsMoved.length > 0 && (
+            <p className="mt-2">
+              {impact.fallbackCenter
+                ? <>Superadministradores que no se eliminan y pasan a <strong>{impact.fallbackCenter}</strong>: <strong>{impact.superAdminsMoved.join(', ')}</strong></>
+                : <strong>Es el último centro: crea otro antes de eliminarlo.</strong>}
+            </p>
           )}
           <p className="mt-2 text-muted">La auditoría se conserva y registra la eliminación. No se puede deshacer.</p>
           {impact.canPurge ? (
