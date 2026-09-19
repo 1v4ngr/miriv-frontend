@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { adminCentersApi, type AdminCenter } from '../services/admin-centers-api'
+import { adminCentersApi, type AdminCenter, type CenterImpact } from '../services/admin-centers-api'
 import { catalogApi, catalogResources, type CatalogItem, type CatalogResource } from '../../../services/catalog-api'
 import { adminUsersApi, type AdminUser, type CreateAdminUserInput } from '../services/admin-users-api'
 import { adminZonesApi, type AdminZone, type AdminZoneInput } from '../services/admin-zones-api'
@@ -47,6 +47,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
 function CentersTab() {
   const [centers, setCenters] = useState<AdminCenter[]>([])
   const [form, setForm] = useState<AdminCenter>({ code: '', name: '' })
+  const [deleting, setDeleting] = useState<AdminCenter>()
   const load = () => adminCentersApi.list().then(setCenters)
   useEffect(() => { load() }, [])
   const save = async () => {
@@ -87,24 +88,71 @@ function CentersTab() {
             </span>
             <span className="flex gap-2">
               <button onClick={() => setForm(center)} className="text-plum">Modificar</button>
-              <button
-                onClick={async () => {
-                  if (confirm(`¿Eliminar ${center.name}?`)) {
-                    await adminCentersApi.remove(center.code)
-                    load()
-                  }
-                }}
-                className="text-[#8e1f33]"
-              >
-                Eliminar
-              </button>
+              <button onClick={() => setDeleting(center)} className="text-[#8e1f33]">Eliminar</button>
             </span>
           </div>
         ))}
       </div>
+      {deleting && <DeleteCenterPanel key={deleting.code} center={deleting} onClose={() => setDeleting(undefined)} onDeleted={() => { setDeleting(undefined); load() }} />}
       </section>
       <ZonesPanel centers={centers} />
     </>
+  )
+}
+
+/** Shows what goes with the center; a super admin can delete it all after typing its code. */
+function DeleteCenterPanel({ center, onClose, onDeleted }: { center: AdminCenter; onClose: () => void; onDeleted: () => void }) {
+  const [impact, setImpact] = useState<CenterImpact>()
+  const [typed, setTyped] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    adminCentersApi.impact(center.code).then(setImpact)
+      .catch((cause) => setError(cause instanceof Error ? cause.message : 'No se ha podido calcular qué se eliminaría.'))
+  }, [center.code])
+
+  const nonEmpty = impact ? Object.entries(impact.counts).filter(([, count]) => count > 0) : []
+  const empty = !!impact && nonEmpty.length === 0 && impact.usersDeleted.length === 0
+  const run = async (action: () => Promise<void>) => {
+    setBusy(true); setError('')
+    try { await action(); onDeleted() }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'No se ha podido eliminar el centro.') }
+    finally { setBusy(false) }
+  }
+
+  return (
+    <div role="dialog" aria-label={`Eliminar ${center.name}`} className="mt-4 rounded-xl border border-[#f0d9de] bg-[#fdf5f7] p-4 text-xs">
+      <h3 className="text-sm font-semibold text-[#8e1f33]">Eliminar {center.name} ({center.code})</h3>
+      {!impact && !error && <p className="mt-2 text-muted">Calculando qué se eliminaría…</p>}
+      {error && <p role="alert" className="mt-2 rounded-lg bg-[#f7e0e6] p-2 text-[#8e1f33]">{error}</p>}
+      {empty && (
+        <div className="mt-2 flex items-center gap-2">
+          <span>El centro está vacío.</span>
+          <button type="button" disabled={busy} onClick={() => run(() => adminCentersApi.remove(center.code))} className="rounded-lg bg-[#8e1f33] px-3 py-1.5 font-semibold text-white disabled:opacity-50">Eliminar centro</button>
+        </div>
+      )}
+      {impact && !empty && (
+        <>
+          <p className="mt-2">Se eliminará <strong>definitivamente</strong> todo lo que depende de este centro:</p>
+          <ul className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 md:grid-cols-3">
+            {nonEmpty.map(([label, count]) => <li key={label}><strong>{count}</strong> {label.toLowerCase()}</li>)}
+          </ul>
+          {impact.usersDeleted.length > 0 && (
+            <p className="mt-2">Cuentas sin otro centro que se eliminarán (o se desactivarán si figuran en datos de otro centro): <strong>{impact.usersDeleted.join(', ')}</strong></p>
+          )}
+          <p className="mt-2 text-muted">La auditoría se conserva y registra la eliminación. No se puede deshacer.</p>
+          {impact.canPurge ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <input value={typed} onChange={(event) => setTyped(event.target.value)} placeholder={`Escribe ${center.code} para confirmar`} className="min-w-[220px] rounded-lg border border-border bg-white px-3 py-1.5" />
+              <button type="button" disabled={busy || typed.trim().toUpperCase() !== center.code.toUpperCase()} onClick={() => run(() => adminCentersApi.purge(center.code, typed.trim()))} className="rounded-lg bg-[#8e1f33] px-3 py-1.5 font-semibold text-white disabled:opacity-50">Eliminar todo</button>
+            </div>
+          ) : (
+            <p className="mt-3 font-semibold">Solo un superadministrador puede eliminar un centro con contenido.</p>
+          )}
+        </>
+      )}
+      <button type="button" onClick={onClose} className="mt-3 text-plum underline">Cancelar</button>
+    </div>
   )
 }
 
