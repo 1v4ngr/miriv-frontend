@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     server: {
       proxy: {
+        '/ai': {
+          target: env.VITE_AI_PROXY_TARGET || 'http://localhost:8090',
+          changeOrigin: true,
+          rewrite: (path: string) => path.replace(/^\/ai/, ''),
+        },
         '/api': {
           target: env.VITE_BACKEND_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,

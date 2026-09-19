@@ -18,6 +18,7 @@ const __dirname = path.dirname(__filename)
 
 const PORT = Number(process.env.PORT) || 3000
 const SPRING_BOOT_BACKEND = process.env.SPRING_BOOT_BACKEND || 'http://localhost:8080'
+const MIRIV_AI_URL = process.env.MIRIV_AI_URL || 'http://localhost:8090'
 
 const app = express()
 
@@ -70,6 +71,39 @@ const proxyToSpringBoot = async (req: any, res: any) => {
   }
 }
 
+// ─── Proxy con streaming hacia el gateway de IA (SSE) ───────────────────────
+// A diferencia de proxyToSpringBoot no bufferiza: reenvía el cuerpo tal cual
+// llega para que la burbuja de chat vea los eventos en directo. /ai/x → /x.
+const proxyToAi = async (req: any, res: any) => {
+  const controller = new AbortController()
+  res.on('close', () => controller.abort())
+  try {
+    const headers: Record<string, string> = { 'content-type': 'application/json' }
+    if (typeof req.headers.authorization === 'string') headers.authorization = req.headers.authorization
+    const response = await fetch(`${MIRIV_AI_URL}${req.originalUrl.replace(/^\/ai/, '')}`, {
+      method: req.method,
+      headers,
+      body: req.method === 'GET' || req.method === 'HEAD' ? undefined : JSON.stringify(req.body),
+      signal: controller.signal,
+    })
+    res.status(response.status)
+    res.setHeader('content-type', response.headers.get('content-type') || 'application/json')
+    res.setHeader('cache-control', 'no-cache, no-transform')
+    res.setHeader('x-accel-buffering', 'no')
+    res.flushHeaders()
+    if (!response.body) return res.end()
+    for await (const chunk of response.body as any) res.write(chunk)
+    res.end()
+  } catch (err: any) {
+    if (controller.signal.aborted) return
+    console.error(`Proxy to AI gateway failed for ${req.method} ${req.originalUrl}:`, err.message)
+    if (!res.headersSent) res.status(502).json({ message: 'El asistente no está disponible.' })
+    else res.end()
+  }
+}
+
+app.all(/^\/ai\/.*/, proxyToAi)
+
 // Todo lo que llegue bajo /api o /docs (Swagger UI de springdoc) va al backend.
 app.all(/^\/(api|docs).*/, proxyToSpringBoot)
 
@@ -79,7 +113,7 @@ app.use(express.static(distDir))
 
 // SPA fallback: cualquier ruta que no sea /api y no exista en dist vuelve a index.html
 // para que el routing por hash del frontend funcione al recargar.
-app.get(/^(?!\/(api|docs)).*/, (_req, res) => {
+app.get(/^(?!\/(api|docs|ai\/)).*/, (_req, res) => {
   res.sendFile(path.join(distDir, 'index.html'))
 })
 
