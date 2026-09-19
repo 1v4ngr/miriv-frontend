@@ -14,6 +14,16 @@ export interface ChartSeries {
 
 export type TimeAxis = 'date' | 'days'
 
+/** Downloads the chart as a PNG (white background, 2x). */
+export function downloadChartPng(chart: ECharts, filename: string) {
+  const link = document.createElement('a')
+  link.href = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#fff' })
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+}
+
 interface Props {
   series: ChartSeries[]
   axis: TimeAxis
@@ -23,13 +33,18 @@ interface Props {
   showRate: boolean
   height?: number
   label: string
+  /** Series names hidden from the legend (controlled, so the owner can persist them). */
+  hiddenSeries?: string[]
+  onLegendChange?: (hidden: string[]) => void
+  /** Gives the owner the ECharts instance (PNG export). */
+  onReady?: (chart: ECharts) => void
 }
 
 const DAY_MS = 86_400_000
 const SYMBOLS = ['circle', 'rect', 'triangle', 'diamond', 'pin', 'arrow']
 const WARN_COLOR = '#c0902a'
 const CRIT_COLOR = '#b3263f'
-const EVENT_COLORS: Record<string, string> = {
+export const EVENT_COLORS: Record<string, string> = {
   TRANSFER: '#2e7d9a', ENTRY: '#4d8b4f', MIX: '#8e4fa8', SPLIT: '#8e4fa8', EXIT: '#4a5568', LOSS: '#b8423f',
   ADJUSTMENT: '#8a8f2a', OPERATION: '#c0782a', STATE_REVIEW: '#6d4656',
 }
@@ -41,9 +56,13 @@ const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (char) => ({ '&': 
 interface PointDatum { value: [number, number]; meta: SeriesPoint; series: ChartSeries }
 interface RateDatum { value: [number, number]; rate: number; series: ChartSeries }
 
-export function SeriesChart({ series, axis, events, showTargets, showRate, height = 340, label }: Props) {
+export function SeriesChart({ series, axis, events, showTargets, showRate, height = 340, label, hiddenSeries, onLegendChange, onReady }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const chartRef = useRef<ECharts | undefined>(undefined)
+  const legendCallback = useRef(onLegendChange)
+  legendCallback.current = onLegendChange
+  const readyCallback = useRef(onReady)
+  readyCallback.current = onReady
 
   useEffect(() => {
     if (!host.current) return
@@ -51,12 +70,20 @@ export function SeriesChart({ series, axis, events, showTargets, showRate, heigh
     const element = host.current
     void import('echarts').then((echarts) => {
       if (disposed) return
-      const chart = chartRef.current ?? echarts.init(element)
-      chartRef.current = chart
-      chart.setOption(buildOption(series, axis, events, showTargets, showRate), true)
+      let chart = chartRef.current
+      if (!chart) {
+        chart = echarts.init(element)
+        chartRef.current = chart
+        chart.on('legendselectchanged', (event) => {
+          const selected = (event as unknown as { selected: Record<string, boolean> }).selected
+          legendCallback.current?.(Object.keys(selected).filter((name) => !selected[name]))
+        })
+        readyCallback.current?.(chart)
+      }
+      chart.setOption(buildOption(series, axis, events, showTargets, showRate, hiddenSeries ?? []), true)
     })
     return () => { disposed = true }
-  }, [series, axis, events, showTargets, showRate])
+  }, [series, axis, events, showTargets, showRate, hiddenSeries])
 
   useEffect(() => {
     const element = host.current
@@ -69,7 +96,7 @@ export function SeriesChart({ series, axis, events, showTargets, showRate, heigh
   return <div ref={host} role="img" aria-label={label} style={{ height }} className="w-full" />
 }
 
-function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEvent[], showTargets: boolean, showRate: boolean): EChartsOption {
+function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEvent[], showTargets: boolean, showRate: boolean, hidden: string[]): EChartsOption {
   const startOf = (code: string) => series.find((item) => item.content.code === code)?.content.startedAt ?? null
   const xOf = (code: string, iso: string) => (axis === 'date' ? new Date(iso).getTime() : daysBetween(startOf(code), iso))
 
@@ -150,8 +177,8 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
   if (rateOn) yAxes.push({ type: 'value' as const, scale: true, name: 'Δ/día', position: 'right' as const, splitLine: { show: false, lineStyle: { color: '#eee7ea' } } })
 
   return {
-    grid: { left: 56, right: yAxes.length > 1 ? 56 : 24, top: 40, bottom: 56 },
-    legend: { type: 'scroll', top: 0, data: [...lines.map((line) => line.name), ...rates.map((rate) => rate.name)], textStyle: { fontSize: 11 } },
+    grid: { left: 56, right: yAxes.length > 1 ? 56 : 24, top: 34, bottom: 78 },
+    legend: { type: 'scroll', bottom: 0, data: [...lines.map((line) => line.name), ...rates.map((rate) => rate.name)], textStyle: { fontSize: 11 }, selected: Object.fromEntries(hidden.map((name) => [name, false])) },
     tooltip: {
       trigger: 'item',
       confine: true,

@@ -1,15 +1,20 @@
+import { BlendShortcutView } from './blend-shortcut-widget'
+import { ChartWidgetSettings, ChartWidgetView } from './chart-widget'
+import { EventsWidgetSettings, EventsWidgetView } from './events-widget'
+import { KpiWidgetSettings, KpiWidgetView } from './kpi-widget'
+import { MatrixWidgetSettings, MatrixWidgetView } from './matrix-widget'
+import { DateCompareWidgetSettings, DateCompareWidgetView, LatestTableWidgetSettings, LatestTableWidgetView } from './tables-widgets'
 import type { WidgetRegistry } from './types'
 
-const Building = () => <p className="p-4 text-xs text-muted">Panel en construcción.</p>
 const NoSettings = () => null
 
-/** One entry per WidgetType; the real views/settings replace the placeholders in F6-06 and F6-08. */
+/** One entry per WidgetType: the panel body and its settings form. */
 export const WIDGETS: WidgetRegistry = {
-  chart: { View: Building, Settings: NoSettings },
-  matrix: { View: Building, Settings: NoSettings },
-  kpi: { View: Building, Settings: NoSettings },
-  latestTable: { View: Building, Settings: NoSettings },
-  dateCompare: { View: Building, Settings: NoSettings },
-  events: { View: Building, Settings: NoSettings },
-  blendShortcut: { View: Building, Settings: NoSettings },
+  chart: { View: ChartWidgetView, Settings: ChartWidgetSettings },
+  matrix: { View: MatrixWidgetView, Settings: MatrixWidgetSettings },
+  kpi: { View: KpiWidgetView, Settings: KpiWidgetSettings },
+  latestTable: { View: LatestTableWidgetView, Settings: LatestTableWidgetSettings },
+  dateCompare: { View: DateCompareWidgetView, Settings: DateCompareWidgetSettings },
+  events: { View: EventsWidgetView, Settings: EventsWidgetSettings },
+  blendShortcut: { View: BlendShortcutView, Settings: NoSettings },
 }

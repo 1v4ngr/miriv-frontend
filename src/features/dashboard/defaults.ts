@@ -54,16 +54,26 @@ export function newWidget(type: WidgetType, overrides: Partial<WidgetConfig> = {
 
 const BREAKPOINTS: Breakpoint[] = ['lg', 'md', 'sm']
 
-/** Adds the widget at the bottom of every breakpoint (react-grid-layout packs it upwards when y = Infinity). */
+const COLS: Record<Breakpoint, number> = { lg: 12, md: 8, sm: 1 }
+
+/**
+ * Adds the widget to every breakpoint: beside the last one when the row has room (so two half-width charts
+ * sit side by side), otherwise at the bottom.
+ */
 export function placeWidget(layouts: Layouts, widget: WidgetConfig): Layouts {
   const { size } = catalogEntry(widget.type)
   const next: Layouts = {}
   for (const breakpoint of BREAKPOINTS) {
     const current = (layouts[breakpoint] ?? []).filter((item) => item.i !== widget.id)
+    const cols = COLS[breakpoint]
+    const width = breakpoint === 'sm' ? 1 : Math.min(size.w, cols)
     const bottom = current.reduce((max, item) => Math.max(max, item.y + item.h), 0)
-    const width = breakpoint === 'sm' ? 1 : breakpoint === 'md' ? Math.min(size.w, 8) : size.w
+    let x = 0
+    let y = bottom
+    const last = [...current].sort((a, b) => b.y - a.y || b.x - a.x)[0]
+    if (last && last.x + last.w + width <= cols && last.y + last.h === bottom) { x = last.x + last.w; y = last.y }
     next[breakpoint] = [...current, {
-      i: widget.id, x: 0, y: bottom, w: width, h: size.h,
+      i: widget.id, x, y, w: width, h: size.h,
       minW: breakpoint === 'sm' ? 1 : Math.min(size.minW, width), minH: size.minH,
     }]
   }

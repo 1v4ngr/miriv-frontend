@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { defaultDashboard, newWidget, placeWidget } from './defaults'
 import { normalizeDashboard } from './schema'
+import { effectiveContents, effectivePeriod } from './filters'
 
 describe('normalizeDashboard', () => {
   it('never throws on garbage and opens empty', () => {
@@ -40,12 +41,40 @@ describe('defaults', () => {
     expect(new Set(layouts.lg?.map((item) => item.i))).toEqual(new Set(widgets.map((widget) => widget.id)))
   })
 
-  it('places a new widget below the existing ones', () => {
-    const first = newWidget('kpi')
-    const second = newWidget('kpi')
-    const layouts = placeWidget(placeWidget({}, first), second)
-    const [a, b] = layouts.lg!
-    expect(b.y).toBe(a.y + a.h)
-    expect(layouts.md![1].w).toBeLessThanOrEqual(8)
+  it('places a widget beside the last one when the row has room, else below', () => {
+    const first = newWidget('chart')
+    const second = newWidget('chart')
+    const third = newWidget('chart')
+    const layouts = placeWidget(placeWidget(placeWidget({}, first), second), third)
+    const [a, b, c] = layouts.lg!
+    expect(b.y).toBe(a.y)
+    expect(b.x).toBe(a.x + a.w)                 // 6 + 6 = 12 columns: same row
+    expect(c.x).toBe(0)
+    expect(c.y).toBe(a.y + a.h)                 // the row is full: goes below
+    expect(layouts.md![1].x).toBe(0)            // 8 columns: two 6-wide charts do not fit side by side
+    expect(layouts.sm![1].x).toBe(0)
+  })
+})
+
+describe('effective filters', () => {
+  const overview = { parameters: [], rows: [
+    { content: 'C-1', category: 'Tinto' }, { content: 'C-2', category: 'Blanco' }, { content: 'C-3', category: 'Tinto' },
+  ] } as unknown as import('../tracking/services/tracking-api').OverviewResponse
+  const globals = (patch: Partial<import('./types').GlobalFilters>) => ({ period: '30' as const, contents: [], category: '', ...patch })
+
+  it('uses the own contents unless following the global ones', () => {
+    expect(effectiveContents(['C-1'], false, globals({ contents: ['C-2'] }), overview)).toEqual(['C-1'])
+    expect(effectiveContents(['C-1'], true, globals({ contents: ['C-2'] }), overview)).toEqual(['C-2'])
+    expect(effectiveContents(['C-1'], true, globals({}), overview)).toEqual(['C-1'])
+  })
+
+  it('narrows by category, or selects the whole category when nothing is chosen', () => {
+    expect(effectiveContents(['C-1', 'C-2'], true, globals({ category: 'Tinto' }), overview)).toEqual(['C-1'])
+    expect(effectiveContents([], true, globals({ category: 'Tinto' }), overview)).toEqual(['C-1', 'C-3'])
+  })
+
+  it('takes the period from the globals only when following them', () => {
+    expect(effectivePeriod('7', true, globals({ period: '90' }))).toBe('90')
+    expect(effectivePeriod('7', false, globals({ period: '90' }))).toBe('7')
   })
 })

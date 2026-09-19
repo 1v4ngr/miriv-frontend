@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Responsive, useContainerWidth } from 'react-grid-layout'
+import { Responsive } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import { Copy, Maximize, Minimize, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { ErrorState, LoadingState } from '../../../components/ui/page-state'
+import { useResource } from '../../../hooks/use-resource'
+import { trackingApi } from '../../tracking/services/tracking-api'
 import { AddWidgetDialog } from '../components/add-widget-dialog'
+import { GlobalFilterBar } from '../components/global-filter-bar'
+import { DashboardContext, type DashboardContextValue } from '../dashboard-context'
 import { WidgetFrame } from '../components/widget-frame'
 import { newWidget, placeWidget, removeFromLayouts } from '../defaults'
+import { useElementSize } from '../hooks/use-element-size'
 import { markSeeded, useDashboard, type SaveStatus } from '../hooks/use-dashboard'
 import { dashboardApi } from '../services/dashboard-api'
 import type { Breakpoint, GlobalFilters, GridItem, Layouts, WidgetConfig, WidgetType } from '../types'
@@ -16,6 +21,8 @@ interface Props { dashboardId?: string; onNavigate: (path: string) => void }
 const BREAKPOINTS = { lg: 1100, md: 700, sm: 0 }
 const COLS = { lg: 12, md: 8, sm: 1 }
 const DESKTOP_MIN_WIDTH = 700
+const DEFAULT_GLOBALS: GlobalFilters = { period: '30', contents: [], category: '' }
+const globalsKey = (id: string) => `miriv:dashboard-globals:${id}`
 const STATUS_LABEL: Record<SaveStatus, string> = {
   loading: 'Cargando…', saved: 'Guardado ✓', saving: 'Guardando…', error: 'Error al guardar', conflict: 'Cambios en otra ventana',
 }
@@ -42,8 +49,11 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [actionError, setActionError] = useState('')
-  const [globals] = useState<GlobalFilters>({ period: '30', contents: [], category: '' })
-  const { width, containerRef, mounted } = useContainerWidth()
+  const [globals, setGlobalsState] = useState<GlobalFilters>(DEFAULT_GLOBALS)
+  const overview = useResource(() => trackingApi.overview(['DENSITY']), [])
+  // Own ResizeObserver: the library hook kept a stale width when the layout around the grid changed.
+  const { ref: containerRef, width } = useElementSize<HTMLDivElement>()
+  const mounted = width > 0
   const canvas = useRef<HTMLDivElement>(null)
   const [fullscreen, setFullscreen] = useState(false)
 
@@ -71,6 +81,23 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
     }
   }
   const isFull = fullscreen || pseudo
+
+  // Global filters belong to the working session, not to the saved design: they live in this browser.
+  useEffect(() => {
+    if (!dashboard?.id) return
+    try {
+      const stored = JSON.parse(localStorage.getItem(globalsKey(dashboard.id)) ?? 'null')
+      setGlobalsState(stored && Array.isArray(stored.contents) ? { ...DEFAULT_GLOBALS, ...stored } : DEFAULT_GLOBALS)
+    } catch { setGlobalsState(DEFAULT_GLOBALS) }
+  }, [dashboard?.id])
+  const dashboardKey = dashboard?.id
+  const setGlobals = useCallback((next: GlobalFilters) => {
+    setGlobalsState(next)
+    if (dashboardKey) { try { localStorage.setItem(globalsKey(dashboardKey), JSON.stringify(next)) } catch { /* storage blocked */ } }
+  }, [dashboardKey])
+  const context = useMemo<DashboardContextValue>(() => ({
+    globals, setGlobals, overview: overview.data, focus: (code) => setGlobals({ ...globals, contents: [code] }),
+  }), [globals, setGlobals, overview.data])
 
   const draggable = editing && width >= DESKTOP_MIN_WIDTH
 
@@ -151,6 +178,7 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
   }
 
   return (
+    <DashboardContext.Provider value={context}>
     <div ref={canvas} className={`space-y-3 pb-6 ${isFull ? 'overflow-auto bg-white p-4' : ''} ${pseudo ? 'fixed inset-0 z-40' : ''}`}>
       {!isFull && (
         <header>
@@ -189,7 +217,7 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
         </button>
       </div>
 
-      <div id="global-filters" />
+      <GlobalFilterBar />
 
       {dashboard.widgets.length === 0 && (
         <p className="rounded-2xl border border-border bg-white p-8 text-center text-xs text-muted">Este dashboard está vacío. Pulsa «Añadir panel» para empezar.</p>
@@ -214,5 +242,6 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
 
       {adding && <AddWidgetDialog onPick={addWidget} onClose={() => setAdding(false)} />}
     </div>
+    </DashboardContext.Provider>
   )
 }

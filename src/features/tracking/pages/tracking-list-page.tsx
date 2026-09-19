@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
-import { AlertTriangle, ArrowDown, ArrowUp, GitCompare, Minus } from 'lucide-react'
+import { GitCompare } from 'lucide-react'
 import { useResource } from '../../../hooks/use-resource'
-import { formatLiters, formatRelative } from '../../../lib/format'
 import { fermentationLabels } from '../../../lib/labels'
 import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { MultiSelect } from '../components/multi-select'
 import { trackingApi, type OverviewRow } from '../services/tracking-api'
-import { STALE_DAYS, formatAge, formatReading, statusClass, statusLabel } from '../utils'
+import { MatrixLegend, OverviewMatrix } from '../components/overview-matrix'
+import { STALE_DAYS } from '../utils'
 
 interface Props {
   onOpenCurves: (contentCode: string) => void
@@ -15,7 +15,6 @@ interface Props {
 
 type Quick = 'all' | 'crit' | 'warn' | 'stale' | 'open'
 
-const th = 'whitespace-nowrap px-3 py-2 text-left text-[11px] font-semibold text-muted'
 const field = 'rounded-xl border border-border bg-white px-2 py-1.5 text-xs'
 
 /** Cellar-wide status matrix: one row per occupied tank, latest key parameters coloured against their targets. */
@@ -58,7 +57,6 @@ export function TrackingListPage({ onOpenCurves, onCompare }: Props) {
     if (quick === 'open') return row.openSamples > 0 || row.openTasks > 0
     return true
   })
-  const allSelected = visible.length > 0 && visible.every((row) => selected.includes(row.content))
   const toggle = (code: string) => setSelected((current) => (current.includes(code) ? current.filter((item) => item !== code) : [...current, code]))
 
   return (
@@ -108,59 +106,10 @@ export function TrackingListPage({ onOpenCurves, onCompare }: Props) {
           {rows.length === 0 && <EmptyState label="No hay depósitos ocupados en seguimiento." />}
           {rows.length > 0 && visible.length === 0 && <EmptyState label="Ningún depósito cumple los filtros." />}
           {visible.length > 0 && (
-            <div className="overflow-x-auto rounded-2xl border border-border bg-white">
-              <table className="w-full min-w-[860px] border-collapse">
-                <thead>
-                  <tr className="border-b border-border bg-[#fbf7f9]">
-                    <th className={th}><input type="checkbox" aria-label="Seleccionar todos los visibles" checked={allSelected} onChange={() => setSelected(allSelected ? [] : visible.map((row) => row.content))} className="size-3.5 accent-plum" /></th>
-                    <th className={`${th} sticky left-0 bg-[#fbf7f9]`}>Depósito</th>
-                    <th className={th}>Fermentación</th>
-                    {parameters.map((parameter) => <th key={parameter.code} className={th}>{parameter.name}<div className="font-normal">{parameter.unit}</div></th>)}
-                    <th className={th}>Pendiente</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((row) => (
-                    <tr key={row.content} className="border-b border-border last:border-0 hover:bg-[#fdfafb]">
-                      <td className="px-3 py-2"><input type="checkbox" aria-label={`Seleccionar ${row.deposit}`} checked={selected.includes(row.content)} onChange={() => toggle(row.content)} className="size-3.5 accent-plum" /></td>
-                      <td className="sticky left-0 bg-white px-3 py-2">
-                        <button type="button" onClick={() => onOpenCurves(row.content)} className="text-left">
-                          <span className="flex items-center gap-1.5 text-[13px] font-semibold text-plum hover:underline">{row.deposit}{row.worstStatus === 'CRIT' && <AlertTriangle className="size-3.5 text-[#b3263f]" aria-label="Crítico" />}</span>
-                          <span className="block font-mono text-[11px] text-copy">{row.content}</span>
-                          <span className="block text-[10.5px] text-muted">{[row.category, `${formatLiters(row.volumeLiters ?? 0)} L`, row.zone].filter(Boolean).join(' · ')}</span>
-                        </button>
-                      </td>
-                      <td className="px-3 py-2 text-xs">{row.alcoholicState ? fermentationLabels[row.alcoholicState] ?? row.alcoholicState : '—'}</td>
-                      {row.cells.map((cell, index) => {
-                        const parameter = parameters[index]
-                        const latest = cell.latest
-                        if (!latest) return <td key={cell.parameter} className="px-3 py-2 text-xs text-muted">—</td>
-                        const old = latest.daysAgo > STALE_DAYS
-                        return (
-                          <td key={cell.parameter} className={`px-3 py-2 ${old ? 'opacity-60' : ''}`}>
-                            <div className="flex items-center gap-1" title={`${statusLabel[latest.status]} · ${formatAge(latest.daysAgo)}${old ? ' (desfasado)' : ''}`}>
-                              <span className={`rounded-md px-2 py-0.5 font-mono text-xs font-semibold ${statusClass[latest.status]}`}>{formatReading(latest.value, latest.qualifier, latest.limit, parameter?.decimals ?? 2)}</span>
-                              <Trend trend={cell.trend} previous={cell.previous ? formatReading(cell.previous.value, cell.previous.qualifier, cell.previous.limit, parameter?.decimals ?? 2) : undefined} />
-                            </div>
-                            <div className={`mt-0.5 text-[10.5px] ${old ? 'font-semibold text-[#8e6a10]' : 'text-muted'}`}>{formatAge(latest.daysAgo)}</div>
-                          </td>
-                        )
-                      })}
-                      <td className="px-3 py-2 text-[11px] text-muted">
-                        {row.daysSinceLastSample === null || row.daysSinceLastSample > STALE_DAYS
-                          ? <div className="font-semibold text-[#8e6a10]">{row.daysSinceLastSample === null ? 'Nunca muestreado' : `Sin muestra ${formatAge(row.daysSinceLastSample)}`}</div>
-                          : null}
-                        {row.openSamples > 0 && <div>{row.openSamples} muestra(s) abierta(s)</div>}
-                        {row.openTasks > 0 && <div>{row.openTasks} tarea(s){row.nextTaskDueAt ? ` · ${formatRelative(row.nextTaskDueAt)}` : ''}</div>}
-                        {row.openSamples === 0 && row.openTasks === 0 && row.daysSinceLastSample !== null && row.daysSinceLastSample <= STALE_DAYS && '—'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <OverviewMatrix rows={visible} parameters={parameters} onOpenRow={onOpenCurves} selected={selected} onToggle={toggle}
+              onToggleAll={(all) => setSelected(all ? [] : visible.map((row) => row.content))} />
           )}
-          <Legend />
+          <MatrixLegend />
         </>
       )}
     </div>
@@ -170,21 +119,4 @@ export function TrackingListPage({ onOpenCurves, onCompare }: Props) {
 function Chip({ active, onClick, label, tone }: { active: boolean; onClick: () => void; label: string; tone?: 'CRIT' | 'WARN' }) {
   const toneClass = tone === 'CRIT' ? 'border-[#e5b3bd] text-[#8e1f33]' : tone === 'WARN' ? 'border-[#e3d08a] text-[#6b5a10]' : 'border-border text-copy'
   return <button type="button" aria-pressed={active} onClick={onClick} className={`rounded-full border px-3 py-1 text-xs font-semibold ${active ? 'bg-plum text-white border-plum' : `bg-white ${toneClass}`}`}>{label}</button>
-}
-
-function Trend({ trend, previous }: { trend: 'UP' | 'DOWN' | 'FLAT' | null; previous?: string }) {
-  if (!trend) return null
-  const title = previous ? `Antes: ${previous}` : undefined
-  if (trend === 'UP') return <ArrowUp className="size-3.5 text-muted" aria-label="Sube" >{title && <title>{title}</title>}</ArrowUp>
-  if (trend === 'DOWN') return <ArrowDown className="size-3.5 text-muted" aria-label="Baja">{title && <title>{title}</title>}</ArrowDown>
-  return <Minus className="size-3.5 text-muted" aria-label="Estable">{title && <title>{title}</title>}</Minus>
-}
-
-function Legend() {
-  return (
-    <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted">
-      {(['OK', 'WARN', 'CRIT', 'UNKNOWN'] as const).map((status) => <span key={status} className="flex items-center gap-1.5"><span className={`inline-block h-3 w-5 rounded ${statusClass[status]}`} />{statusLabel[status]}</span>)}
-      <span>Sin color: parámetro sin objetivo. Valores atenuados: muestra de hace más de {STALE_DAYS} días. Las flechas comparan con el análisis anterior.</span>
-    </p>
-  )
 }

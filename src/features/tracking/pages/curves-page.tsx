@@ -8,7 +8,8 @@ import { DataTable, DateComparison, LatestComparison } from '../components/compa
 import { downloadCsv, seriesToCsv } from '../export'
 import { loadFavorites, saveFavorites, type Axis, type Favorite, type Mode, type Period } from '../favorites'
 import { trackingApi, type SeriesResponse } from '../services/tracking-api'
-import { contentColors } from '../utils'
+import { buildChartSeries } from '../build-chart-series'
+import { PERIODS, periodStart } from '../period'
 
 interface Props {
   /** "tracking/C-2026-001" (one content) or "tracking/compare?c=A,B&p=PH,DENSITY&…" (shareable comparison). */
@@ -21,10 +22,6 @@ interface ViewState { contents: string[]; parameters: string[]; period: Period; 
 
 const DEFAULT_PARAMETERS = ['DENSITY', 'VOLATILE_ACIDITY', 'PH']
 const EMPTY: SeriesResponse = { contents: [], parameters: [], points: [], targets: [] }
-const PERIODS: Array<{ value: Period; label: string }> = [
-  { value: '7', label: 'Últimos 7 días' }, { value: '30', label: 'Últimos 30 días' },
-  { value: '90', label: 'Últimos 90 días' }, { value: 'all', label: 'Campaña completa' },
-]
 const card = 'rounded-2xl border border-border bg-white p-4'
 const select = 'rounded-xl border border-border bg-white px-2 py-1.5 text-xs'
 
@@ -46,10 +43,6 @@ function parseRoute(route: string): ViewState {
 
 function toQuery(view: ViewState): string {
   return `c=${view.contents.join(',')}&p=${view.parameters.join(',')}&per=${view.period}&mode=${view.mode}&axis=${view.axis}`
-}
-
-function periodStart(period: Period): string | undefined {
-  return period === 'all' ? undefined : new Date(Date.now() - Number(period) * 86_400_000).toISOString()
 }
 
 export function CurvesPage({ route, onBack, onNavigate }: Props) {
@@ -96,17 +89,7 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
     [parameterList.data],
   )
 
-  const chartSeries = useMemo<ChartSeries[]>(() => {
-    const colorOf = new Map<string, string>()
-    data.contents.filter((content) => !content.ancestor).forEach((content, index) => colorOf.set(content.code, contentColors[index % contentColors.length]))
-    return data.contents.flatMap((content) => data.parameters.map((parameter) => ({
-      content,
-      parameter,
-      color: colorOf.get(content.ancestor ? content.descendantCode ?? '' : content.code) ?? contentColors[0],
-      points: data.points.filter((point) => point.content === content.code && point.parameter === parameter.code),
-      target: data.targets.find((target) => target.content === content.code && target.parameter === parameter.code),
-    })))
-  }, [data])
+  const chartSeries = useMemo<ChartSeries[]>(() => buildChartSeries(data), [data])
 
   const distinctUnits = new Set(data.parameters.map((parameter) => parameter.unit ?? '')).size
   const mode: Mode = view.mode === 'overlay' && distinctUnits <= 2 ? 'overlay' : 'grid'
