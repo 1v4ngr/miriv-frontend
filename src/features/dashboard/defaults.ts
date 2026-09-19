@@ -14,6 +14,7 @@ export const WIDGET_CATALOG: CatalogEntry[] = [
   { type: 'latestTable', label: 'Última analítica', description: 'Tabla comparativa de depósitos', size: { w: 6, h: 6, minW: 4, minH: 4 } },
   { type: 'dateCompare', label: 'Comparar dos análisis', description: 'Dos fechas de un mismo contenido', size: { w: 6, h: 6, minW: 4, minH: 4 } },
   { type: 'events', label: 'Eventos', description: 'Trasiegos, operaciones y revisiones', size: { w: 4, h: 6, minW: 3, minH: 4 } },
+  { type: 'alerts', label: 'Avisos', description: 'Fermentación terminada, posibles paradas y otras reglas', size: { w: 6, h: 6, minW: 3, minH: 3 } },
   { type: 'blendShortcut', label: 'Simulador de mezclas', description: 'Acceso rápido al simulador', size: { w: 3, h: 4, minW: 2, minH: 3 } },
 ]
 
@@ -47,6 +48,9 @@ export function newWidget(type: WidgetType, overrides: Partial<WidgetConfig> = {
       break
     case 'blendShortcut':
       widget = { ...base, type }
+      break
+    case 'alerts':
+      widget = { ...base, type, minSeverity: 'INFO' }
       break
   }
   return { ...widget, ...overrides } as WidgetConfig
@@ -89,6 +93,7 @@ export function removeFromLayouts(layouts: Layouts, id: string): Layouts {
 /** First-use template: overview matrix, one chart per key parameter (each one a free-standing panel) and the blend shortcut. */
 export function defaultDashboard(): { layouts: Layouts; widgets: WidgetConfig[] } {
   const widgets: WidgetConfig[] = [
+    newWidget('alerts', { title: 'Avisos' }),
     newWidget('matrix', { title: 'Estado de la bodega' }),
     newWidget('chart', { title: 'Densidad (fermentaciones)', parameters: ['DENSITY'], axis: 'days', showRate: true }),
     newWidget('chart', { title: 'Acidez volátil', parameters: ['VOLATILE_ACIDITY'] }),

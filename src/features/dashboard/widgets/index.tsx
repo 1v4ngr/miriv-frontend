@@ -1,3 +1,4 @@
+import { AlertsWidgetSettings, AlertsWidgetView } from './alerts-widget'
 import { BlendShortcutView } from './blend-shortcut-widget'
 import { ChartWidgetSettings, ChartWidgetView } from './chart-widget'
 import { EventsWidgetSettings, EventsWidgetView } from './events-widget'
@@ -17,4 +18,5 @@ export const WIDGETS: WidgetRegistry = {
   dateCompare: { View: DateCompareWidgetView, Settings: DateCompareWidgetSettings },
   events: { View: EventsWidgetView, Settings: EventsWidgetSettings },
   blendShortcut: { View: BlendShortcutView, Settings: NoSettings },
+  alerts: { View: AlertsWidgetView, Settings: AlertsWidgetSettings },
 }

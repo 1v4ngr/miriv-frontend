@@ -6,15 +6,17 @@ import { adminZonesApi, type AdminZone, type AdminZoneInput } from '../services/
 import { adminAccountsApi, type RoleOption } from '../../../services/admin-accounts-api'
 import { UserAccessPanel } from '../components/user-access-panel'
 import { TargetsTab } from '../components/targets-tab'
+import { AlertRulesTab } from '../components/alert-rules-tab'
 import { useCan } from '../../../hooks/use-permissions'
 
 const card = 'rounded-2xl border border-border bg-white p-4'
 
-type Tab = 'centers' | 'catalogs' | 'users' | 'targets'
+type Tab = 'centers' | 'catalogs' | 'users' | 'targets' | 'alerts'
 
 export function AdministrationManagementPage() {
   const [tab, setTab] = useState<Tab>('centers')
   const canTargets = useCan('LAB_CATALOG_MANAGE')
+  const canAlerts = useCan('RULE_EDIT')
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -25,6 +27,7 @@ export function AdministrationManagementPage() {
           <TabButton active={tab === 'centers'} onClick={() => setTab('centers')}>Centros</TabButton>
           <TabButton active={tab === 'catalogs'} onClick={() => setTab('catalogs')}>Catálogos</TabButton>
           <TabButton active={tab === 'users'} onClick={() => setTab('users')}>Usuarios</TabButton>
+          {canAlerts && <TabButton active={tab === 'alerts'} onClick={() => setTab('alerts')}>Avisos</TabButton>}
           {canTargets && <TabButton active={tab === 'targets'} onClick={() => setTab('targets')}>Objetivos analíticos</TabButton>}
         </div>
       </header>
@@ -32,6 +35,7 @@ export function AdministrationManagementPage() {
       {tab === 'catalogs' && <CatalogsTab />}
       {tab === 'users' && <UsersTab />}
       {tab === 'targets' && canTargets && <TargetsTab />}
+      {tab === 'alerts' && canAlerts && <AlertRulesTab />}
     </div>
   )
 }

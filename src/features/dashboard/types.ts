@@ -28,8 +28,9 @@ export interface LatestTableWidget extends WidgetBase { type: 'latestTable'; con
 export interface DateCompareWidget extends WidgetBase { type: 'dateCompare'; content: string; parameters: string[] }
 export interface EventsWidget extends WidgetBase { type: 'events'; contents: string[]; period: Period; types: string[] }
 export interface BlendShortcutWidget extends WidgetBase { type: 'blendShortcut' }
+export interface AlertsWidget extends WidgetBase { type: 'alerts'; minSeverity: 'INFO' | 'WARN' | 'CRIT' }
 
-export type WidgetConfig = ChartWidget | MatrixWidget | KpiWidget | LatestTableWidget | DateCompareWidget | EventsWidget | BlendShortcutWidget
+export type WidgetConfig = ChartWidget | MatrixWidget | KpiWidget | LatestTableWidget | DateCompareWidget | EventsWidget | BlendShortcutWidget | AlertsWidget
 export type WidgetType = WidgetConfig['type']
 
 export interface GridItem { i: string; x: number; y: number; w: number; h: number; minW?: number; minH?: number }

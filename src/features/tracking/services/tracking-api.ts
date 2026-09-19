@@ -52,6 +52,8 @@ export interface OverviewResponse { parameters: ParameterInfo[]; rows: OverviewR
 
 export interface TargetView {
   id: string
+  /** Set when the range is fixed for one content only. */
+  contentCode: string | null
   parameter: string
   parameterName: string
   unit: string | null
@@ -66,6 +68,7 @@ export interface TargetView {
 }
 export interface TargetInput {
   parameter: string
+  contentCode?: string | null
   categoryCode: string | null
   phase: string | null
   warnMin: number | null
@@ -103,6 +106,30 @@ export interface LatestContent {
   targets: TargetRange[]
 }
 
+export type AlertSeverity = 'INFO' | 'WARN' | 'CRIT'
+export interface AlertCondition { parameter: string; type: 'LTE' | 'GTE' | 'STABLE'; value: number | null; days: number | null; tolerance: number | null }
+export interface AlertRule {
+  id: string
+  name: string
+  severity: AlertSeverity
+  conditions: AlertCondition[]
+  categoryCode: string | null
+  categoryName: string | null
+  contentCode: string | null
+  phases: string[]
+  active: boolean
+}
+export interface AlertRuleInput {
+  name: string
+  severity: AlertSeverity
+  conditions: AlertCondition[]
+  categoryCode: string | null
+  contentCode: string | null
+  phases: string[]
+  active: boolean
+}
+export interface TrackingAlert { ruleId: string; rule: string; severity: AlertSeverity; content: string; deposit: string; category: string | null; since: string; sampleCode: string; detail: string }
+
 export interface SeriesQuery { contents: string[]; parameters: string[]; from?: string; to?: string; includeAncestors?: boolean }
 
 const list = (values: string[]) => encodeURIComponent(values.join(','))
@@ -126,6 +153,16 @@ export const trackingApi = {
     return apiRequest<OverviewResponse>(`/api/tracking/overview${parameters?.length ? `?parameters=${list(parameters)}` : ''}`)
   },
   latest(contents: string[]) { return apiRequest<LatestContent[]>(`/api/tracking/latest?contents=${list(contents)}`) },
+  alerts() { return apiRequest<TrackingAlert[]>('/api/tracking/alerts') },
+  acknowledgeAlert(ruleId: string, content: string) { return apiRequest<void>(`/api/tracking/alerts/${ruleId}/contents/${encodeURIComponent(content)}/ack`, { method: 'POST' }) },
+  alertRules() { return apiRequest<AlertRule[]>('/api/admin/alert-rules') },
+  createAlertRule(input: AlertRuleInput) { return apiRequest<AlertRule>('/api/admin/alert-rules', { method: 'POST', body: JSON.stringify(input) }) },
+  updateAlertRule(id: string, input: AlertRuleInput) { return apiRequest<AlertRule>(`/api/admin/alert-rules/${id}`, { method: 'PUT', body: JSON.stringify(input) }) },
+  deleteAlertRule(id: string) { return apiRequest<void>(`/api/admin/alert-rules/${id}`, { method: 'DELETE' }) },
+  contentAlertRules(content: string) { return apiRequest<AlertRule[]>(`/api/tracking/contents/${encodeURIComponent(content)}/alert-rules`) },
+  contentTargets(content: string) { return apiRequest<TargetView[]>(`/api/tracking/contents/${encodeURIComponent(content)}/targets`) },
+  saveContentTarget(content: string, input: TargetInput) { return apiRequest<TargetView>(`/api/tracking/contents/${encodeURIComponent(content)}/targets`, { method: 'PUT', body: JSON.stringify(input) }) },
+  deleteContentTarget(content: string, id: string) { return apiRequest<void>(`/api/tracking/contents/${encodeURIComponent(content)}/targets/${id}`, { method: 'DELETE' }) },
   listTargets() { return apiRequest<TargetView[]>('/api/admin/parameter-targets') },
   createTarget(input: TargetInput) { return apiRequest<TargetView>('/api/admin/parameter-targets', { method: 'POST', body: JSON.stringify(input) }) },
   updateTarget(id: string, input: TargetInput) { return apiRequest<TargetView>(`/api/admin/parameter-targets/${id}`, { method: 'PUT', body: JSON.stringify(input) }) },

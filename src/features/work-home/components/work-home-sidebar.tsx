@@ -19,7 +19,7 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Inicio', icon: Home },
   { label: 'Bodega', icon: Wine },
   { label: 'Laboratorio', icon: FlaskConical, badgeKey: 'laboratory' },
-  { label: 'Seguimiento', icon: Activity },
+  { label: 'Seguimiento', icon: Activity, badgeKey: 'tracking' },
   { label: 'Actividad', icon: ClipboardCheck },
   { label: 'Incidencias', icon: Archive, badgeKey: 'incidents' },
   { label: 'Tareas', icon: ListChecks },

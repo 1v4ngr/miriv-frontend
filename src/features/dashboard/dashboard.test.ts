@@ -34,10 +34,11 @@ describe('normalizeDashboard', () => {
 })
 
 describe('defaults', () => {
-  it('builds the five-panel template with matching layout ids', () => {
+  it('builds the six-panel template (alerts first) with matching layout ids', () => {
     const { layouts, widgets } = defaultDashboard()
-    expect(widgets).toHaveLength(5)
-    expect(layouts.lg).toHaveLength(5)
+    expect(widgets).toHaveLength(6)
+    expect(widgets[0].type).toBe('alerts')
+    expect(layouts.lg).toHaveLength(6)
     expect(new Set(layouts.lg?.map((item) => item.i))).toEqual(new Set(widgets.map((widget) => widget.id)))
   })
 
