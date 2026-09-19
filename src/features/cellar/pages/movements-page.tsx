@@ -15,10 +15,16 @@ const STATUS_LABELS: Record<MovementStatus, string> = {
   CANCELLED: 'Cancelado',
 }
 
-const TYPE_LABELS: Record<MovementType, string> = {
+const TYPE_LABELS: Record<string, string> = {
   Trasiego: 'Trasiego',
   Trasvase: 'Trasvase',
   Salida: 'Salida',
+  TRANSFER_PARTIAL: 'Trasiego parcial',
+  TRANSFER_FULL: 'Trasiego completo',
+  EXIT: 'Salida',
+  MIX: 'Mezcla',
+  ENTRY: 'Entrada inicial',
+  LOSS: 'Pérdida',
 }
 
 function statusToneClass(status: MovementStatus): string {

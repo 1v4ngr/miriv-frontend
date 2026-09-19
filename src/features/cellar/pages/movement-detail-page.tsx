@@ -10,7 +10,20 @@ interface MovementDetailPageProps {
   onBack: () => void
 }
 
-const TYPE_LABELS: Record<MovementType, string> = { Trasiego: 'Trasiego', Trasvase: 'Trasvase', Salida: 'Salida' }
+// F4-01: enum codes from the backend cover the wire types (Trasiego / Trasvase / Salida)
+// plus the storage types that the server may resolve at the end of an execution (MIX, EXIT,
+// TRANSFER_FULL, TRANSFER_PARTIAL, ENTRY, LOSS, etc.).
+const TYPE_LABELS: Record<string, string> = {
+  Trasiego: 'Trasiego',
+  Trasvase: 'Trasvase',
+  Salida: 'Salida',
+  TRANSFER_PARTIAL: 'Trasiego parcial',
+  TRANSFER_FULL: 'Trasiego completo',
+  EXIT: 'Salida',
+  MIX: 'Mezcla',
+  ENTRY: 'Entrada inicial',
+  LOSS: 'Pérdida',
+}
 const STATUS_LABELS: Record<MovementStatus, string> = { PLANNED: 'Previsto', EXECUTED: 'Ejecutado', CANCELLED: 'Cancelado' }
 
 function statusToneClass(status: MovementStatus): string {
@@ -122,7 +135,7 @@ export function MovementDetailPage({ code, onBack }: MovementDetailPageProps) {
           <button type="button" onClick={onBack} aria-label="Volver al historial" className="mt-1 flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-white hover:bg-plum-soft"><ArrowLeft className="size-4" /></button>
           <div>
             <p className="font-mono text-[12px] text-muted">{detail.code}</p>
-            <h1 id="movement-receipt-title" className="text-[24px] font-semibold tracking-[-0.02em]">{TYPE_LABELS[detail.type as MovementType] ?? detail.type}</h1>
+            <h1 id="movement-receipt-title" className="text-[24px] font-semibold tracking-[-0.02em]">{TYPE_LABELS[detail.type] ?? detail.type}</h1>
             <p className="mt-1 text-[13px] text-muted">Responsable {detail.responsible || '—'} · Registrado por {detail.registeredBy || '—'}</p>
           </div>
         </div>
