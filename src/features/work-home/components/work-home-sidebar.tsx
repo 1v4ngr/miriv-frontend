@@ -44,7 +44,7 @@ export function WorkHomeSidebar({ activeItem, onNavigate, badges = {}, profile }
             <button key={label} type="button" onClick={() => onNavigate(label)} className={`flex h-[38px] items-center gap-2.5 rounded-xl px-3 text-left text-[12.5px] transition-colors ${isActive ? 'bg-[#f3e7ee] font-semibold text-plum' : 'font-medium text-copy hover:bg-[#faf4f7]'}`} aria-current={isActive ? 'page' : undefined}>
               <Icon className={`size-4 ${isActive ? 'text-plum' : 'text-[#b8a7af]'}`} aria-hidden="true" />
               <span>{label}</span>
-              {badge && <span className="ml-auto rounded-full bg-[#f7dadf] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#8e1f33]">{badge}</span>}
+              {badge ? <span className="ml-auto rounded-full bg-[#f7dadf] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#8e1f33]">{badge}</span> : null}
             </button>
           )
         })}

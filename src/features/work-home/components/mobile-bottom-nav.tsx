@@ -35,7 +35,7 @@ export function MobileBottomNav({ activeItem, onNavigate, laboratoryMode = false
             <div className="flex items-center justify-between px-1"><h2 className="text-[15px] font-semibold">Más secciones</h2><button type="button" onClick={() => setMenuOpen(false)} aria-label="Cerrar" className="rounded-lg p-2 hover:bg-plum-soft"><X className="size-4" /></button></div>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {menuItems.map(({ label, icon: Icon, badgeKey }) => { const badge = badgeKey ? badges[badgeKey] : undefined; return <button key={label} type="button" onClick={() => { setMenuOpen(false); onNavigate(label) }} className={`flex flex-col items-start gap-2 rounded-2xl border p-3.5 text-left text-[12.5px] font-semibold ${label === activeItem ? 'border-plum bg-plum-soft text-plum' : 'border-border bg-white text-copy'}`}>
-                <span className="flex w-full items-center justify-between"><Icon className={`size-4 ${label === activeItem ? 'text-plum' : 'text-[#b8a7af]'}`} aria-hidden="true" />{badge && <span className="rounded-full bg-[#f7dadf] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#8e1f33]">{badge}</span>}</span>
+                <span className="flex w-full items-center justify-between"><Icon className={`size-4 ${label === activeItem ? 'text-plum' : 'text-[#b8a7af]'}`} aria-hidden="true" />{badge ? <span className="rounded-full bg-[#f7dadf] px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#8e1f33]">{badge}</span> : null}</span>
                 {label}
               </button> })}
             </div>
