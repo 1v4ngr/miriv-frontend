@@ -34,6 +34,7 @@ export const cellarApi: CellarApi = {
   async getLot(code) { try { return await apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}`) } catch (error) { if ((error as { status?: number }).status === 404) return undefined; throw error } },
   updateLot(code, input) { return apiRequest<Lot>(`/api/lots/${encodeURIComponent(code)}`, { method: 'PATCH', body: JSON.stringify(input) }) },
   createLot(input, entry) { return apiRequest<Lot>('/api/lots', { method: 'POST', body: JSON.stringify({ lot: input, entry: entry ?? null }) }) },
+  executeMovement(code: string) { return apiRequest<MovementResult>(`/api/movements/${encodeURIComponent(code)}/execute`, { method: 'POST' }) },
   registerMovement(input) { return apiRequest<MovementResult>('/api/movements', { method: 'POST', body: JSON.stringify(input) }) },
   clearContent(code: string, reason: string, responsible: string) {
     return apiRequest<void>(`/api/movements/deposits/${encodeURIComponent(code)}/content-clearance`, {

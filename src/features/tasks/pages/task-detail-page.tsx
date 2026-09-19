@@ -6,7 +6,9 @@ import { nowTimeInCenter, todayInCenter } from '../../../lib/format'
 import type { Sample } from '../../laboratory/types'
 import type { Task } from '../types'
 
-interface Props { id: string; onBack: () => void; onOpenContent: (code: string) => void; onOpenLaboratory: (code?: string) => void }
+import { TaskBlendSteps } from '../../blend/components/task-blend-steps'
+
+interface Props { id: string; onBack: () => void; onOpenContent: (code: string) => void; onOpenLaboratory: (code?: string) => void; onNavigate?: (path: string) => void }
 
 interface ExecutionDraft {
   executedAt: string
@@ -19,7 +21,7 @@ interface ExecutionDraft {
 const emptyDraft = (): ExecutionDraft => ({ executedAt: `${todayInCenter()}T${nowTimeInCenter()}`, result: 'Realizada', samplePoint: '', sampleCode: '', observations: '' })
 const RESULTS = ['Realizada', 'Realizada con incidencias', 'No realizada'] as const
 
-export function TaskDetailPage({ id, onBack, onOpenContent, onOpenLaboratory }: Props) {
+export function TaskDetailPage({ id, onBack, onOpenContent, onOpenLaboratory, onNavigate }: Props) {
   const [task, setTask] = useState<Task>()
   const [draft, setDraft] = useState<ExecutionDraft>(emptyDraft)
   const [samples, setSamples] = useState<Sample[]>([])
@@ -76,7 +78,7 @@ export function TaskDetailPage({ id, onBack, onOpenContent, onOpenLaboratory }: 
 
   const isClosed = task.status === 'DONE' || task.status === 'CANCELLED'
 
-  return <div className="mx-auto max-w-6xl space-y-4 pb-6"><button onClick={onBack} className="flex items-center gap-1 text-xs font-semibold text-plum"><ArrowLeft className="size-4" />Volver a tareas</button><header className="rounded-2xl border border-border bg-white p-4 sm:p-5"><div className="flex flex-wrap justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><h1 className="text-[22px] font-semibold">{task.title}</h1><span className="rounded-full bg-[#fae3d3] px-2.5 py-1 text-[10px] font-semibold text-[#8a4715]">{task.priority}</span><span className="rounded-full bg-[#e3e3ef] px-2.5 py-1 text-[10px] font-semibold text-[#43435c]">{task.status}</span></div><p className="mt-2 text-xs text-copy">{[task.depositCode, task.contentCode, task.dueLabel, `responsable ${task.responsible}`].filter(Boolean).join(' · ')}</p>{task.description && <p className="mt-1 text-[11px] text-muted">{task.description}</p>}</div>{!isClosed && <div className="flex gap-2"><button onClick={() => setShowCancel(true)} className="rounded-xl border border-border px-3 py-2 text-xs font-semibold">Cancelar</button></div>}</div></header>
+  return <div className="mx-auto max-w-6xl space-y-4 pb-6"><button onClick={onBack} className="flex items-center gap-1 text-xs font-semibold text-plum"><ArrowLeft className="size-4" />Volver a tareas</button><header className="rounded-2xl border border-border bg-white p-4 sm:p-5"><div className="flex flex-wrap justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><h1 className="text-[22px] font-semibold">{task.title}</h1><span className="rounded-full bg-[#fae3d3] px-2.5 py-1 text-[10px] font-semibold text-[#8a4715]">{task.priority}</span><span className="rounded-full bg-[#e3e3ef] px-2.5 py-1 text-[10px] font-semibold text-[#43435c]">{task.status}</span></div><p className="mt-2 text-xs text-copy">{[task.depositCode, task.contentCode, task.dueLabel, `responsable ${task.responsible}`].filter(Boolean).join(' · ')}</p>{task.description && <p className="mt-1 text-[11px] text-muted">{task.description}</p>}</div>{!isClosed && <div className="flex gap-2"><button onClick={() => setShowCancel(true)} className="rounded-xl border border-border px-3 py-2 text-xs font-semibold">Cancelar</button></div>}</div></header>{onNavigate && <TaskBlendSteps description={task.description} onNavigate={onNavigate} />}
     <p className="text-[12px] text-muted">Al registrar la ejecución, el servidor comprueba que el contenido sigue en {task.depositCode ?? 'su depósito'}. Si se ha movido, la tarea no se podrá completar.</p>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(270px,1fr)]">
       <div className="space-y-4">
