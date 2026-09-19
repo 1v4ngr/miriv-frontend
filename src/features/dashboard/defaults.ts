@@ -28,7 +28,7 @@ export function newWidget(type: WidgetType, overrides: Partial<WidgetConfig> = {
   let widget: WidgetConfig
   switch (type) {
     case 'chart':
-      widget = { ...base, type, contents: [], parameters: ['DENSITY'], period: '30', mode: 'grid', axis: 'date', showEvents: true, showTargets: true, showRate: false, includeAncestors: false, hiddenSeries: [] }
+      widget = { ...base, type, contents: [], parameters: ['DENSITY'], period: '30', mode: 'overlay', axis: 'date', showEvents: true, showTargets: true, showRate: false, includeAncestors: false, hiddenSeries: [] }
       break
     case 'matrix':
       widget = { ...base, type, parameters: [], onlyFlagged: false }
@@ -86,12 +86,13 @@ export function removeFromLayouts(layouts: Layouts, id: string): Layouts {
   return next
 }
 
-/** First-use template: overview matrix, density curves, acidity + pH and the blend shortcut. */
+/** First-use template: overview matrix, one chart per key parameter (each one a free-standing panel) and the blend shortcut. */
 export function defaultDashboard(): { layouts: Layouts; widgets: WidgetConfig[] } {
   const widgets: WidgetConfig[] = [
     newWidget('matrix', { title: 'Estado de la bodega' }),
     newWidget('chart', { title: 'Densidad (fermentaciones)', parameters: ['DENSITY'], axis: 'days', showRate: true }),
-    newWidget('chart', { title: 'Acidez volátil y pH', parameters: ['VOLATILE_ACIDITY', 'PH'], mode: 'grid' }),
+    newWidget('chart', { title: 'Acidez volátil', parameters: ['VOLATILE_ACIDITY'] }),
+    newWidget('chart', { title: 'pH', parameters: ['PH'] }),
     newWidget('blendShortcut'),
   ]
   const layouts = widgets.reduce<Layouts>((acc, widget) => placeWidget(acc, widget), {})

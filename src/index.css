@@ -48,3 +48,10 @@ a:focus-visible {
   color: #fff8fb;
   background: #6d4656;
 }
+
+/* Dashboard grid (react-grid-layout): easier resize corner, clear drop target while dragging. */
+.react-grid-item > .react-resizable-handle { width: 22px; height: 22px; opacity: 0.55; }
+.react-grid-item:hover > .react-resizable-handle { opacity: 1; }
+.react-grid-item.react-draggable-dragging,
+.react-grid-item.resizing { z-index: 30; box-shadow: 0 10px 28px rgba(60, 30, 45, 0.22); }
+.react-grid-item.react-grid-placeholder { background: #6d4656; opacity: 0.14; border-radius: 16px; }

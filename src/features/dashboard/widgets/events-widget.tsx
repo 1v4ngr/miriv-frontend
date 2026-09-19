@@ -2,7 +2,7 @@ import { ArrowRightLeft, ClipboardCheck, FlaskConical, Wrench } from 'lucide-rea
 import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { useResource } from '../../../hooks/use-resource'
 import { formatDateTime } from '../../../lib/format'
-import { MultiSelect } from '../../tracking/components/multi-select'
+import { DepositPicker } from '../components/deposit-picker'
 import { EVENT_COLORS } from '../../tracking/components/series-chart'
 import type { Period } from '../../tracking/favorites'
 import { PERIODS, periodStart } from '../../tracking/period'
@@ -59,10 +59,9 @@ export function EventsWidgetView({ widget, globals, openSettings }: WidgetProps<
 
 export function EventsWidgetSettings({ widget, onChange }: WidgetSettingsProps<EventsWidget>) {
   const { overview } = useDashboardContext()
-  const contentOptions = (overview?.rows ?? []).map((row) => ({ value: row.content, label: `${row.deposit} · ${row.content}`, hint: row.category ?? undefined }))
   return (
     <div className="space-y-4">
-      <MultiSelect label="Depósitos / contenidos" options={contentOptions} selected={widget.contents} onChange={(contents) => onChange({ ...widget, contents })} max={40} />
+      <DepositPicker rows={overview?.rows ?? []} selected={widget.contents} onChange={(contents) => onChange({ ...widget, contents })} />
       <label className="grid gap-1 font-semibold text-muted">Periodo
         <select value={widget.period} disabled={widget.followGlobal} onChange={(event) => onChange({ ...widget, period: event.target.value as Period })} className={select}>
           {PERIODS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}

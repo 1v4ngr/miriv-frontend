@@ -2,18 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Responsive } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import { Copy, Maximize, Minimize, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { Lock, Maximize, Minimize, Plus, Unlock } from 'lucide-react'
 import { ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { useResource } from '../../../hooks/use-resource'
 import { trackingApi } from '../../tracking/services/tracking-api'
 import { TrackingTabs } from '../../tracking/components/tracking-tabs'
 import { AddWidgetDialog } from '../components/add-widget-dialog'
+import { DashboardTabs } from '../components/dashboard-tabs'
 import { GlobalFilterBar } from '../components/global-filter-bar'
 import { DashboardContext, type DashboardContextValue } from '../dashboard-context'
 import { WidgetFrame } from '../components/widget-frame'
 import { newWidget, placeWidget, removeFromLayouts } from '../defaults'
 import { useElementSize } from '../hooks/use-element-size'
-import { markSeeded, useDashboard, type SaveStatus } from '../hooks/use-dashboard'
+import { forgetDashboard, markSeeded, useDashboard, type SaveStatus } from '../hooks/use-dashboard'
 import { dashboardApi } from '../services/dashboard-api'
 import type { Breakpoint, GlobalFilters, GridItem, Layouts, WidgetConfig, WidgetType } from '../types'
 
@@ -22,6 +23,7 @@ interface Props { dashboardId?: string; onNavigate: (path: string) => void }
 const BREAKPOINTS = { lg: 1100, md: 700, sm: 0 }
 const COLS = { lg: 12, md: 8, sm: 1 }
 const DESKTOP_MIN_WIDTH = 700
+const MAX_WIDGETS = 30
 const DEFAULT_GLOBALS: GlobalFilters = { period: '30', contents: [], category: '' }
 const globalsKey = (id: string) => `miriv:dashboard-globals:${id}`
 const STATUS_LABEL: Record<SaveStatus, string> = {
@@ -47,7 +49,9 @@ function toLayouts(all: Partial<Record<string, readonly GridItem[]>>): Layouts {
 
 export function DashboardPage({ dashboardId, onNavigate }: Props) {
   const { summaries, dashboard, status, error, update, flush, retry, reload } = useDashboard(dashboardId)
-  const [editing, setEditing] = useState(false)
+  // Layout is free by default: panels can be dragged and resized without switching any mode on.
+  const [locked, setLocked] = useState(false)
+  const editing = !locked
   const [adding, setAdding] = useState(false)
   const [actionError, setActionError] = useState('')
   const [globals, setGlobalsState] = useState<GlobalFilters>(DEFAULT_GLOBALS)
@@ -116,6 +120,21 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
       return { ...current, widgets: [...current.widgets, copy], layouts: placeWidget(current.layouts, copy) }
     })
   }, [update])
+  const replaceWidget = useCallback((id: string, replacements: WidgetConfig[]) => {
+    update((current) => {
+      const index = current.widgets.findIndex((widget) => widget.id === id)
+      if (index < 0) return current
+      if (current.widgets.length - 1 + replacements.length > MAX_WIDGETS) {
+        setActionError(`Máximo ${MAX_WIDGETS} paneles por dashboard.`)
+        return current
+      }
+      let layouts = removeFromLayouts(current.layouts, id)
+      for (const widget of replacements) layouts = placeWidget(layouts, widget)
+      const widgets = [...current.widgets]
+      widgets.splice(index, 1, ...replacements)
+      return { ...current, widgets, layouts }
+    })
+  }, [update])
   const nudgeWidget = useCallback((id: string, dx: number, dy: number, dw: number, dh: number) => {
     const breakpoint: Breakpoint = width >= BREAKPOINTS.lg ? 'lg' : width >= BREAKPOINTS.md ? 'md' : 'sm'
     const cols = COLS[breakpoint]
@@ -146,6 +165,7 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
     await flush()
     const created = await dashboardApi.create(name, { layouts: {}, widgets: [] })
     markSeeded(created.id)
+    forgetDashboard()
     onNavigate(`dashboard/${created.id}`)
   })
   const rename = () => {
@@ -158,17 +178,20 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
     await flush()
     const copy = await dashboardApi.duplicate(dashboard.id)
     markSeeded(copy.id)
+    forgetDashboard()
     onNavigate(`dashboard/${copy.id}`)
   })
   const remove = () => guarded(async () => {
     if (!dashboard || !confirm(`¿Eliminar el dashboard «${dashboard.name}»?`)) return
     await dashboardApi.remove(dashboard.id)
+    forgetDashboard(dashboard.id)
     onNavigate('dashboard')
   })
   const makeDefault = () => guarded(async () => {
     if (!dashboard) return
     await flush()
     await dashboardApi.makeDefault(dashboard.id)
+    forgetDashboard()
     reload()
   })
 
@@ -183,9 +206,9 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
 
   const children = useMemo(() => (dashboard?.widgets ?? []).map((widget) => (
     <div key={widget.id}>
-      <WidgetFrame widget={widget} editing={draggable} globals={globals} onChange={changeWidget} onDuplicate={duplicateWidget} onRemove={removeWidget} onNavigate={onNavigate} onNudge={nudgeWidget} />
+      <WidgetFrame widget={widget} editing={draggable} globals={globals} onChange={changeWidget} onDuplicate={duplicateWidget} onRemove={removeWidget} onReplace={replaceWidget} onNavigate={onNavigate} onNudge={nudgeWidget} />
     </div>
-  )), [dashboard?.widgets, draggable, globals, changeWidget, duplicateWidget, removeWidget, onNavigate, nudgeWidget])
+  )), [dashboard?.widgets, draggable, globals, changeWidget, duplicateWidget, removeWidget, replaceWidget, onNavigate, nudgeWidget])
 
   if (!dashboard) {
     return status === 'error' ? <ErrorState message={error} onRetry={reload} /> : <LoadingState label="Cargando dashboard…" />
@@ -202,35 +225,28 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
         </header>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="sr-only" htmlFor="dashboard-select">Dashboard</label>
-        <select id="dashboard-select" value={dashboard.id} onChange={(event) => onNavigate(`dashboard/${event.target.value}`)} className="rounded-xl border border-border bg-white px-3 py-1.5 text-xs font-semibold">
-          {summaries.map((item) => <option key={item.id} value={item.id}>{item.name}{item.isDefault ? ' ★' : ''}</option>)}
-        </select>
-        <button type="button" className={button} onClick={create}><Plus className="size-3.5" />Nuevo</button>
-        <button type="button" className={button} onClick={rename}><Pencil className="size-3.5" />Renombrar</button>
-        <button type="button" className={button} onClick={duplicate}><Copy className="size-3.5" />Duplicar</button>
-        <button type="button" className={button} disabled={dashboard.isDefault} onClick={makeDefault}><Star className="size-3.5" />{dashboard.isDefault ? 'Predeterminado' : 'Hacer predeterminado'}</button>
-        <button type="button" className={`${button} text-[#8e1f33]`} disabled={summaries.length <= 1} onClick={remove}><Trash2 className="size-3.5" />Eliminar</button>
-        <span role="status" className={`ml-auto text-[11.5px] font-semibold ${status === 'error' || status === 'conflict' ? 'text-[#8e1f33]' : 'text-muted'}`}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
+          <DashboardTabs summaries={summaries} activeId={dashboard.id} onSwitch={(id) => onNavigate(`dashboard/${id}`)}
+            onCreate={create} onRename={rename} onDuplicate={duplicate} onMakeDefault={makeDefault} onRemove={remove} />
+        </div>
+        <span role="status" className={`text-[11.5px] font-semibold ${status === 'error' || status === 'conflict' ? 'text-[#8e1f33]' : 'text-muted'}`}>
           {STATUS_LABEL[status]}
           {status === 'error' && <button type="button" onClick={retry} className="ml-2 underline">Reintentar</button>}
           {status === 'conflict' && <button type="button" onClick={reload} className="ml-2 underline">Recargar</button>}
         </span>
+        <button type="button" className={button} onClick={() => setAdding(true)}><Plus className="size-3.5" />Añadir panel</button>
+        <button type="button" className={button} onClick={() => setLocked((current) => !current)} aria-pressed={locked}
+          title="Con el diseño desbloqueado arrastra los paneles por su cabecera y redimensiónalos desde la esquina inferior derecha. Con un panel enfocado, las flechas lo mueven y Mayús + flechas lo redimensionan.">
+          {locked ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}{locked ? 'Diseño bloqueado' : 'Diseño libre'}
+        </button>
+        <button type="button" className={button} onClick={toggleFullscreen} aria-pressed={isFull}>
+          {isFull ? <Minimize className="size-3.5" /> : <Maximize className="size-3.5" />}{isFull ? 'Salir de pantalla completa' : 'Pantalla completa'}
+        </button>
       </div>
       {(actionError || (status !== 'saved' && status !== 'saving' && status !== 'loading' && error)) && (
         <p role="alert" className="rounded-xl bg-[#f7e0e6] p-2 text-xs text-[#8e1f33]">{actionError || error}</p>
       )}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 text-xs font-semibold" title="Con «Editar diseño»: arrastra los paneles por su cabecera y redimensiónalos desde la esquina inferior derecha. Con un panel enfocado, las flechas lo mueven y Mayús + flechas lo redimensionan.">
-          <input type="checkbox" checked={editing} onChange={(event) => setEditing(event.target.checked)} className="size-3.5 accent-plum" />Editar diseño
-        </label>
-        <button type="button" className={button} onClick={() => setAdding(true)}><Plus className="size-3.5" />Añadir panel</button>
-        <button type="button" className={`${button} ml-auto`} onClick={toggleFullscreen} aria-pressed={isFull}>
-          {isFull ? <Minimize className="size-3.5" /> : <Maximize className="size-3.5" />}{isFull ? 'Salir de pantalla completa' : 'Pantalla completa'}
-        </button>
-      </div>
 
       <GlobalFilterBar />
 

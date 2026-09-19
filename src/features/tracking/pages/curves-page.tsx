@@ -120,11 +120,15 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
       const target = list.find((item) => item.isDefault) ?? list[0]
       let dashboard = await dashboardApi.get(target.id)
       if (dashboard.widgets.length === 0 && !wasSeeded(dashboard.id)) dashboard = { ...dashboard, ...defaultDashboard() }
-      const widget = newWidget('chart', {
-        title: view.contents.length === 1 ? view.contents[0] : 'Comparación', contents: view.contents, parameters: view.parameters,
-        period: view.period, mode: view.mode, axis: view.axis, showEvents, showTargets, showRate, includeAncestors, followGlobal: false,
-      })
-      await dashboardApi.save({ ...dashboard, widgets: [...dashboard.widgets, widget], layouts: placeWidget(dashboard.layouts, widget) })
+      const shared = { contents: view.contents, period: view.period, axis: view.axis, showEvents, showTargets, showRate, includeAncestors, followGlobal: false }
+      // "One chart per parameter" view → one free-standing panel per parameter; "overlay" → a single panel.
+      const names = new Map((parameterList.data ?? []).map((parameter) => [parameter.code, parameter.name]))
+      const added = view.mode === 'grid' && view.parameters.length > 1
+        ? view.parameters.map((code) => newWidget('chart', { ...shared, title: `${names.get(code) ?? code}${view.contents.length === 1 ? ` · ${view.contents[0]}` : ''}`, parameters: [code], mode: 'overlay' }))
+        : [newWidget('chart', { ...shared, title: view.contents.length === 1 ? view.contents[0] : 'Comparación', parameters: view.parameters, mode: view.mode })]
+      const layouts = added.reduce((acc, widget) => placeWidget(acc, widget), dashboard.layouts)
+      if (dashboard.widgets.length + added.length > 30) throw new Error('Máximo 30 paneles por dashboard.')
+      await dashboardApi.save({ ...dashboard, widgets: [...dashboard.widgets, ...added], layouts })
       markSeeded(dashboard.id)
       onNavigate(`dashboard/${dashboard.id}`)
     } catch (cause) {

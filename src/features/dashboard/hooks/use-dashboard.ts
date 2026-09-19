@@ -7,11 +7,21 @@ import type { Dashboard, DashboardSummary } from '../types'
 export type SaveStatus = 'loading' | 'saved' | 'saving' | 'error' | 'conflict'
 
 const SAVE_DELAY_MS = 800
+
+// Module-level caches make switching dashboards instant: the cached one shows at once and is refreshed in the background.
+let summariesCache: DashboardSummary[] | undefined
+const dashboardCache = new Map<string, Dashboard>()
 const seededKey = (id: string) => `miriv:dashboard-seeded:${id}`
 
 export function wasSeeded(id: string): boolean {
   try { return localStorage.getItem(seededKey(id)) !== null } catch { return false }
 }
+/** Drops cached copies after a dashboard is deleted or the list changed. */
+export function forgetDashboard(id?: string) {
+  if (id) dashboardCache.delete(id)
+  summariesCache = undefined
+}
+
 export function markSeeded(id: string) {
   try { localStorage.setItem(seededKey(id), '1') } catch { /* storage blocked: the template may be offered again */ }
 }
@@ -42,8 +52,13 @@ export function useDashboard(requestedId?: string) {
       // Keep edits made while saving; only adopt the server's version and timestamps.
       const merged = dirty.current && latest.current ? { ...latest.current, version: saved.version, updatedAt: saved.updatedAt } : saved
       latest.current = merged
+      dashboardCache.set(merged.id, merged)
       setDashboard(merged)
-      setSummaries((list) => list.map((item) => (item.id === merged.id ? { ...item, name: merged.name, updatedAt: merged.updatedAt } : item)))
+      setSummaries((list) => {
+        const next = list.map((item) => (item.id === merged.id ? { ...item, name: merged.name, updatedAt: merged.updatedAt } : item))
+        summariesCache = next
+        return next
+      })
       setStatus(dirty.current ? 'saving' : 'saved')
       setError('')
       if (dirty.current) timer.current = window.setTimeout(() => void flush(), SAVE_DELAY_MS)
@@ -59,17 +74,27 @@ export function useDashboard(requestedId?: string) {
     let active = true
     blocked.current = false
     dirty.current = false
-    setStatus('loading')
     setError('')
+    // Show what is cached right away (stale-while-revalidate) instead of a loading state.
+    const cachedList = summariesCache
+    const cachedTarget = cachedList ? (cachedList.find((item) => item.id === requestedId) ?? (requestedId ? undefined : cachedList.find((item) => item.isDefault) ?? cachedList[0])) : undefined
+    const cached = cachedTarget ? dashboardCache.get(cachedTarget.id) : undefined
+    if (cachedList) setSummaries(cachedList)
+    if (cached) { latest.current = cached; setDashboard(cached); setStatus('saved') }
+    else { latest.current = undefined; setDashboard(undefined); setStatus('loading') }
     ;(async () => {
       try {
         const list = await dashboardApi.list()
         if (!active) return
+        summariesCache = list
         setSummaries(list)
         const target = list.find((item) => item.id === requestedId) ?? list.find((item) => item.isDefault) ?? list[0]
         if (!target) { setStatus('error'); setError('No hay ningún dashboard.'); return }
         let loaded = await dashboardApi.get(target.id)
         if (!active) return
+        // Edits made while this refresh was in flight win over the server copy we already show.
+        if (dirty.current && latest.current?.id === loaded.id) return
+        dashboardCache.set(loaded.id, loaded)
         if (loaded.widgets.length === 0 && !wasSeeded(loaded.id)) {
           loaded = { ...loaded, ...defaultDashboard() }
           markSeeded(loaded.id)
@@ -93,6 +118,7 @@ export function useDashboard(requestedId?: string) {
     const next = mutator(latest.current)
     if (next === latest.current) return
     latest.current = next
+    dashboardCache.set(next.id, next)
     dirty.current = true
     setDashboard(next)
     if (!blocked.current) {

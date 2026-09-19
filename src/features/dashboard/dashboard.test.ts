@@ -15,7 +15,7 @@ describe('normalizeDashboard', () => {
     const chart = dashboard.widgets[0]
     expect(chart.type).toBe('chart')
     if (chart.type === 'chart') {
-      expect(chart.mode).toBe('grid')
+      expect(chart.mode).toBe('overlay')
       expect(chart.period).toBe('30')
     }
     expect(chart.title).toBe('T')
@@ -34,10 +34,10 @@ describe('normalizeDashboard', () => {
 })
 
 describe('defaults', () => {
-  it('builds the four-panel template with matching layout ids', () => {
+  it('builds the five-panel template with matching layout ids', () => {
     const { layouts, widgets } = defaultDashboard()
-    expect(widgets).toHaveLength(4)
-    expect(layouts.lg).toHaveLength(4)
+    expect(widgets).toHaveLength(5)
+    expect(layouts.lg).toHaveLength(5)
     expect(new Set(layouts.lg?.map((item) => item.i))).toEqual(new Set(widgets.map((widget) => widget.id)))
   })
 

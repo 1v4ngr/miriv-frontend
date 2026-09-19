@@ -2,6 +2,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/pag
 import { useResource } from '../../../hooks/use-resource'
 import { DateComparison, LatestComparison } from '../../tracking/components/comparison-tables'
 import { MultiSelect } from '../../tracking/components/multi-select'
+import { DepositPicker } from '../components/deposit-picker'
 import { trackingApi, type SeriesResponse } from '../../tracking/services/tracking-api'
 import { useDashboardContext } from '../dashboard-context'
 import { effectiveContents } from '../filters'
@@ -39,10 +40,9 @@ export function LatestTableWidgetView({ widget, globals, onNavigate, openSetting
 export function LatestTableWidgetSettings({ widget, onChange }: WidgetSettingsProps<LatestTableWidget>) {
   const { overview } = useDashboardContext()
   const parameterOptions = useParameterOptions()
-  const contentOptions = (overview?.rows ?? []).map((row) => ({ value: row.content, label: `${row.deposit} · ${row.content}`, hint: row.category ?? undefined }))
   return (
     <div className="space-y-4">
-      <MultiSelect label="Depósitos / contenidos" options={contentOptions} selected={widget.contents} onChange={(contents) => onChange({ ...widget, contents })} max={40} />
+      <DepositPicker rows={overview?.rows ?? []} selected={widget.contents} onChange={(contents) => onChange({ ...widget, contents })} />
       <MultiSelect label="Parámetros" options={parameterOptions} selected={widget.parameters} onChange={(parameters) => onChange({ ...widget, parameters })} bulk max={30} />
     </div>
   )

@@ -13,6 +13,7 @@ interface Props {
   onChange: (next: WidgetConfig) => void
   onDuplicate: (id: string) => void
   onRemove: (id: string) => void
+  onReplace: (id: string, widgets: WidgetConfig[]) => void
   onNavigate: (path: string) => void
   /** Keyboard editing: arrows move the panel, Shift + arrows resize it (deltas in grid cells). */
   onNudge: (id: string, dx: number, dy: number, dw: number, dh: number) => void
@@ -21,7 +22,7 @@ interface Props {
 const icon = 'widget-no-drag flex size-7 items-center justify-center rounded-lg text-muted hover:bg-plum-soft hover:text-plum'
 
 /** Common chrome of every panel: drag handle, editable title, settings, maximize, duplicate, delete. */
-function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNavigate, onNudge }: Props) {
+function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onReplace, onNavigate, onNudge }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [maximized, setMaximized] = useState(false)
   const [renaming, setRenaming] = useState(false)
@@ -52,7 +53,7 @@ function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNa
   }
   const body = (
     <WidgetErrorBoundary resetKey={widget.id}>
-      <View widget={widget} onChange={onChange} globals={globals} onNavigate={onNavigate} openSettings={() => setSettingsOpen(true)} />
+      <View widget={widget} onChange={onChange} globals={globals} onNavigate={onNavigate} openSettings={() => setSettingsOpen(true)} onReplace={(widgets) => onReplace(widget.id, widgets)} />
     </WidgetErrorBoundary>
   )
 
@@ -74,7 +75,7 @@ function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNa
         <button type="button" className={icon} aria-label="Eliminar panel" onMouseDown={(event) => event.stopPropagation()} onClick={() => { if (confirm(`¿Eliminar el panel «${widget.title}»?`)) onRemove(widget.id) }}><Trash2 className="size-4" /></button>
       </header>
       <div className="min-h-0 flex-1 overflow-auto">{body}</div>
-      {settingsOpen && <WidgetSettingsDrawer widget={widget} onChange={onChange} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <WidgetSettingsDrawer widget={widget} onChange={onChange} onReplace={(widgets) => onReplace(widget.id, widgets)} onClose={() => setSettingsOpen(false)} />}
       {maximized && (
         <div role="dialog" aria-label={`${widget.title} ampliado`} className="fixed inset-4 z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl">
           <header className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4">

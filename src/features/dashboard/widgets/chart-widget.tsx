@@ -5,6 +5,8 @@ import { ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { useResource } from '../../../hooks/use-resource'
 import { buildChartSeries } from '../../tracking/build-chart-series'
 import { MultiSelect } from '../../tracking/components/multi-select'
+import { newId } from '../defaults'
+import { DepositPicker } from '../components/deposit-picker'
 import { downloadChartPng, SeriesChart, type ChartSeries } from '../../tracking/components/series-chart'
 import { downloadCsv, seriesToCsv } from '../../tracking/export'
 import type { Axis, Mode, Period } from '../../tracking/favorites'
@@ -65,7 +67,7 @@ export function ChartWidgetView({ widget, onChange, globals, onNavigate, openSet
       {widget.mode === 'overlay' && mode === 'grid' && <p role="status" className="mx-3 mt-2 rounded-lg bg-[#f5eed0] p-1.5 text-[11px] text-[#6b5a10]">Superponer admite 2 unidades como máximo: se muestra un gráfico por parámetro.</p>}
       <div className="min-h-0 flex-1 overflow-auto p-2">
         {mode === 'overlay' ? (
-          <SeriesChart series={chartSeries} axis={widget.axis} events={eventList} showTargets={widget.showTargets} showRate={false}
+          <SeriesChart series={chartSeries} axis={widget.axis} events={eventList} showTargets={widget.showTargets} showRate={widget.showRate}
             height={overlayHeight} label={`Evolución de ${data.parameters.map((parameter) => parameter.name).join(', ')}`}
             hiddenSeries={widget.hiddenSeries} onLegendChange={setHidden} onReady={(chart) => charts.current.set('overlay', chart)} />
         ) : (
@@ -99,19 +101,26 @@ export function ChartWidgetView({ widget, onChange, globals, onNavigate, openSet
   )
 }
 
-export function ChartWidgetSettings({ widget, onChange }: WidgetSettingsProps<ChartWidget>) {
+export function ChartWidgetSettings({ widget, onChange, onReplace }: WidgetSettingsProps<ChartWidget>) {
   const { overview, globals } = useDashboardContext()
   const parameters = useResource(() => trackingApi.parameters(), [])
   const globalContents = widget.followGlobal && globals.contents.length > 0
-  const contentOptions = (overview?.rows ?? []).map((row) => ({ value: row.content, label: `${row.deposit} · ${row.content}`, hint: row.category ?? undefined }))
-  for (const code of widget.contents) if (!contentOptions.some((option) => option.value === code)) contentOptions.push({ value: code, label: code, hint: undefined })
+  const shown = effectiveContents(widget.contents, widget.followGlobal, globals, overview)
+  const namesByCode = new Map((parameters.data ?? []).map((parameter) => [parameter.code, parameter]))
+  const unitCount = new Set(widget.parameters.map((code) => namesByCode.get(code)?.unit ?? '')).size
+  // Splitting turns one panel into several free-standing ones: each can then be dragged and resized on its own.
+  const child = (patch: Partial<ChartWidget>): ChartWidget => ({ ...widget, id: newId(), hiddenSeries: [], ...patch })
+  const splitByParameter = () => onReplace(widget.parameters.map((code) => child({ title: namesByCode.get(code)?.name ?? code, parameters: [code], mode: 'overlay' })))
+  const splitByDeposit = () => onReplace(shown.map((code) => child({
+    title: overview?.rows.find((row) => row.content === code)?.deposit ?? code, contents: [code], followGlobal: false, mode: unitCount <= 2 ? 'overlay' : 'grid',
+  })))
   const set = <K extends keyof ChartWidget>(key: K, value: ChartWidget[K]) => onChange({ ...widget, [key]: value })
 
   return (
     <div className="space-y-4">
       {globalContents
         ? <p className="rounded-xl bg-plum-soft p-2 text-[11.5px] text-plum">Usando los depósitos globales. Desactiva «Seguir filtros globales» para elegir otros.</p>
-        : <MultiSelect label="Depósitos / contenidos" options={contentOptions} selected={widget.contents} onChange={(value) => set('contents', value)} placeholder="Elige uno o varios" max={40} />}
+        : <DepositPicker rows={overview?.rows ?? []} selected={widget.contents} onChange={(value) => set('contents', value)} />}
       <MultiSelect label="Parámetros" options={(parameters.data ?? []).map((parameter) => ({ value: parameter.code, label: parameter.name, hint: parameter.unit ?? undefined }))}
         selected={widget.parameters} onChange={(value) => set('parameters', value)} placeholder="Elige parámetros" bulk max={30} />
       <div className="grid grid-cols-2 gap-3">
@@ -128,9 +137,16 @@ export function ChartWidgetSettings({ widget, onChange }: WidgetSettingsProps<Ch
       <div className="grid gap-2">
         <label className="flex items-center gap-2"><input type="checkbox" checked={widget.showEvents} onChange={(event) => set('showEvents', event.target.checked)} className="size-3.5 accent-plum" />Anotar trasiegos, operaciones y revisiones</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={widget.showTargets} onChange={(event) => set('showTargets', event.target.checked)} className="size-3.5 accent-plum" />Mostrar objetivos (aviso / crítico)</label>
-        <label className={`flex items-center gap-2 ${widget.mode === 'grid' ? '' : 'opacity-50'}`}><input type="checkbox" disabled={widget.mode !== 'grid'} checked={widget.showRate} onChange={(event) => set('showRate', event.target.checked)} className="size-3.5 accent-plum" />Velocidad de cambio (Δ/día)</label>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={widget.showRate} onChange={(event) => set('showRate', event.target.checked)} className="size-3.5 accent-plum" />Velocidad de cambio (Δ/día)</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={widget.includeAncestors} onChange={(event) => set('includeAncestors', event.target.checked)} className="size-3.5 accent-plum" />Incluir origen (contenidos de los que procede)</label>
       </div>
+      {(widget.parameters.length > 1 || shown.length > 1) && (
+        <fieldset className="grid gap-2 rounded-xl border border-border p-3">
+          <legend className="px-1 font-semibold text-muted">Dividir en paneles independientes</legend>
+          {widget.parameters.length > 1 && <button type="button" onClick={splitByParameter} className="rounded-xl border border-border px-3 py-1.5 text-left font-semibold text-plum hover:bg-plum-soft">Un panel por parámetro ({widget.parameters.length})</button>}
+          {shown.length > 1 && <button type="button" onClick={splitByDeposit} className="rounded-xl border border-border px-3 py-1.5 text-left font-semibold text-plum hover:bg-plum-soft">Un panel por depósito ({shown.length})</button>}
+        </fieldset>
+      )}
       {widget.hiddenSeries.length > 0 && <button type="button" onClick={() => set('hiddenSeries', [])} className="font-semibold text-plum underline">Mostrar las {widget.hiddenSeries.length} serie(s) ocultas</button>}
     </div>
   )

@@ -4,10 +4,10 @@ import type { WidgetConfig } from '../types'
 import { WIDGETS } from '../widgets'
 import type { WidgetDefinition } from '../widgets/types'
 
-interface Props { widget: WidgetConfig; onChange: (next: WidgetConfig) => void; onClose: () => void }
+interface Props { widget: WidgetConfig; onChange: (next: WidgetConfig) => void; onReplace: (widgets: WidgetConfig[]) => void; onClose: () => void }
 
 /** Right-hand drawer: common fields (title, follow global filters) plus the settings of the widget type. */
-export function WidgetSettingsDrawer({ widget, onChange, onClose }: Props) {
+export function WidgetSettingsDrawer({ widget, onChange, onReplace, onClose }: Props) {
   const { Settings } = WIDGETS[widget.type] as unknown as WidgetDefinition<WidgetConfig>
   useEffect(() => {
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
@@ -29,7 +29,7 @@ export function WidgetSettingsDrawer({ widget, onChange, onClose }: Props) {
           <input type="checkbox" checked={widget.followGlobal} onChange={(event) => onChange({ ...widget, followGlobal: event.target.checked })} className="size-3.5 accent-plum" />
           Seguir filtros globales (periodo, depósitos y categoría)
         </label>
-        <Settings widget={widget} onChange={onChange} />
+        <Settings widget={widget} onChange={onChange} onReplace={(widgets) => { onReplace(widgets); onClose() }} />
       </div>
       <footer className="border-t border-border p-4">
         <button type="button" onClick={onClose} className="w-full rounded-xl bg-plum px-4 py-2 text-xs font-semibold text-white">Listo</button>
