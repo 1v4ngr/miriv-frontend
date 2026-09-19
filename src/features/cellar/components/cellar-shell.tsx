@@ -10,7 +10,7 @@ interface CellarShellProps {
   children: ReactNode
   search: string
   onSearchChange: (value: string) => void
-  activeSubsection: 'Depósitos' | 'Lotes' | 'Contenidos' | 'Laboratorio' | 'Seguimiento' | 'Actividad' | 'Incidencias' | 'Tareas' | 'Elaboración' | 'Informes' | 'Administración'
+  activeSubsection: 'Depósitos' | 'Lotes' | 'Movimientos' | 'Contenidos' | 'Laboratorio' | 'Seguimiento' | 'Actividad' | 'Incidencias' | 'Tareas' | 'Elaboración' | 'Informes' | 'Administración'
   onNavigate: (path: string) => void
 }
 
@@ -42,7 +42,7 @@ export function CellarShell({ children, search, onSearchChange, activeSubsection
           <WorkHomeHeader center={profile?.centerName ?? 'Cargando…'} campaign="Campaña 2026" search={search} onSearchChange={onSearchChange} searchPlaceholder={activeSubsection === 'Laboratorio' ? 'Buscar muestra o depósito' : 'Buscar depósito, lote o contenido'} onOpenNotices={() => onNavigate('account')} onOpenProfile={() => setShowAccount(true)} profile={profile} />
           <div className="w-full min-w-0 flex-1 px-4 pb-24 pt-4 sm:px-5 lg:px-6 lg:pb-8">
             {showBodegaTabs && <nav aria-label="Secciones de bodega" className="mb-5 flex items-center gap-1 border-b border-[#e5d9df]">
-              {(['Depósitos', 'Lotes'] as const).map((label) => <button key={label} type="button" onClick={() => onNavigate(label === 'Depósitos' ? 'deposits' : 'lots')} aria-current={activeSubsection === label ? 'page' : undefined} className={`border-b-2 px-4 py-2.5 text-[12.5px] font-semibold transition-colors ${activeSubsection === label ? 'border-plum text-plum' : 'border-transparent text-muted hover:text-plum'}`}>{label}</button>)}
+              {(['Depósitos', 'Lotes', 'Movimientos'] as const).map((label) => <button key={label} type="button" onClick={() => onNavigate(label === 'Depósitos' ? 'deposits' : label === 'Lotes' ? 'lots' : 'movements')} aria-current={activeSubsection === label ? 'page' : undefined} className={`border-b-2 px-4 py-2.5 text-[12.5px] font-semibold transition-colors ${activeSubsection === label ? 'border-plum text-plum' : 'border-transparent text-muted hover:text-plum'}`}>{label}</button>)}
             </nav>}
             {children}
           </div>

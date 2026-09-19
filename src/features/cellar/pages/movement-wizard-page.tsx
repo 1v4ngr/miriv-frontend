@@ -7,7 +7,7 @@ import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import type { Deposit, MovementType, NewMovement } from '../types'
 import { activeOccupation, formatLiters } from '../utils'
 
-interface Props { sourceCode: string; onBack: () => void; onDone: (destinationContentCode: string) => void }
+interface Props { sourceCode: string; onBack: () => void; onSaved: (movementCode: string) => void; plannedMode?: boolean }
 
 const steps = ['Tipo y momento', 'Origen y destino', 'Balance', 'Revisión'] as const
 const today = new Date().toISOString().slice(0, 10)
@@ -22,7 +22,7 @@ function Stepper({ current }: { current: number }) {
   </div>)}</div>
 }
 
-export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
+export function MovementWizardPage({ sourceCode, onBack, onSaved, plannedMode = false }: Props) {
   const [step, setStep] = useState(0)
   const [deposits, setDeposits] = useState<Deposit[]>([])
   const [centerMembers, setCenterMembers] = useState<CenterMember[]>([])
@@ -60,7 +60,7 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
   const [uncertain, setUncertain] = useState(false)
   const [staleBalance, setStaleBalance] = useState<{ deposit: string; expected: number; current: number } | null>(null)
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (asPlanned = plannedMode) => {
     setSaving(true); setError(''); setUncertain(false); setStaleBalance(null)
     // F2-06: stamp the balance we observed at confirmation time so the server can detect
     // a concurrent write and refuse the move instead of silently overwriting the new value.
@@ -69,7 +69,7 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
       expectedSourceLiters: sourceOccupation.volumeLiters,
       expectedDestinationLiters: destinationOccupation?.volumeLiters ?? 0,
     }
-    try { const result = await cellarApi.registerMovement(payload); onDone(result.destinationContentCode) }
+    try { const result = await cellarApi.registerMovement({ ...payload, planned: asPlanned }); onSaved(result.code) }
     catch (cause) {
       if (cause instanceof ApiRequestError && cause.code === 'STALE_BALANCE') {
         const details = cause.details ?? {}
@@ -97,8 +97,14 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
       setDeposits(items)
       const refreshed = items.find((deposit) => deposit.code === sourceCode)
       const occupation = refreshed ? activeOccupation(refreshed) : undefined
-      if (occupation && occupation.volumeLiters !== sourceOccupation.volumeLiters) onDone(form.destinationDeposit)
-      else { setUncertain(false); setError('') }
+      if (occupation && occupation.volumeLiters !== sourceOccupation.volumeLiters) {
+        setUncertain(false)
+        setError('El saldo del origen ha cambiado; vuelve a revisar el balance antes de repetir.')
+        setStep(2)
+      } else {
+        setUncertain(false)
+        setError('No se ha podido confirmar el registro. Repite el movimiento.')
+      }
     } finally { setSaving(false) }
   }
 
@@ -172,7 +178,10 @@ export function MovementWizardPage({ sourceCode, onBack, onDone }: Props) {
         <button type="button" disabled={step === 0} onClick={() => setStep(step - 1)} className="min-h-10 rounded-xl border border-border px-4 text-xs font-semibold disabled:opacity-40">Atrás</button>
         {step < 3
           ? <button type="button" disabled={(step === 0 && !canAdvanceStep1) || (step === 1 && !canAdvanceStep2) || (step === 2 && !canAdvanceStep3)} onClick={() => setStep(step + 1)} className="min-h-10 rounded-xl bg-plum px-4 text-xs font-semibold text-white disabled:opacity-40">Continuar</button>
-          : <button type="button" disabled={saving || uncertain} onClick={handleConfirm} className="min-h-10 rounded-xl bg-plum px-4 text-xs font-semibold text-white disabled:opacity-60">{saving ? 'Confirmando…' : 'Confirmar movimiento'}</button>}
+          : <div className="flex flex-wrap items-center justify-end gap-2">
+              <button type="button" disabled={saving || uncertain} onClick={() => handleConfirm(false)} className="min-h-10 rounded-xl bg-plum px-4 text-xs font-semibold text-white disabled:opacity-60">{saving && !plannedMode ? 'Confirmando…' : 'Confirmar movimiento'}</button>
+              <button type="button" disabled={saving || uncertain} onClick={() => handleConfirm(true)} className="min-h-10 rounded-xl border border-plum px-4 text-xs font-semibold text-plum disabled:opacity-60">{saving && plannedMode ? 'Guardando…' : 'Guardar como previsto'}</button>
+            </div>}
       </div>
     </section>
   </div>

@@ -78,6 +78,8 @@ export interface NewEntry {
 }
 
 export type MovementType = 'Trasiego' | 'Trasvase' | 'Salida'
+// F4-01: lifecycle of a movement (planned → executed, or cancelled).
+export type MovementStatus = 'PLANNED' | 'EXECUTED' | 'CANCELLED'
 
 export interface NewMovement {
   type: MovementType
@@ -91,6 +93,8 @@ export interface NewMovement {
   lossLiters: number
   authorizeMixture: boolean
   idempotencyKey: string
+  // F4-01: when true, the wizard saves the body as PLANNED without touching deposits.
+  planned?: boolean
   // F2-06: balance snapshot the wizard took when the user confirmed. If the server
   // finds a different volume when the request arrives, it rejects with STALE_BALANCE
   // instead of overwriting the change that happened behind our back.
