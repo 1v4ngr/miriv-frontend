@@ -22,7 +22,7 @@ export function CellarShell({ children, search, onSearchChange, activeSubsection
     if (item === 'Inicio') onNavigate('home')
     if (item === 'Bodega') onNavigate('deposits')
     if (item === 'Laboratorio') onNavigate('laboratory')
-    if (item === 'Seguimiento') onNavigate('tracking')
+    if (item === 'Seguimiento') onNavigate('dashboard')
     if (item === 'Actividad') onNavigate('activity')
     if (item === 'Incidencias') onNavigate('incidents')
     if (item === 'Tareas') onNavigate('tasks')

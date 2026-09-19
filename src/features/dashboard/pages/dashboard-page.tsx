@@ -6,6 +6,7 @@ import { Copy, Maximize, Minimize, Pencil, Plus, Star, Trash2 } from 'lucide-rea
 import { ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { useResource } from '../../../hooks/use-resource'
 import { trackingApi } from '../../tracking/services/tracking-api'
+import { TrackingTabs } from '../../tracking/components/tracking-tabs'
 import { AddWidgetDialog } from '../components/add-widget-dialog'
 import { GlobalFilterBar } from '../components/global-filter-bar'
 import { DashboardContext, type DashboardContextValue } from '../dashboard-context'
@@ -115,6 +116,19 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
       return { ...current, widgets: [...current.widgets, copy], layouts: placeWidget(current.layouts, copy) }
     })
   }, [update])
+  const nudgeWidget = useCallback((id: string, dx: number, dy: number, dw: number, dh: number) => {
+    const breakpoint: Breakpoint = width >= BREAKPOINTS.lg ? 'lg' : width >= BREAKPOINTS.md ? 'md' : 'sm'
+    const cols = COLS[breakpoint]
+    update((current) => {
+      const items = current.layouts[breakpoint] ?? []
+      const target = items.find((item) => item.i === id)
+      if (!target) return current
+      const w = Math.min(cols, Math.max(target.minW ?? 1, target.w + dw))
+      const h = Math.max(target.minH ?? 1, target.h + dh)
+      const moved: GridItem = { ...target, w, h, x: Math.min(Math.max(0, target.x + dx), cols - w), y: Math.max(0, target.y + dy) }
+      return { ...current, layouts: { ...current.layouts, [breakpoint]: items.map((item) => (item.i === id ? moved : item)) } }
+    })
+  }, [update, width])
   const addWidget = (type: WidgetType) => {
     const widget = newWidget(type)
     update((current) => ({ ...current, widgets: [...current.widgets, widget], layouts: placeWidget(current.layouts, widget) }))
@@ -169,9 +183,9 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
 
   const children = useMemo(() => (dashboard?.widgets ?? []).map((widget) => (
     <div key={widget.id}>
-      <WidgetFrame widget={widget} editing={draggable} globals={globals} onChange={changeWidget} onDuplicate={duplicateWidget} onRemove={removeWidget} onNavigate={onNavigate} />
+      <WidgetFrame widget={widget} editing={draggable} globals={globals} onChange={changeWidget} onDuplicate={duplicateWidget} onRemove={removeWidget} onNavigate={onNavigate} onNudge={nudgeWidget} />
     </div>
-  )), [dashboard?.widgets, draggable, globals, changeWidget, duplicateWidget, removeWidget, onNavigate])
+  )), [dashboard?.widgets, draggable, globals, changeWidget, duplicateWidget, removeWidget, onNavigate, nudgeWidget])
 
   if (!dashboard) {
     return status === 'error' ? <ErrorState message={error} onRetry={reload} /> : <LoadingState label="Cargando dashboard…" />
@@ -180,6 +194,7 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
   return (
     <DashboardContext.Provider value={context}>
     <div ref={canvas} className={`space-y-3 pb-6 ${isFull ? 'overflow-auto bg-white p-4' : ''} ${pseudo ? 'fixed inset-0 z-40' : ''}`}>
+      {!isFull && <TrackingTabs active="dashboard" />}
       {!isFull && (
         <header>
           <p className="text-[11px] text-muted">Seguimiento</p>

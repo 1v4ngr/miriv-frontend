@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Download, Star, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, LayoutDashboard, Star, Trash2 } from 'lucide-react'
 import { useResource } from '../../../hooks/use-resource'
 import { ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { MultiSelect } from '../components/multi-select'
+import { TrackingTabs } from '../components/tracking-tabs'
 import { SeriesChart, type ChartSeries } from '../components/series-chart'
 import { DataTable, DateComparison, LatestComparison } from '../components/comparison-tables'
 import { downloadCsv, seriesToCsv } from '../export'
 import { loadFavorites, saveFavorites, type Axis, type Favorite, type Mode, type Period } from '../favorites'
 import { trackingApi, type SeriesResponse } from '../services/tracking-api'
 import { buildChartSeries } from '../build-chart-series'
+import { defaultDashboard, newWidget, placeWidget } from '../../dashboard/defaults'
+import { markSeeded, wasSeeded } from '../../dashboard/hooks/use-dashboard'
+import { dashboardApi } from '../../dashboard/services/dashboard-api'
 import { PERIODS, periodStart } from '../period'
 
 interface Props {
@@ -54,6 +58,7 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
   const [showTable, setShowTable] = useState(false)
   const [favorites, setFavorites] = useState<Favorite[]>(() => loadFavorites())
   const [favoriteName, setFavoriteName] = useState('')
+  const [dashboardError, setDashboardError] = useState('')
   const patch = (next: Partial<ViewState>) => setView((current) => ({ ...current, ...next }))
 
   // Keep the URL shareable without re-running the router (replaceState does not fire hashchange).
@@ -107,9 +112,30 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
     setFavorites(next); saveFavorites(next)
   }
 
+  // Turns the current view into a chart panel of the default dashboard, then opens it.
+  const addToDashboard = async () => {
+    setDashboardError('')
+    try {
+      const list = await dashboardApi.list()
+      const target = list.find((item) => item.isDefault) ?? list[0]
+      let dashboard = await dashboardApi.get(target.id)
+      if (dashboard.widgets.length === 0 && !wasSeeded(dashboard.id)) dashboard = { ...dashboard, ...defaultDashboard() }
+      const widget = newWidget('chart', {
+        title: view.contents.length === 1 ? view.contents[0] : 'Comparación', contents: view.contents, parameters: view.parameters,
+        period: view.period, mode: view.mode, axis: view.axis, showEvents, showTargets, showRate, includeAncestors, followGlobal: false,
+      })
+      await dashboardApi.save({ ...dashboard, widgets: [...dashboard.widgets, widget], layouts: placeWidget(dashboard.layouts, widget) })
+      markSeeded(dashboard.id)
+      onNavigate(`dashboard/${dashboard.id}`)
+    } catch (cause) {
+      setDashboardError(cause instanceof Error ? cause.message : 'No se ha podido añadir al dashboard.')
+    }
+  }
+
   const title = view.contents.length === 1 ? view.contents[0] : 'Comparador analítico'
   return (
     <div className="mx-auto max-w-6xl space-y-4 pb-6">
+      <TrackingTabs active="compare" />
       <button type="button" onClick={onBack} className="flex items-center gap-1 text-xs font-semibold text-plum"><ArrowLeft className="size-4" />Volver</button>
       <header>
         <p className="text-[11px] text-muted">Seguimiento / {view.contents.length === 1 ? view.contents[0] : 'Comparador'}</p>
@@ -138,6 +164,7 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
             </div>
           </div>
           <div className="ml-auto flex flex-wrap gap-2">
+            <button type="button" disabled={view.contents.length === 0} onClick={addToDashboard} className="flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-1.5 font-semibold disabled:opacity-50"><LayoutDashboard className="size-3.5" />Añadir al dashboard</button>
             <button type="button" disabled={!hasPoints} onClick={() => downloadCsv(`seguimiento-${new Date().toISOString().slice(0, 10)}.csv`, seriesToCsv(data))} className="flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-1.5 font-semibold disabled:opacity-50"><Download className="size-3.5" />Exportar CSV</button>
           </div>
         </div>
@@ -147,6 +174,7 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
           <Toggle checked={includeAncestors} onChange={setIncludeAncestors} label="Incluir origen (contenidos de los que procede)" />
           <Toggle checked={showRate && mode === 'grid'} disabled={mode !== 'grid'} onChange={setShowRate} label="Velocidad de cambio (Δ/día)" />
         </div>
+        {dashboardError && <p role="alert" className="rounded-xl bg-[#f7e0e6] p-2 text-xs text-[#8e1f33]">{dashboardError}</p>}
         {view.mode === 'overlay' && distinctUnits > 2 && <p role="status" className="rounded-xl bg-[#f5eed0] p-2 text-[11.5px] text-[#6b5a10]">Superponer admite como máximo 2 unidades distintas; se muestra un gráfico por parámetro.</p>}
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs">
           <Star className="size-3.5 text-muted" aria-hidden="true" />

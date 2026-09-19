@@ -9,7 +9,7 @@ export type SaveStatus = 'loading' | 'saved' | 'saving' | 'error' | 'conflict'
 const SAVE_DELAY_MS = 800
 const seededKey = (id: string) => `miriv:dashboard-seeded:${id}`
 
-function wasSeeded(id: string): boolean {
+export function wasSeeded(id: string): boolean {
   try { return localStorage.getItem(seededKey(id)) !== null } catch { return false }
 }
 export function markSeeded(id: string) {

@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/pag
 import { MultiSelect } from '../components/multi-select'
 import { trackingApi, type OverviewRow } from '../services/tracking-api'
 import { MatrixLegend, OverviewMatrix } from '../components/overview-matrix'
+import { TrackingTabs } from '../components/tracking-tabs'
 import { STALE_DAYS } from '../utils'
 
 interface Props {
@@ -61,6 +62,7 @@ export function TrackingListPage({ onOpenCurves, onCompare }: Props) {
 
   return (
     <div className="space-y-4 pb-6">
+      <TrackingTabs active="overview" />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] text-muted">Seguimiento</p>

@@ -14,12 +14,14 @@ interface Props {
   onDuplicate: (id: string) => void
   onRemove: (id: string) => void
   onNavigate: (path: string) => void
+  /** Keyboard editing: arrows move the panel, Shift + arrows resize it (deltas in grid cells). */
+  onNudge: (id: string, dx: number, dy: number, dw: number, dh: number) => void
 }
 
 const icon = 'widget-no-drag flex size-7 items-center justify-center rounded-lg text-muted hover:bg-plum-soft hover:text-plum'
 
 /** Common chrome of every panel: drag handle, editable title, settings, maximize, duplicate, delete. */
-function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNavigate }: Props) {
+function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNavigate, onNudge }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [maximized, setMaximized] = useState(false)
   const [renaming, setRenaming] = useState(false)
@@ -39,6 +41,15 @@ function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNa
     if (title && title !== widget.title) onChange({ ...widget, title })
     else setDraft(widget.title)
   }
+  const onKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (!editing || event.target !== event.currentTarget) return
+    const delta: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
+    const move = delta[event.key]
+    if (!move) return
+    event.preventDefault()
+    if (event.shiftKey) onNudge(widget.id, 0, 0, move[0], move[1])
+    else onNudge(widget.id, move[0], move[1], 0, 0)
+  }
   const body = (
     <WidgetErrorBoundary resetKey={widget.id}>
       <View widget={widget} onChange={onChange} globals={globals} onNavigate={onNavigate} openSettings={() => setSettingsOpen(true)} />
@@ -46,7 +57,7 @@ function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onNa
   )
 
   return (
-    <section role="region" aria-label={widget.title} tabIndex={0} className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-plum">
+    <section role="region" aria-label={widget.title} tabIndex={0} onKeyDown={onKeyDown} className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-plum">
       <header className={`widget-drag flex h-10 shrink-0 items-center gap-1 border-b border-border px-2 ${editing ? 'cursor-move bg-[#fbf7f9]' : ''}`}>
         {editing && <GripVertical className="size-4 shrink-0 text-muted" aria-hidden="true" />}
         {renaming ? (
