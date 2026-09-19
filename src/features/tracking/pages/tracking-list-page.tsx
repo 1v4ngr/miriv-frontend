@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { GitCompare } from 'lucide-react'
+import { FlaskConical, GitCompare } from 'lucide-react'
 import { useResource } from '../../../hooks/use-resource'
 import { fermentationLabels } from '../../../lib/labels'
 import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/page-state'
@@ -12,6 +12,7 @@ import { STALE_DAYS } from '../utils'
 interface Props {
   onOpenCurves: (contentCode: string) => void
   onCompare: (contentCodes: string[], parameterCodes: string[]) => void
+  onSimulate: (contentCodes: string[]) => void
 }
 
 type Quick = 'all' | 'crit' | 'warn' | 'stale' | 'open'
@@ -19,7 +20,7 @@ type Quick = 'all' | 'crit' | 'warn' | 'stale' | 'open'
 const field = 'rounded-xl border border-border bg-white px-2 py-1.5 text-xs'
 
 /** Cellar-wide status matrix: one row per occupied tank, latest key parameters coloured against their targets. */
-export function TrackingListPage({ onOpenCurves, onCompare }: Props) {
+export function TrackingListPage({ onOpenCurves, onCompare, onSimulate }: Props) {
   const [chosen, setChosen] = useState<string[]>([])
   const [quick, setQuick] = useState<Quick>('all')
   const [search, setSearch] = useState('')
@@ -69,9 +70,14 @@ export function TrackingListPage({ onOpenCurves, onCompare }: Props) {
           <h1 className="mt-1 text-[23px] font-semibold">Estado de la bodega</h1>
           <p className="mt-1 text-xs text-muted">Cada depósito ocupado con su última analítica. Ordenado de más a menos preocupante; el color compara con los objetivos configurados.</p>
         </div>
+        <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={selected.length < 2} onClick={() => onSimulate(selected)} title="Simula qué saldría de mezclar los depósitos elegidos" className="flex items-center gap-2 rounded-xl border border-plum px-4 py-2 text-xs font-semibold text-plum hover:bg-plum-soft disabled:opacity-50">
+          <FlaskConical className="size-4" aria-hidden="true" />Simular mezcla{selected.length > 1 ? ` (${selected.length})` : ''}
+        </button>
         <button type="button" disabled={selected.length === 0} onClick={() => onCompare(selected, shownParameters)} className="flex items-center gap-2 rounded-xl bg-plum px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">
           <GitCompare className="size-4" aria-hidden="true" />Comparar{selected.length > 0 ? ` (${selected.length})` : ''}
         </button>
+        </div>
       </header>
 
       {overview.loading && <LoadingState label="Cargando estado de la bodega…" />}
