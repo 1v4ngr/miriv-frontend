@@ -86,7 +86,21 @@ function LotForm({ deposits, existingLots, defaultResponsibleUsername, initialDe
   const availableDeposits = deposits.filter((deposit) => deposit.status === 'available')
 
   const handleNext = () => {
-    if (step === 1 && (!lot.code.trim() || !lot.campaign || !lot.entryDate || !lot.category || !lot.destination || !lot.responsible.trim())) { setError('Completa los campos obligatorios del lote.'); return }
+    if (step === 1 && (!lot.code.trim() || !lot.campaign || !lot.entryDate || !lot.category || !lot.destination || !lot.responsible.trim())) {
+      // The DOM can show a value while React state is still empty (e.g. catalogs
+      // hadn't loaded when the form opened). Refusing here with a generic
+      // message helps nobody — surface which field is actually missing.
+      const missing = [
+        !lot.code.trim() && 'código',
+        !lot.campaign && 'campaña',
+        !lot.entryDate && 'fecha de entrada',
+        !lot.category && 'categoría',
+        !lot.destination && 'destino',
+        !lot.responsible.trim() && 'responsable',
+      ].filter(Boolean)
+      setError(`Faltan campos obligatorios: ${missing.join(', ')}. Espera a que carguen los catálogos y vuelve a pulsar Continuar.`)
+      return
+    }
     if (step === 1) {
       const known = origins.filter((item) => item.percentage.trim() !== '')
       if (known.length === origins.length && known.length > 0 && known.reduce((sum, item) => sum + Number(item.percentage), 0) !== 100) { setError('Si indicas todos los porcentajes, deben sumar 100 %.'); return }
