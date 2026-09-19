@@ -3,6 +3,7 @@ import { Copy, Globe2, GripVertical, Maximize2, Settings2, Trash2, X } from 'luc
 import type { GlobalFilters, WidgetConfig } from '../types'
 import { WIDGETS } from '../widgets'
 import type { WidgetDefinition } from '../widgets/types'
+import { Portal } from './portal'
 import { WidgetErrorBoundary } from './widget-error-boundary'
 import { WidgetSettingsDrawer } from './widget-settings-drawer'
 
@@ -75,8 +76,9 @@ function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onRe
         <button type="button" className={icon} aria-label="Eliminar panel" onMouseDown={(event) => event.stopPropagation()} onClick={() => { if (confirm(`¿Eliminar el panel «${widget.title}»?`)) onRemove(widget.id) }}><Trash2 className="size-4" /></button>
       </header>
       <div className="min-h-0 flex-1 overflow-auto">{body}</div>
-      {settingsOpen && <WidgetSettingsDrawer widget={widget} onChange={onChange} onReplace={(widgets) => onReplace(widget.id, widgets)} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <Portal><WidgetSettingsDrawer widget={widget} onChange={onChange} onReplace={(widgets) => onReplace(widget.id, widgets)} onClose={() => setSettingsOpen(false)} /></Portal>}
       {maximized && (
+        <Portal>
         <div role="dialog" aria-label={`${widget.title} ampliado`} className="fixed inset-4 z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl">
           <header className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4">
             <h3 className="text-sm font-semibold">{widget.title}</h3>
@@ -84,6 +86,7 @@ function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onRe
           </header>
           <div className="min-h-0 flex-1 overflow-auto">{body}</div>
         </div>
+        </Portal>
       )}
     </section>
   )

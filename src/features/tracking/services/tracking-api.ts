@@ -99,6 +99,8 @@ export interface LatestContent {
   volumeLiters: number | null
   alcoholicState: string | null
   readings: LatestReading[]
+  /** Ranges that apply to this content (category / phase already resolved). */
+  targets: TargetRange[]
 }
 
 export interface SeriesQuery { contents: string[]; parameters: string[]; from?: string; to?: string; includeAncestors?: boolean }

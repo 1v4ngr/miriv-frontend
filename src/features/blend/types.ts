@@ -1,4 +1,4 @@
-import type { LatestContent, Qualifier } from '../tracking/services/tracking-api'
+import type { LatestContent, Qualifier, TargetRange } from '../tracking/services/tracking-api'
 
 export type BlendRule = 'LINEAR' | 'LINEAR_APPROX' | 'PH_HPLUS' | 'UPPER_BOUND' | 'NOT_BLENDABLE'
 export type AdditionType = 'WATER' | 'TARTARIC_ACID' | 'POTASSIUM_METABISULFITE' | 'SO2_SOLUTION'
@@ -15,6 +15,8 @@ export interface WineComponent {
   availableLiters: number | null
   volumeLiters: number
   readings: Record<string, ComponentReading>   // key = parameter.code
+  /** Ranges that apply to this wine (used to colour the estimated result). */
+  targets?: TargetRange[]
 }
 
 /** amount: litres (WATER), g/hL (TARTARIC_ACID, POTASSIUM_METABISULFITE) or mg/L of SO₂ (SO2_SOLUTION). */
@@ -56,6 +58,7 @@ export function toComponent(content: LatestContent, volumeLiters: number): WineC
     lotCode: content.lot,
     availableLiters: content.volumeLiters,
     volumeLiters,
+    targets: content.targets,
     readings: Object.fromEntries(content.readings.map((reading) => [reading.parameter, {
       value: reading.value, qualifier: reading.qualifier, limit: reading.limit, daysAgo: reading.daysAgo, validated: reading.validated,
     }])),
