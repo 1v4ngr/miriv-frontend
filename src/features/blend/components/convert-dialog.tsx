@@ -29,8 +29,8 @@ export function ConvertDialog({ defaultResponsible, onConvert, onClose }: Props)
   }
   const field = 'rounded-xl border border-border bg-white px-2 py-1.5 text-xs font-normal text-copy'
   return (
-    <div role="dialog" aria-label="Convertir en tarea" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-md space-y-3 rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#2e262a]/30 p-4" onMouseDown={onClose}>
+      <div role="dialog" aria-modal="true" aria-label="Convertir en tarea" className="w-full max-w-md space-y-3 rounded-2xl bg-white p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
         <h2 className="text-sm font-semibold">Convertir en tarea</h2>
         <p className="text-xs text-muted">Se crearán los traslados como movimientos <strong>previstos</strong> y una tarea con los pasos. No se mueve vino hasta que ejecutes cada paso.</p>
         <label className="grid gap-1 text-xs font-semibold text-muted">Responsable

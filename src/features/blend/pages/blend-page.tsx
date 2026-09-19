@@ -249,8 +249,8 @@ export function BlendPage({ route, onNavigate }: Props) {
       </section>
       {(notice || error) && <p role={error ? 'alert' : 'status'} className={`rounded-xl p-2 text-xs ${error ? 'bg-[#f7e0e6] text-[#8e1f33]' : 'bg-[#dceadf] text-[#1f5c3a]'}`}>{error || notice}</p>}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
-        <div className="space-y-4">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-4">
           <section className={card}>
             <h2 className="mb-2 text-sm font-semibold">Componentes</h2>
             <DepositPicker rows={rows} selected={state.components.map((component) => component.id)} onChange={(codes) => void setSelected(codes)} label="Depósitos que mezclas" />
@@ -274,7 +274,7 @@ export function BlendPage({ route, onNavigate }: Props) {
           </section>
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <section className={card} aria-label="Resumen">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs">
               <span><strong className="text-base">{formatLiters(result.totalLiters)}</strong> L en total</span>

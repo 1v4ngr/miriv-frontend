@@ -16,7 +16,8 @@ export function WidgetSettingsDrawer({ widget, onChange, onReplace, onClose }: P
   }, [onClose])
 
   return (
-    <aside role="dialog" aria-label={`Ajustes de ${widget.title}`} className="fixed right-0 top-0 z-[60] flex h-full w-[380px] max-w-full flex-col border-l border-border bg-white shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex justify-end bg-[#2e262a]/30" onMouseDown={onClose}>
+    <aside role="dialog" aria-modal="true" aria-label={`Ajustes de ${widget.title}`} onMouseDown={(event) => event.stopPropagation()} className="flex h-full w-[380px] max-w-full flex-col border-l border-border bg-white shadow-2xl">
       <header className="flex items-center justify-between border-b border-border p-4">
         <h2 className="text-sm font-semibold">Ajustes del panel</h2>
         <button type="button" onClick={onClose} aria-label="Cerrar ajustes"><X className="size-4" /></button>
@@ -35,5 +36,6 @@ export function WidgetSettingsDrawer({ widget, onChange, onReplace, onClose }: P
         <button type="button" onClick={onClose} className="w-full rounded-xl bg-plum px-4 py-2 text-xs font-semibold text-white">Listo</button>
       </footer>
     </aside>
+    </div>
   )
 }

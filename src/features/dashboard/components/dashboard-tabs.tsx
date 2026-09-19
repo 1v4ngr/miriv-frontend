@@ -32,8 +32,8 @@ export function DashboardTabs({ summaries, activeId, onSwitch, onCreate, onRenam
   const run = (action: () => void) => () => { setMenu(false); action() }
 
   return (
-    <div ref={root} className="relative flex items-center gap-1">
-      <div role="tablist" aria-label="Dashboards" className="flex min-w-0 gap-1 overflow-x-auto">
+    <div ref={root} className="relative flex w-full items-center gap-1">
+      <div role="tablist" aria-label="Dashboards" className="no-scrollbar flex min-w-0 flex-1 gap-1 overflow-x-auto">
         {summaries.map((summary) => (
           <button key={summary.id} type="button" role="tab" aria-selected={summary.id === activeId} onClick={() => onSwitch(summary.id)}
             className={`flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition-colors ${summary.id === activeId ? 'bg-plum text-white' : 'bg-white text-copy ring-1 ring-border hover:bg-plum-soft'}`}>

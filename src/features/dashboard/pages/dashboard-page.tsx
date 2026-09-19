@@ -226,7 +226,7 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
       )}
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="min-w-0 flex-1">
+        <div className="w-full min-w-0 md:w-auto md:flex-1">
           <DashboardTabs summaries={summaries} activeId={dashboard.id} onSwitch={(id) => onNavigate(`dashboard/${id}`)}
             onCreate={create} onRename={rename} onDuplicate={duplicate} onMakeDefault={makeDefault} onRemove={remove} />
         </div>
@@ -236,7 +236,7 @@ export function DashboardPage({ dashboardId, onNavigate }: Props) {
           {status === 'conflict' && <button type="button" onClick={reload} className="ml-2 underline">Recargar</button>}
         </span>
         <button type="button" className={button} onClick={() => setAdding(true)}><Plus className="size-3.5" />Añadir panel</button>
-        <button type="button" className={button} onClick={() => setLocked((current) => !current)} aria-pressed={locked}
+        <button type="button" className={`${button} hidden md:flex`} onClick={() => setLocked((current) => !current)} aria-pressed={locked}
           title="Con el diseño desbloqueado arrastra los paneles por su cabecera y redimensiónalos desde la esquina inferior derecha. Con un panel enfocado, las flechas lo mueven y Mayús + flechas lo redimensionan.">
           {locked ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}{locked ? 'Diseño bloqueado' : 'Diseño libre'}
         </button>

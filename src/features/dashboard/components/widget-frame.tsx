@@ -79,12 +79,14 @@ function Frame({ widget, editing, globals, onChange, onDuplicate, onRemove, onRe
       {settingsOpen && <Portal><WidgetSettingsDrawer widget={widget} onChange={onChange} onReplace={(widgets) => onReplace(widget.id, widgets)} onClose={() => setSettingsOpen(false)} /></Portal>}
       {maximized && (
         <Portal>
-        <div role="dialog" aria-label={`${widget.title} ampliado`} className="fixed inset-4 z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2e262a]/30 p-4" onMouseDown={() => setMaximized(false)}>
+        <div role="dialog" aria-modal="true" aria-label={`${widget.title} ampliado`} onMouseDown={(event) => event.stopPropagation()} className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl">
           <header className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4">
             <h3 className="text-sm font-semibold">{widget.title}</h3>
             <button type="button" onClick={() => setMaximized(false)} className="flex items-center gap-1 text-xs font-semibold text-plum"><X className="size-4" />Cerrar</button>
           </header>
           <div className="min-h-0 flex-1 overflow-auto">{body}</div>
+        </div>
         </div>
         </Portal>
       )}

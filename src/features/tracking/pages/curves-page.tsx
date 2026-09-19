@@ -27,7 +27,7 @@ interface ViewState { contents: string[]; parameters: string[]; period: Period; 
 const DEFAULT_PARAMETERS = ['DENSITY', 'VOLATILE_ACIDITY', 'PH']
 const EMPTY: SeriesResponse = { contents: [], parameters: [], points: [], targets: [] }
 const card = 'rounded-2xl border border-border bg-white p-4'
-const select = 'rounded-xl border border-border bg-white px-2 py-1.5 text-xs'
+const select = 'w-full min-w-0 rounded-xl border border-border bg-white px-2 py-1.5 text-xs sm:w-auto'
 
 function parseRoute(route: string): ViewState {
   const rest = route.replace(/^tracking\/?/, '')
@@ -151,12 +151,12 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
           <MultiSelect label="Parámetros" options={parameterOptions} selected={view.parameters} onChange={(parameters) => patch({ parameters })} placeholder="Elige parámetros" bulk max={30} />
         </div>
         <div className="flex flex-wrap items-end gap-3 text-xs">
-          <label className="grid gap-1 font-semibold text-muted">Periodo
+          <label className="grid min-w-0 flex-1 basis-[150px] gap-1 font-semibold text-muted sm:flex-none">Periodo
             <select value={view.period} onChange={(event) => patch({ period: event.target.value as Period })} className={`${select} font-normal text-copy`}>{PERIODS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
           </label>
-          <label className="grid gap-1 font-semibold text-muted">Eje horizontal
+          <label className="grid min-w-0 flex-1 basis-[150px] gap-1 font-semibold text-muted sm:flex-none" title="«Días desde el inicio» alinea fermentaciones que empezaron en fechas distintas">Eje horizontal
             <select value={view.axis} onChange={(event) => patch({ axis: event.target.value as Axis })} className={`${select} font-normal text-copy`}>
-              <option value="date">Fecha</option><option value="days">Días desde el inicio (alinea fermentaciones)</option>
+              <option value="date">Fecha</option><option value="days">Días desde el inicio</option>
             </select>
           </label>
           <div className="grid gap-1 font-semibold text-muted">Vista

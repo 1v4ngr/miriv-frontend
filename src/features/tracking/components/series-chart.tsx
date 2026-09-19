@@ -206,7 +206,8 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
       ? { type: 'time', axisLabel: { fontSize: 11 } }
       : { type: 'value', name: 'días desde el inicio', nameLocation: 'middle', nameGap: 30, min: 0, axisLabel: { fontSize: 11 } },
     yAxis: yAxes,
-    dataZoom: [{ type: 'inside', filterMode: 'none' }],
+    // preventDefaultMouseMove off: on a phone a finger dragging over a chart must still scroll the page.
+    dataZoom: [{ type: 'inside', filterMode: 'none', preventDefaultMouseMove: false }],
     series: [...lines, ...rates, ...eventSeries] as EChartsOption['series'],
   }
 }

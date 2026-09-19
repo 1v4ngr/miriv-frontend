@@ -15,7 +15,8 @@ export function SimulationsDrawer({ canWrite, onOpen, onNavigate, onClose }: Pro
     try { await action(); list.reload() } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se ha podido completar la acción.') }
   }
   return (
-    <aside role="dialog" aria-label="Mis simulaciones" className="fixed right-0 top-0 z-[60] flex h-full w-[400px] max-w-full flex-col border-l border-border bg-white shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex justify-end bg-[#2e262a]/30" onMouseDown={onClose}>
+    <aside role="dialog" aria-modal="true" aria-label="Mis simulaciones" onMouseDown={(event) => event.stopPropagation()} className="flex h-full w-[400px] max-w-full flex-col border-l border-border bg-white shadow-2xl">
       <header className="flex items-center justify-between border-b border-border p-4"><h2 className="text-sm font-semibold">Simulaciones guardadas</h2><button type="button" onClick={onClose} aria-label="Cerrar"><X className="size-4" /></button></header>
       <div className="flex-1 space-y-2 overflow-y-auto p-4 text-xs">
         {error && <p role="alert" className="rounded-xl bg-[#f7e0e6] p-2 text-[#8e1f33]">{error}</p>}
@@ -40,5 +41,6 @@ export function SimulationsDrawer({ canWrite, onOpen, onNavigate, onClose }: Pro
         ))}
       </div>
     </aside>
+    </div>
   )
 }

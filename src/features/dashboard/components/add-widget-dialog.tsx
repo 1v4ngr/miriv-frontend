@@ -4,8 +4,8 @@ import type { WidgetType } from '../types'
 
 export function AddWidgetDialog({ onPick, onClose }: { onPick: (type: WidgetType) => void; onClose: () => void }) {
   return (
-    <div role="dialog" aria-label="Añadir panel" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#2e262a]/30 p-4" onMouseDown={onClose}>
+      <div role="dialog" aria-modal="true" aria-label="Añadir panel" className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Añadir panel</h2>
           <button type="button" onClick={onClose} aria-label="Cerrar"><X className="size-4" /></button>
