@@ -96,8 +96,7 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
 
   const chartSeries = useMemo<ChartSeries[]>(() => buildChartSeries(data), [data])
 
-  const distinctUnits = new Set(data.parameters.map((parameter) => parameter.unit ?? '')).size
-  const mode: Mode = view.mode === 'overlay' && distinctUnits <= 2 ? 'overlay' : 'grid'
+  const mode: Mode = view.mode
   const eventList = events.data ?? []
   const hasPoints = data.points.length > 0
 
@@ -179,7 +178,6 @@ export function CurvesPage({ route, onBack, onNavigate }: Props) {
           <Toggle checked={showRate && mode === 'grid'} disabled={mode !== 'grid'} onChange={setShowRate} label="Velocidad de cambio (Δ/día)" />
         </div>
         {dashboardError && <p role="alert" className="rounded-xl bg-[#f7e0e6] p-2 text-xs text-[#8e1f33]">{dashboardError}</p>}
-        {view.mode === 'overlay' && distinctUnits > 2 && <p role="status" className="rounded-xl bg-[#f5eed0] p-2 text-[11.5px] text-[#6b5a10]">Superponer admite como máximo 2 unidades distintas; se muestra un gráfico por parámetro.</p>}
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs">
           <Star className="size-3.5 text-muted" aria-hidden="true" />
           {favorites.length === 0 && <span className="text-muted">Guarda una vista para recuperarla con un clic (se guarda en este navegador).</span>}

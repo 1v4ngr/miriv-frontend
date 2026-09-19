@@ -109,7 +109,7 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
 
   const seenTargetFor = new Set<string>()
   const lines = series.map((item) => {
-    const yAxisIndex = Math.min(units.indexOf(item.parameter.unit ?? ''), 1)
+    const yAxisIndex = units.indexOf(item.parameter.unit ?? '')
     const data: PointDatum[] = item.points
       .map((point) => ({ point, y: plotValue(point) }))
       .filter((entry): entry is { point: SeriesPoint; y: number } => entry.y !== null)
@@ -170,14 +170,19 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
     markLine: { symbol: 'none', data: eventLines, tooltip: { formatter: (params: { name?: string }) => params.name ?? '' } },
   }] : []
 
-  const yAxes = (twoUnits ? units.slice(0, 2) : [units[0] ?? '']).map((unit, index) => ({
-    type: 'value' as const, scale: true, name: unit, position: index === 0 ? ('left' as const) : ('right' as const),
+  // One value axis per unit, alternating left / right and stacked outwards, so any number of units can be overlaid.
+  const AXIS_STEP = 58
+  const sideOf = (index: number) => (index % 2 === 0 ? ('left' as const) : ('right' as const))
+  const yAxes = units.map((unit, index) => ({
+    type: 'value' as const, scale: true, name: unit, position: sideOf(index), offset: Math.floor(index / 2) * AXIS_STEP,
     splitLine: { show: index === 0, lineStyle: { color: '#eee7ea' } },
   }))
-  if (rateOn) yAxes.push({ type: 'value' as const, scale: true, name: 'Δ/día', position: 'right' as const, splitLine: { show: false, lineStyle: { color: '#eee7ea' } } })
+  if (rateOn) yAxes.push({ type: 'value' as const, scale: true, name: 'Δ/día', position: sideOf(yAxes.length), offset: Math.floor(yAxes.length / 2) * AXIS_STEP, splitLine: { show: false, lineStyle: { color: '#eee7ea' } } })
+  const leftAxes = Math.ceil(yAxes.length / 2)
+  const rightAxes = Math.floor(yAxes.length / 2)
 
   return {
-    grid: { left: 56, right: yAxes.length > 1 ? 56 : 24, top: 34, bottom: 78 },
+    grid: { left: 56 + (leftAxes - 1) * AXIS_STEP, right: rightAxes > 0 ? 56 + (rightAxes - 1) * AXIS_STEP : 24, top: 34, bottom: 78 },
     legend: { type: 'scroll', bottom: 0, data: [...lines.map((line) => line.name), ...rates.map((rate) => rate.name)], textStyle: { fontSize: 11 }, selected: Object.fromEntries(hidden.map((name) => [name, false])) },
     tooltip: {
       trigger: 'item',

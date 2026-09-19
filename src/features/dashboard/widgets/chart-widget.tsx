@@ -45,8 +45,7 @@ export function ChartWidgetView({ widget, onChange, globals, onNavigate, openSet
   )
   const chartSeries = useMemo<ChartSeries[]>(() => buildChartSeries(data), [data])
   const eventList = events.data ?? []
-  const distinctUnits = new Set(data.parameters.map((parameter) => parameter.unit ?? '')).size
-  const mode: Mode = widget.mode === 'overlay' && distinctUnits <= 2 ? 'overlay' : 'grid'
+  const mode: Mode = widget.mode
   const setHidden = (hiddenSeries: string[]) => onChange({ ...widget, hiddenSeries })
 
   if (contents.length === 0) {
@@ -64,7 +63,6 @@ export function ChartWidgetView({ widget, onChange, globals, onNavigate, openSet
   const overlayHeight = Math.max(MIN_HEIGHT, size.height - TOOLBAR_HEIGHT)
   return (
     <div ref={size.ref} className="flex h-full flex-col">
-      {widget.mode === 'overlay' && mode === 'grid' && <p role="status" className="mx-3 mt-2 rounded-lg bg-[#f5eed0] p-1.5 text-[11px] text-[#6b5a10]">Superponer admite 2 unidades como máximo: se muestra un gráfico por parámetro.</p>}
       <div className="min-h-0 flex-1 overflow-auto p-2">
         {mode === 'overlay' ? (
           <SeriesChart series={chartSeries} axis={widget.axis} events={eventList} showTargets={widget.showTargets} showRate={widget.showRate}
