@@ -120,7 +120,7 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
     if (showTargets && item.target && !seenTargetFor.has(item.parameter.code)) {
       seenTargetFor.add(item.parameter.code)
       const add = (value: number | null, kind: string, color: string) => {
-        if (value !== null) targetLines.push({ yAxis: value, lineStyle: { color, type: 'dashed', width: 1.2 }, label: { formatter: `${kind} ${formatNumber(value, item.parameter.decimals)}`, color, position: 'insideEndTop', fontSize: 10 } })
+        if (value !== null) targetLines.push({ yAxis: value, lineStyle: { color, type: 'dashed', width: 1.2 }, label: { formatter: `${kind} ${formatNumber(value, item.parameter.decimals)}`, color, position: 'insideEndTop', fontSize: 10, backgroundColor: 'rgba(255,255,255,0.85)', padding: [1, 3] } })
       }
       add(item.target.warnMin, 'aviso mín.', WARN_COLOR); add(item.target.warnMax, 'aviso máx.', WARN_COLOR)
       add(item.target.critMin, 'crítico mín.', CRIT_COLOR); add(item.target.critMax, 'crítico máx.', CRIT_COLOR)
@@ -155,16 +155,27 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
         : (xOf(item.content.code, before.takenAt) + xOf(item.content.code, after.takenAt)) / 2
       data.push({ value: [midpoint, ((after.value as number) - (before.value as number)) / days], rate: ((after.value as number) - (before.value as number)) / days, series: item })
     }
-    return [{ name: `${item.content.code} · Δ/día`, type: 'bar' as const, yAxisIndex: 1, barMaxWidth: 10, itemStyle: { color: item.color, opacity: 0.28 }, data }]
+    return [{ name: `${item.content.code} · Δ/día`, type: 'bar' as const, yAxisIndex: 1, barWidth: 8, z: 1, itemStyle: { color: item.color, opacity: 0.4, borderColor: item.color, borderWidth: 1 }, data }]
   }) : []
 
+  // Event labels: only when there are few, and never two closer than ~8 % of the x range (they would overprint).
   const labelled = events.length <= MAX_LABELLED_EVENTS
-  const eventLines = events.map((event) => ({
-    xAxis: xOf(event.content, event.at),
-    name: `${escapeHtml(event.content)} · ${escapeHtml(event.label)}<br/>${formatDateTime(event.at)}<br/>${escapeHtml(event.detail)}`,
-    lineStyle: { color: EVENT_COLORS[event.type] ?? '#6d4656', type: 'dotted' as const, width: 1.2 },
-    label: labelled ? { show: true, formatter: event.label, rotate: 90, position: 'insideEndTop' as const, fontSize: 10, color: EVENT_COLORS[event.type] ?? '#6d4656' } : { show: false },
-  }))
+  const positions = [...events.map((event) => xOf(event.content, event.at)), ...series.flatMap((item) => item.points.map((point) => xOf(item.content.code, point.takenAt)))]
+  const span = Math.max(1e-9, Math.max(...positions) - Math.min(...positions))
+  let lastLabelX = -Infinity
+  const eventLines = [...events].sort((a, b) => xOf(a.content, a.at) - xOf(b.content, b.at)).map((event) => {
+    const x = xOf(event.content, event.at)
+    const showLabel = labelled && x - lastLabelX >= span * 0.08
+    if (showLabel) lastLabelX = x
+    return {
+      xAxis: x,
+      name: `${escapeHtml(event.content)} · ${escapeHtml(event.label)}<br/>${formatDateTime(event.at)}<br/>${escapeHtml(event.detail)}`,
+      lineStyle: { color: EVENT_COLORS[event.type] ?? '#6d4656', type: 'dotted' as const, width: 1.2 },
+      label: showLabel
+        ? { show: true, formatter: event.label.length > 22 ? `${event.label.slice(0, 21)}…` : event.label, rotate: 90, position: 'insideEndTop' as const, distance: 6, fontSize: 10, color: EVENT_COLORS[event.type] ?? '#6d4656', backgroundColor: 'rgba(255,255,255,0.85)', padding: [2, 3] }
+        : { show: false },
+    }
+  })
   const eventSeries = eventLines.length ? [{
     name: 'Eventos', type: 'line' as const, data: [], silent: false,
     markLine: { symbol: 'none', data: eventLines, tooltip: { formatter: (params: { name?: string }) => params.name ?? '' } },
@@ -175,15 +186,20 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
   const sideOf = (index: number) => (index % 2 === 0 ? ('left' as const) : ('right' as const))
   const yAxes = units.map((unit, index) => ({
     type: 'value' as const, scale: true, name: unit, position: sideOf(index), offset: Math.floor(index / 2) * AXIS_STEP,
+    nameGap: 12, nameTextStyle: { align: sideOf(index) === 'left' ? ('right' as const) : ('left' as const), fontSize: 11 }, axisLabel: { fontSize: 11 },
     splitLine: { show: index === 0, lineStyle: { color: '#eee7ea' } },
   }))
-  if (rateOn) yAxes.push({ type: 'value' as const, scale: true, name: 'Δ/día', position: sideOf(yAxes.length), offset: Math.floor(yAxes.length / 2) * AXIS_STEP, splitLine: { show: false, lineStyle: { color: '#eee7ea' } } })
+  if (rateOn) {
+    // Includes 0 (no `scale`) so the bars start from a visible baseline instead of hanging from the frame.
+    yAxes.push({ type: 'value' as const, scale: false, name: 'Velocidad Δ/día', position: sideOf(yAxes.length), offset: Math.floor(yAxes.length / 2) * AXIS_STEP,
+      splitLine: { show: false, lineStyle: { color: '#eee7ea' } }, axisLine: { show: true, lineStyle: { color: '#9a8590' } }, axisLabel: { color: '#7a6470', fontSize: 10 }, nameTextStyle: { color: '#7a6470' } } as never)
+  }
   const leftAxes = Math.ceil(yAxes.length / 2)
   const rightAxes = Math.floor(yAxes.length / 2)
 
   return {
-    grid: { left: 56 + (leftAxes - 1) * AXIS_STEP, right: rightAxes > 0 ? 56 + (rightAxes - 1) * AXIS_STEP : 24, top: 34, bottom: 78 },
-    legend: { type: 'scroll', bottom: 0, data: [...lines.map((line) => line.name), ...rates.map((rate) => rate.name)], textStyle: { fontSize: 11 }, selected: Object.fromEntries(hidden.map((name) => [name, false])) },
+    grid: { left: 56 + (leftAxes - 1) * AXIS_STEP, right: rightAxes > 0 ? 56 + (rightAxes - 1) * AXIS_STEP : 24, top: 48, bottom: axis === 'days' ? 104 : 84 },
+    legend: { type: 'scroll', bottom: 4, itemGap: 14, itemWidth: 22, data: [...lines.map((line) => line.name), ...rates.map((rate) => rate.name)], textStyle: { fontSize: 11 }, selected: Object.fromEntries(hidden.map((name) => [name, false])) },
     tooltip: {
       trigger: 'item',
       confine: true,
@@ -204,7 +220,7 @@ function buildOption(series: ChartSeries[], axis: TimeAxis, events: TrackingEven
     },
     xAxis: axis === 'date'
       ? { type: 'time', axisLabel: { fontSize: 11 } }
-      : { type: 'value', name: 'días desde el inicio', nameLocation: 'middle', nameGap: 30, min: 0, axisLabel: { fontSize: 11 } },
+      : { type: 'value', name: 'días desde el inicio', nameLocation: 'middle', nameGap: 30, min: 0, axisLabel: { fontSize: 11 }, nameTextStyle: { fontSize: 11 } },
     yAxis: yAxes,
     // preventDefaultMouseMove off: on a phone a finger dragging over a chart must still scroll the page.
     dataZoom: [{ type: 'inside', filterMode: 'none', preventDefaultMouseMove: false }],
