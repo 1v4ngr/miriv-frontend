@@ -10,6 +10,7 @@ export interface CreateAdminUserInput {
   jobTitle?: string
   password: string
   centerCodes: string[]
+  roleCodes?: string[]
 }
 
 export const adminUsersApi = {

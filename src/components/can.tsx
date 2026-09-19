@@ -8,6 +8,8 @@ interface CanProps {
 }
 
 export function Can({ permission, fallback = null, children }: CanProps) {
-  const allowed = permission ? useCan(permission) : true
+  // Always call the hook (Rules of Hooks); no permission means "no restriction".
+  const can = useCan(permission ?? '')
+  const allowed = permission ? can : true
   return <>{allowed ? children : fallback}</>
 }

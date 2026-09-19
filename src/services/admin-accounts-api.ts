@@ -45,6 +45,12 @@ export const adminAccountsApi = {
   reactivate(id: string, reason: string) {
     return apiRequest<UserAccount>(`/api/admin/users/accounts/${id}/reactivate`, { method: 'POST', body: JSON.stringify({ reason }) })
   },
+  resetPassword(id: string, newPassword: string) {
+    return apiRequest<void>(`/api/admin/users/accounts/${id}/password`, { method: 'POST', body: JSON.stringify({ newPassword }) })
+  },
+  pendingWork(id: string) {
+    return apiRequest<{ openTaskCodes: string[]; openIncidentCodes: string[] }>(`/api/admin/users/accounts/${id}/pending-work`)
+  },
   listRoles() { return apiRequest<RoleOption[]>('/api/admin/roles') },
   listPermissions() { return apiRequest<PermissionOption[]>('/api/admin/permissions') },
 }

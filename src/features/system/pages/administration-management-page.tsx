@@ -3,6 +3,8 @@ import { adminCentersApi, type AdminCenter } from '../services/admin-centers-api
 import { catalogApi, catalogResources, type CatalogItem, type CatalogResource } from '../../../services/catalog-api'
 import { adminUsersApi, type AdminUser, type CreateAdminUserInput } from '../services/admin-users-api'
 import { adminZonesApi, type AdminZone, type AdminZoneInput } from '../services/admin-zones-api'
+import { adminAccountsApi, type RoleOption } from '../../../services/admin-accounts-api'
+import { UserAccessPanel } from '../components/user-access-panel'
 
 const card = 'rounded-2xl border border-border bg-white p-4'
 
@@ -486,7 +488,9 @@ function UsersTab() {
     jobTitle: '',
     password: '',
     centerCodes: [],
+    roleCodes: [],
   })
+  const [roleOptions, setRoleOptions] = useState<RoleOption[]>([])
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -497,7 +501,7 @@ function UsersTab() {
       setCenters(centerList)
     })
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(); adminAccountsApi.listRoles().then(setRoleOptions).catch(() => undefined) }, [])
 
   const choose = (user: AdminUser) => {
     setSelected(user)
@@ -511,7 +515,7 @@ function UsersTab() {
     setEditing(undefined)
     setSelected(undefined)
     setSelectedCenters([])
-    setForm({ username: '', email: '', firstName: '', lastName: '', jobTitle: '', password: '', centerCodes: [] })
+    setForm({ username: '', email: '', firstName: '', lastName: '', jobTitle: '', password: '', centerCodes: [], roleCodes: [] })
     setNotice('')
     setError('')
   }
@@ -623,6 +627,7 @@ function UsersTab() {
               >
                 Guardar centros
               </button>
+              <UserAccessPanel username={editing.username} />
             </div>
           ) : (
             <div>
@@ -652,6 +657,27 @@ function UsersTab() {
                       }
                     />
                     {center.name}
+                  </label>
+                ))}
+              </div>
+              <h3 className="mt-5 text-xs font-semibold">Roles</h3>
+              <p className="mt-1 text-[11px] text-muted">Si no marcas ninguno, se crea como Consulta (solo lectura).</p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {roleOptions.map((role) => (
+                  <label key={role.code} className="flex items-center gap-2 rounded-lg border border-border p-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={(form.roleCodes ?? []).includes(role.code)}
+                      onChange={(event) =>
+                        setForm({
+                          ...form,
+                          roleCodes: event.target.checked
+                            ? [...(form.roleCodes ?? []), role.code]
+                            : (form.roleCodes ?? []).filter((code) => code !== role.code),
+                        })
+                      }
+                    />
+                    {role.name}
                   </label>
                 ))}
               </div>
