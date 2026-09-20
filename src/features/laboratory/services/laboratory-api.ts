@@ -10,6 +10,7 @@ export interface LaboratoryApi {
   correctResult(code: string, parameter: string, value: string, reason: string): Promise<Sample>
   invalidateSample(code: string, reason: string): Promise<Sample>
   reassignDeposit(code: string, deposit: string, reason: string): Promise<Sample>
+  deleteSample(code: string, reason: string): Promise<void>
 }
 
 export const laboratoryApi: LaboratoryApi = {
@@ -20,5 +21,8 @@ export const laboratoryApi: LaboratoryApi = {
   validateSample(code, note) { return apiRequest<Sample>(`/api/laboratory/samples/${encodeURIComponent(code)}/validate`, { method: 'POST', body: JSON.stringify({ note }) }) },
   correctResult(code, parameter, value, reason) { return apiRequest<Sample>(`/api/laboratory/samples/${encodeURIComponent(code)}/results/${encodeURIComponent(parameter)}/correction`, { method: 'POST', body: JSON.stringify({ value, reason }) }) },
   invalidateSample(code, reason) { return apiRequest<Sample>(`/api/laboratory/samples/${encodeURIComponent(code)}/invalidate`, { method: 'POST', body: JSON.stringify({ reason }) }) },
+  deleteSample(code, reason) {
+    return apiRequest<void>(`/api/laboratory/samples/${encodeURIComponent(code)}?reason=${encodeURIComponent(reason)}`, { method: 'DELETE' })
+  },
   reassignDeposit(code, deposit, reason) { return apiRequest<Sample>(`/api/laboratory/samples/${encodeURIComponent(code)}/deposit`, { method: 'POST', body: JSON.stringify({ deposit, reason }) }) },
 }

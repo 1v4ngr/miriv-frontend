@@ -34,6 +34,12 @@ export function useAccount() {
   return account
 }
 
+/** Destructive corrections (deleting an analysis, undoing a movement) are for the super administrator. */
+export function useIsSuperAdmin(): boolean {
+  const account = useAccount()
+  return (account?.roles ?? []).some((role) => role.code === 'SUPER_ADMIN')
+}
+
 export function useCan(permission: string): boolean {
   const account = useAccount()
   if (!account) return false

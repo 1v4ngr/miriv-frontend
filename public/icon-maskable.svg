@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MIRIV">
+  <!-- Maskable variant: lucide's wine glass (ISC) inside the 80% safe zone Android may crop to a circle. -->
+  <rect width="512" height="512" fill="#6d4656"/>
+  <g transform="translate(153.6 153.6) scale(8.53)" fill="none" stroke="#fdfbfc"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 22h8"/>
+    <path d="M7 10h10"/>
+    <path d="M12 15v7"/>
+    <path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>
+  </g>
+</svg>

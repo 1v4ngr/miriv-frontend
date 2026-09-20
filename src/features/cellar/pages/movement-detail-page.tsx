@@ -1,9 +1,10 @@
 // F4-01: receipt of a single movement (UI15). Shows before/after balances per line and lets the
 // authorised user execute or cancel a PLANNED movement from here.
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { ArrowLeft, CheckCircle2, History, X } from 'lucide-react'
+import { ArrowLeft, CalendarClock, CheckCircle2, History, Trash2, X } from 'lucide-react'
 import { movementsApi, type MovementDetail } from '../services/movements-api'
 import type { MovementStatus, MovementType } from '../types'
+import { useCan, useIsSuperAdmin } from '../../../hooks/use-permissions'
 
 interface MovementDetailPageProps {
   code: string
@@ -85,11 +86,80 @@ function CancelForm({ onClose, onCancel }: CancelFormProps) {
   )
 }
 
+interface CorrectionFormProps {
+  effectiveAt: string
+  mode: 'reschedule' | 'undo'
+  onClose: () => void
+  onSubmit: (input: { date: string; time: string; reason: string }) => Promise<void>
+}
+
+/** Fixing a movement entered wrong: move its date/time, or delete it and put the wine back. */
+function CorrectionForm({ effectiveAt, mode, onClose, onSubmit }: CorrectionFormProps) {
+  const current = new Date(effectiveAt)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const [date, setDate] = useState(`${current.getFullYear()}-${pad(current.getMonth() + 1)}-${pad(current.getDate())}`)
+  const [time, setTime] = useState(`${pad(current.getHours())}:${pad(current.getMinutes())}`)
+  const [reason, setReason] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const undo = mode === 'undo'
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (undo && !reason.trim()) { setError('Indica el motivo de la eliminación.'); return }
+    setSubmitting(true); setError('')
+    try {
+      await onSubmit({ date, time, reason: reason.trim() })
+      onClose()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se ha podido completar la corrección.')
+    } finally { setSubmitting(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-30 flex justify-end bg-[#2e262a]/30" onMouseDown={onClose}>
+      <section role="dialog" aria-modal="true" aria-labelledby="correct-movement-title" onMouseDown={(event) => event.stopPropagation()} className="h-full w-full max-w-[440px] overflow-y-auto bg-[#fdfbfc] p-5 shadow-xl sm:p-6">
+        <div className="flex items-center justify-between">
+          <h2 id="correct-movement-title" className="text-[20px] font-semibold">{undo ? 'Eliminar movimiento' : 'Corregir fecha'}</h2>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="rounded-lg p-2 hover:bg-plum-soft"><X className="size-4" /></button>
+        </div>
+        <p className={`mt-2 text-[12.5px] ${undo ? 'text-[#8e3b4a]' : 'text-muted'}`}>
+          {undo
+            ? 'El vino vuelve a su depósito de origen y el movimiento desaparece del historial. Se bloquea si después hubo otros movimientos o analíticas.'
+            : 'Cambia cuándo ocurrió el movimiento. Las ocupaciones que abrió o cerró se ajustan solas, y en una entrada inicial también la fecha del lote. Los litros y los depósitos no cambian.'}
+        </p>
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          {!undo && (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block text-[12px] font-semibold text-copy">Fecha *
+                <input type="date" required value={date} onChange={(event) => setDate(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e0d2d9] bg-white p-2 text-[13px] font-normal outline-none focus:border-[#b9899c]" />
+              </label>
+              <label className="block text-[12px] font-semibold text-copy">Hora
+                <input type="time" step="60" value={time} onChange={(event) => setTime(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e0d2d9] bg-white p-2 text-[13px] font-normal outline-none focus:border-[#b9899c]" />
+              </label>
+            </div>
+          )}
+          <label className="block text-[12px] font-semibold text-copy">{undo ? 'Motivo *' : 'Motivo'}
+            <textarea required={undo} value={reason} onChange={(event) => setReason(event.target.value)} rows={3} className="mt-1.5 w-full rounded-xl border border-[#e0d2d9] bg-white p-2 text-[13px] font-normal outline-none focus:border-[#b9899c]" />
+          </label>
+          {error && <p role="alert" className="text-[12px] text-[#8e3b4a]">{error}</p>}
+          <button type="submit" disabled={submitting} className={`min-h-10 w-full rounded-xl px-4 text-[12.5px] font-semibold text-white disabled:opacity-60 ${undo ? 'bg-[#8e1f33]' : 'bg-plum hover:bg-plum-dark'}`}>
+            {submitting ? 'Guardando…' : undo ? 'Eliminar y devolver el vino' : 'Guardar fecha'}
+          </button>
+        </form>
+      </section>
+    </div>
+  )
+}
+
 export function MovementDetailPage({ code, onBack }: MovementDetailPageProps) {
+  const isSuperAdmin = useIsSuperAdmin()
+  const canCorrect = useCan('MOVEMENT_REGISTER')
   const [detail, setDetail] = useState<MovementDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showCancel, setShowCancel] = useState(false)
+  const [correction, setCorrection] = useState<'reschedule' | 'undo'>()
   const [actionMessage, setActionMessage] = useState('')
 
   const load = () => { setLoading(true); setError(''); movementsApi.get(code).then(setDetail).catch((cause) => setError(cause instanceof Error ? cause.message : 'No se ha podido cargar el movimiento.')).finally(() => setLoading(false)) }
@@ -115,6 +185,23 @@ export function MovementDetailPage({ code, onBack }: MovementDetailPageProps) {
       setActionMessage('')
       setError(cause instanceof Error ? cause.message : 'No se pudo ejecutar el movimiento.')
     }
+  }
+
+  async function reschedule(input: { date: string; time: string; reason: string }) {
+    if (!detail) return
+    await movementsApi.reschedule(detail.code, {
+      effectiveDate: input.date,
+      effectiveTime: input.time ? `${input.time}:00` : undefined,
+      reason: input.reason || undefined,
+    })
+    setActionMessage('Fecha corregida. Recargando…')
+    load()
+  }
+
+  async function undoMovement(input: { reason: string }) {
+    if (!detail) return
+    await movementsApi.undo(detail.code, input.reason)
+    onBack()
   }
 
   async function cancelPlanned(reason: string) {
@@ -192,6 +279,18 @@ export function MovementDetailPage({ code, onBack }: MovementDetailPageProps) {
         </div>
       )}
 
+      <div className="flex flex-wrap justify-end gap-2">
+        {canCorrect && detail.status !== 'CANCELLED' && (
+          <button type="button" onClick={() => setCorrection('reschedule')} className="flex min-h-9 items-center gap-1 rounded-xl border border-border bg-white px-3 text-[12px] font-semibold hover:bg-plum-soft"><CalendarClock className="size-3.5" />Corregir fecha</button>
+        )}
+        {isSuperAdmin && (
+          <button type="button" onClick={() => setCorrection('undo')} className="flex min-h-9 items-center gap-1 rounded-xl border border-[#e3aab6] bg-white px-3 text-[12px] font-semibold text-[#8e1f33]"><Trash2 className="size-3.5" />Eliminar movimiento</button>
+        )}
+      </div>
+      {correction && (
+        <CorrectionForm effectiveAt={detail.effectiveAt} mode={correction} onClose={() => setCorrection(undefined)}
+          onSubmit={correction === 'undo' ? undoMovement : reschedule} />
+      )}
       {detail.status === 'PLANNED' && (
         <div className="flex flex-wrap items-center justify-end gap-2 rounded-2xl border border-border bg-white p-4">
           <button type="button" onClick={() => setShowCancel(true)} className="flex min-h-9 items-center gap-1 rounded-xl border border-border px-3 text-[12px] font-semibold hover:bg-plum-soft"><X className="size-3.5" />Cancelar previsto</button>

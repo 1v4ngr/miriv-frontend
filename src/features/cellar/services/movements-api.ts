@@ -77,6 +77,18 @@ export const movementsApi = {
   execute(code: string) {
     return apiRequest<{ code: string; status: MovementStatus }>(`/api/movements/${encodeURIComponent(code)}/execute`, { method: 'POST' })
   },
+  /** Fixes when a movement happened; the occupations it opened or closed follow it. */
+  reschedule(code: string, input: { effectiveDate: string; effectiveTime?: string; reason?: string }) {
+    return apiRequest<void>(`/api/movements/${encodeURIComponent(code)}`, {
+      method: 'PATCH', body: JSON.stringify(input),
+    })
+  },
+  /** Deletes a movement and puts the wine back where it was (super administrator only). */
+  undo(code: string, reason: string) {
+    return apiRequest<void>(`/api/movements/${encodeURIComponent(code)}?reason=${encodeURIComponent(reason)}`, {
+      method: 'DELETE',
+    })
+  },
   cancel(code: string, reason: string) {
     return apiRequest<void>(`/api/movements/${encodeURIComponent(code)}/cancel`, {
       method: 'POST',
