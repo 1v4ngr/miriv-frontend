@@ -104,3 +104,22 @@ describe('saved templates', () => {
     expect(mapping).toEqual(['deposit', 'param:CONTENT_TEMPERATURE', 'ignore', 'param:PH'])
   })
 })
+
+describe('finished-wine worksheet', () => {
+  const WINE_HEADER = 'ID\tProducto\tFecha\tGrado\tAz. Reduct.\tpH\tAci. total TH2\tA. Tart.\tA. Malico\tA. Lacti.\tAci. Vola.\tIC\tA420\tA520\tA620\tA. Glucon.\tGlu.+Fruc.\tAci. total\tDensidad\tGlicerol\tGlucosa\tFructosa\tA. Citrico\tA. Sorbico\tCO2\tI.P.T.\tHora'
+
+  it('maps every column of the wine sheet', () => {
+    const headers = WINE_HEADER.split('\t')
+    const mapping = guessMapping(headers)
+    const unmapped = headers.filter((_, index) => mapping[index] === 'ignore')
+    expect(unmapped).toEqual(['Producto'])
+    expect(mapping[headers.indexOf('Grado')]).toBe('param:ETHANOL')
+    expect(mapping[headers.indexOf('IC')]).toBe('param:COLOR_INTENSITY')
+    expect(mapping[headers.indexOf('I.P.T.')]).toBe('param:TOTAL_POLYPHENOL_INDEX')
+    expect(mapping[headers.indexOf('A. Sorbico')]).toBe('param:SORBIC_ACID')
+  })
+
+  it('recognises a parameter created in Administración by its name', () => {
+    expect(guessMapping(['Sulfatos'], [{ code: 'SULPHATES', name: 'Sulfatos' }])[0]).toBe('param:SULPHATES')
+  })
+})

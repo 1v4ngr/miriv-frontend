@@ -35,7 +35,17 @@ const HEADER_ALIASES: Record<string, ColumnTarget> = {
   temperatura: 'param:CONTENT_TEMPERATURE', temp: 'param:CONTENT_TEMPERATURE',
   temperaturadelcontenido: 'param:CONTENT_TEMPERATURE',
   so2libre: 'param:FREE_SO2', so2total: 'param:TOTAL_SO2', yan: 'param:YAN',
-  alactico: 'param:L_LACTIC_ACID', acidolactico: 'param:L_LACTIC_ACID',
+  alactico: 'param:L_LACTIC_ACID', acidolactico: 'param:L_LACTIC_ACID', alacti: 'param:L_LACTIC_ACID',
+  // Finished-wine worksheet
+  grado: 'param:ETHANOL', gradoalcoholico: 'param:ETHANOL',
+  atart: 'param:TARTARIC_ACID', acidotartarico: 'param:TARTARIC_ACID',
+  ic: 'param:COLOR_INTENSITY', intensidadcolorante: 'param:COLOR_INTENSITY',
+  a420: 'param:ABS_420', a520: 'param:ABS_520', a620: 'param:ABS_620',
+  aglucon: 'param:GLUCONIC_ACID', acidogluconico: 'param:GLUCONIC_ACID',
+  glicerol: 'param:GLYCEROL', glucosa: 'param:GLUCOSE', fructosa: 'param:FRUCTOSE',
+  acitrico: 'param:CITRIC_ACID', acidocitrico: 'param:CITRIC_ACID',
+  asorbico: 'param:SORBIC_ACID', acidosorbico: 'param:SORBIC_ACID',
+  ipt: 'param:TOTAL_POLYPHENOL_INDEX', indicedepolifenolestotales: 'param:TOTAL_POLYPHENOL_INDEX',
 }
 
 /** Loses accents, punctuation and case so "Aci. Total TH2" and "acidez total th2" match the same key. */
@@ -83,13 +93,17 @@ export function looksLikeHeader(cells: string[]): boolean {
   return known >= 2
 }
 
-export function guessMapping(headers: string[], knownParameters: string[] = []): ColumnTarget[] {
+/** A catalogue parameter, by code alone or with its name (so parameters created in Administración match too). */
+export type KnownParameter = string | { code: string; name: string }
+
+export function guessMapping(headers: string[], knownParameters: KnownParameter[] = []): ColumnTarget[] {
+  const known = knownParameters.map(item => (typeof item === 'string' ? { code: item, name: item } : item))
   return headers.map(header => {
     const key = normalizeHeader(header)
     const alias = HEADER_ALIASES[key]
     if (alias) return alias
-    const direct = knownParameters.find(code => normalizeHeader(code) === key)
-    return direct ? (`param:${direct}` as ColumnTarget) : 'ignore'
+    const direct = known.find(item => normalizeHeader(item.code) === key || normalizeHeader(item.name) === key)
+    return direct ? (`param:${direct.code}` as ColumnTarget) : 'ignore'
   })
 }
 
@@ -124,7 +138,7 @@ export function templateFits(headers: string[], templateHeaders: string[]): bool
 
 /** Applies a saved matching by header name, falling back to the automatic guess for new columns. */
 export function applyTemplate(headers: string[], template: { header: string; target: string }[],
-                              knownParameters: string[] = []): ColumnTarget[] {
+                              knownParameters: KnownParameter[] = []): ColumnTarget[] {
   const byHeader = new Map(template.map(column => [normalizeHeader(column.header), column.target as ColumnTarget]))
   const guessed = guessMapping(headers, knownParameters)
   return headers.map((header, index) => byHeader.get(normalizeHeader(header)) ?? guessed[index])

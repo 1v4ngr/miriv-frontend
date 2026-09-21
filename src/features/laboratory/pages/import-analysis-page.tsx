@@ -116,7 +116,7 @@ export function ImportAnalysisPage({ onBack }: Props) {
     const hasHeader = looksLikeHeader(table[0])
     const head = hasHeader ? table[0] : table[0].map((_, index) => `Columna ${index + 1}`)
     const body = hasHeader ? table.slice(1) : table
-    const codes = parameters.map(item => item.code)
+    const codes = parameters
     // A saved template wins over the automatic guess, which is the point of saving it.
     const template = templatesRef.current.find(item => templateFits(head, item.columns.map(column => column.header)))
     setHeaders(head)
@@ -222,7 +222,7 @@ export function ImportAnalysisPage({ onBack }: Props) {
     const template = templates.find(item => item.name === name)
     setTemplateName(name)
     if (!template) return
-    setMapping(applyTemplate(headers, template.columns, parameters.map(item => item.code)))
+    setMapping(applyTemplate(headers, template.columns, parameters))
     setNotice(`Correspondencia aplicada desde «${name}».`)
   }
 

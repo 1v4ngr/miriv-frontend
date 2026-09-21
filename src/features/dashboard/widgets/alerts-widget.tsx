@@ -59,6 +59,10 @@ export function AlertsWidgetView({ widget, globals, onNavigate }: WidgetProps<Al
                 <p className="mt-0.5 text-[11.5px] text-copy">{alert.detail}</p>
               </div>
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${chip}`}>{label}</span>
+              {(alert.category ?? '').toLowerCase() === 'mosto' && /terminad|agotad/i.test(alert.rule) && (
+                <button type="button" onClick={() => onNavigate(`contents/${encodeURIComponent(alert.content)}?to-wine`)}
+                  className="widget-no-drag shrink-0 rounded-lg bg-plum px-2 py-1 text-[11px] font-semibold text-white">Pasar a vino</button>
+              )}
               {canAck && (
                 <button type="button" disabled={busy === alert.ruleId + alert.content} onClick={() => acknowledge(alert)} title="Ocultar hasta que haya una muestra nueva" className="widget-no-drag shrink-0 rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-plum hover:bg-plum-soft disabled:opacity-50">Visto</button>
               )}

@@ -15,7 +15,13 @@ export interface ContentRecord {
   samples: Sample[]
 }
 
-export interface ReviewStateInput { process: 'alcoholic' | 'malolactic'; decision: string; reason: string }
+export interface ReviewStateInput {
+  process: 'alcoholic' | 'malolactic'
+  decision: string
+  reason: string
+  /** Only when closing the alcoholic fermentation: the category the must becomes (Tinto, Blanco…). */
+  newCategory?: string
+}
 export interface ContentApi {
   getContent(code: string): Promise<ContentRecord | undefined>
   reviewState(code: string, input: ReviewStateInput): Promise<void>
