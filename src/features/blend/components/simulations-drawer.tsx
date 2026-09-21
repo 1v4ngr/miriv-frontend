@@ -30,7 +30,6 @@ export function SimulationsDrawer({ canWrite, onOpen, onClose }: Props) {
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.status === 'CONVERTED' ? 'bg-[#dceadf] text-[#1f5c3a]' : 'bg-[#eee9f4] text-[#5b4a72]'}`}>{item.status === 'CONVERTED' ? 'Convertida' : 'Borrador'}</span>
             </div>
             <p className="mt-1 text-[11px] text-muted">{[item.destinationDepositCode && `Destino ${item.destinationDepositCode}`, item.author, formatDateTime(item.updatedAt)].filter(Boolean).join(' · ')}</p>
-            {item.taskCode && <span className="mt-1 block text-[11px] text-muted">Vinculada a tarea {item.taskCode}</span>}
             
             {canWrite && (
               <div className="mt-2 flex gap-3 text-[11px]">

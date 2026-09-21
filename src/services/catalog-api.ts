@@ -43,6 +43,10 @@ export const catalogApi = {
   create(path: CatalogResource, input: CatalogItemInput) {
     return apiRequest<CatalogItem>(`/api/catalogs/${path}`, { method: 'POST', body: JSON.stringify(input) })
   },
+  /** Physical DELETE; only offered for resources flagged `deletable` in catalogResources. */
+  remove(path: CatalogResource, id: string) {
+    return apiRequest<void>(`/api/catalogs/${path}/${id}`, { method: 'DELETE' })
+  },
   setActive(path: CatalogResource, id: string, active: boolean) {
     return apiRequest<CatalogItem>(`/api/catalogs/${path}/${id}/active`, {
       method: 'PUT',
