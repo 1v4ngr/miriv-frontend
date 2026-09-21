@@ -10,7 +10,7 @@ interface CellarShellProps {
   children: ReactNode
   search: string
   onSearchChange: (value: string) => void
-  activeSubsection: 'Depósitos' | 'Lotes' | 'Movimientos' | 'Contenidos' | 'Laboratorio' | 'Seguimiento' | 'Actividad' | 'Incidencias' | 'Tareas' | 'Elaboración' | 'Informes' | 'Administración'
+  activeSubsection: 'Depósitos' | 'Lotes' | 'Movimientos' | 'Contenidos' | 'Laboratorio' | 'Seguimiento' | 'Informes' | 'Administración'
   onNavigate: (path: string) => void
 }
 
@@ -23,16 +23,12 @@ export function CellarShell({ children, search, onSearchChange, activeSubsection
     if (item === 'Bodega') onNavigate('deposits')
     if (item === 'Laboratorio') onNavigate('laboratory')
     if (item === 'Seguimiento') onNavigate('dashboard')
-    if (item === 'Actividad') onNavigate('activity')
-    if (item === 'Incidencias') onNavigate('incidents')
-    if (item === 'Tareas') onNavigate('tasks')
-    if (item === 'Elaboración') onNavigate('plans')
     if (item === 'Informes') onNavigate('reports')
     if (item === 'Administración') onNavigate('admin')
   }
 
-  const sidebarItem = activeSubsection === 'Laboratorio' || activeSubsection === 'Seguimiento' || activeSubsection === 'Actividad' || activeSubsection === 'Incidencias' || activeSubsection === 'Tareas' || activeSubsection === 'Elaboración' || activeSubsection === 'Informes' || activeSubsection === 'Administración' ? activeSubsection : 'Bodega'
-  const showBodegaTabs = activeSubsection !== 'Laboratorio' && activeSubsection !== 'Seguimiento' && activeSubsection !== 'Actividad' && activeSubsection !== 'Incidencias' && activeSubsection !== 'Tareas' && activeSubsection !== 'Elaboración' && activeSubsection !== 'Informes' && activeSubsection !== 'Administración'
+  const sidebarItem = activeSubsection === 'Laboratorio' || activeSubsection === 'Seguimiento' || activeSubsection === 'Informes' || activeSubsection === 'Administración' ? activeSubsection : 'Bodega'
+  const showBodegaTabs = activeSubsection !== 'Laboratorio' && activeSubsection !== 'Seguimiento' && activeSubsection !== 'Informes' && activeSubsection !== 'Administración'
 
   return (
     <main className="min-h-screen bg-[#f2eef1] text-ink">
@@ -46,7 +42,7 @@ export function CellarShell({ children, search, onSearchChange, activeSubsection
             </nav>}
             {children}
           </div>
-          <MobileBottomNav activeItem={sidebarItem} onNavigate={handleNavigate} laboratoryMode={activeSubsection === 'Laboratorio'} incidentsMode={activeSubsection === 'Incidencias'} badges={badges} />
+          <MobileBottomNav activeItem={sidebarItem} onNavigate={handleNavigate} laboratoryMode={activeSubsection === 'Laboratorio'} badges={badges} />
         </div>
       </div>
       <AccountMenu open={showAccount} onClose={() => setShowAccount(false)} onLogout={() => onNavigate('login')} />

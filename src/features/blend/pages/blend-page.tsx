@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FolderOpen, Save } from 'lucide-react'
 import { ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { useCan } from '../../../hooks/use-permissions'
-import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import { useResource } from '../../../hooks/use-resource'
 import { formatLiters } from '../../../lib/format'
 import { cellarApi } from '../../cellar/services/cellar-api'
@@ -13,12 +12,11 @@ import { trackingApi } from '../../tracking/services/tracking-api'
 import { AdditionsPanel } from '../components/additions-panel'
 import { ChecksList } from '../components/checks-list'
 import { ComponentList } from '../components/component-list'
-import { ConvertDialog } from '../components/convert-dialog'
 import { ResultChart } from '../components/result-chart'
 import { ResultTable } from '../components/result-table'
 import { SimulationsDrawer } from '../components/simulations-drawer'
 import { SolverPanel, type SolverSettings } from '../components/solver-panel'
-import { blocksConversion, checkBlend, type Destination } from '../checks'
+import { checkBlend, type Destination } from '../checks'
 import { simulateBlend } from '../engine'
 import { blendApi, type BlendPayload, type BlendView } from '../services/blend-api'
 import { toComponent, type Addition, type ParameterMeta, type WineComponent } from '../types'
@@ -30,7 +28,6 @@ interface State {
   name: string
   version?: number
   status: 'DRAFT' | 'CONVERTED'
-  taskCode: string | null
   components: WineComponent[]
   additions: Addition[]
   destinationCode: string | null
@@ -39,7 +36,7 @@ interface State {
 
 const DEFAULT_CHART = ['VOLATILE_ACIDITY', 'ETHANOL', 'TOTAL_ACIDITY', 'PH', 'FREE_SO2']
 const emptyState = (): State => ({
-  name: `Mezcla ${new Date().toLocaleDateString('es-ES')}`, status: 'DRAFT', taskCode: null, components: [], additions: [], destinationCode: null,
+  name: `Mezcla ${new Date().toLocaleDateString('es-ES')}`, status: 'DRAFT', components: [], additions: [], destinationCode: null,
   solver: { targets: [], goal: { kind: 'MAX_VOLUME' }, totalMin: null, totalMax: null },
 })
 const card = 'rounded-2xl border border-border bg-white p-4'
@@ -68,10 +65,8 @@ export function BlendPage({ route, onNavigate }: Props) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [drawer, setDrawer] = useState(false)
-  const [converting, setConverting] = useState(false)
   const [chartParameters, setChartParameters] = useState(DEFAULT_CHART)
   const canWrite = useCan('MOVEMENT_PLAN')
-  const profile = useCurrentProfile()
   const started = useRef(false)
 
   const catalogResource = useResource(() => trackingApi.parameters(true), [])
@@ -101,7 +96,7 @@ export function BlendPage({ route, onNavigate }: Props) {
           const volumes = Object.fromEntries(view.payload.components.map((item) => [item.contentCode, item.volumeLiters]))
           const components = await loadComponents(view.payload.components.map((item) => item.contentCode), volumes)
           setState({
-            id: view.id, name: view.name, version: view.version, status: view.status, taskCode: view.taskCode, components,
+            id: view.id, name: view.name, version: view.version, status: view.status, components,
             additions: view.payload.additions ?? [], destinationCode: view.destinationDepositCode,
             solver: { targets: view.payload.targets ?? [], goal: view.payload.goal ?? { kind: 'MAX_VOLUME' }, totalMin: view.payload.totalMin ?? null, totalMax: view.payload.totalMax ?? null },
           })
@@ -184,15 +179,6 @@ export function BlendPage({ route, onNavigate }: Props) {
     finally { setBusy(false) }
   }
 
-  const convert = async (input: Parameters<typeof blendApi.convert>[1]) => {
-    if (!state.id) throw new Error('Guarda la simulación antes de convertirla.')
-    if (dirty) await persist()
-    const converted = await blendApi.convert(state.id, input)
-    setState((current) => ({ ...current, status: converted.status, taskCode: converted.taskCode, version: converted.version }))
-    setConverting(false)
-    setNotice(`Tarea ${converted.taskCode} creada con ${converted.plannedMovements.length} traslado(s) previsto(s).`)
-  }
-
   const openSimulation = (id: string) => {
     if (dirty && !confirm('Hay cambios sin guardar. ¿Abrir otra simulación igualmente?')) return
     window.location.hash = `blend/${id}`
@@ -207,11 +193,6 @@ export function BlendPage({ route, onNavigate }: Props) {
   if (loading) return <LoadingState label="Cargando simulador…" />
   if (loadError) return <ErrorState message={loadError} onRetry={() => window.location.reload()} />
 
-  const convertDisabledReason = !canWrite ? 'Necesitas el permiso «Guardar y cancelar movimientos previstos».'
-    : frozen ? 'Ya está convertida en tarea.'
-    : !state.destinationCode ? 'Elige el depósito destino.'
-    : blocksConversion(checks) ? 'Hay comprobaciones que bloquean (o agua).'
-    : ''
   const destinationOptions = [
     ...components.filter((component) => component.depositCode).map((component) => ({ code: component.depositCode as string, label: `${component.depositCode} · usa todo su vino`, group: 'Depósitos de la mezcla' })),
     ...(deposits.data ?? []).filter((deposit) => deposit.status === 'available' && !components.some((component) => component.depositCode === deposit.code))
@@ -241,10 +222,8 @@ export function BlendPage({ route, onNavigate }: Props) {
           ? <>
               <button type="button" className={button} disabled={busy || frozen} onClick={persist}><Save className="size-3.5" />{state.id ? 'Guardar cambios' : 'Guardar'}</button>
               <button type="button" className={button} disabled={busy || !state.id} onClick={duplicate}>Duplicar</button>
-              <button type="button" disabled={!!convertDisabledReason || !state.id} title={convertDisabledReason || (!state.id ? 'Guarda primero la simulación.' : 'Crear los traslados previstos y la tarea')} onClick={() => setConverting(true)} className="rounded-xl bg-plum px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50">Convertir en tarea</button>
             </>
           : <p className="text-[11.5px] text-muted">Solo lectura: necesitas el permiso «Guardar y cancelar movimientos previstos» para guardar simulaciones.</p>}
-        {state.status === 'CONVERTED' && state.taskCode && <button type="button" onClick={() => onNavigate(`tasks/${encodeURIComponent(state.taskCode!)}`)} className="text-xs font-semibold text-plum underline">Ver tarea {state.taskCode}</button>}
         {dirty && <span className="text-[11px] font-semibold text-[#6b5a10]">Cambios sin guardar</span>}
       </section>
       {(notice || error) && <p role={error ? 'alert' : 'status'} className={`rounded-xl p-2 text-xs ${error ? 'bg-[#f7e0e6] text-[#8e1f33]' : 'bg-[#dceadf] text-[#1f5c3a]'}`}>{error || notice}</p>}
@@ -312,9 +291,7 @@ export function BlendPage({ route, onNavigate }: Props) {
         </div>
       </div>
 
-      {drawer && <SimulationsDrawer canWrite={canWrite} onOpen={openSimulation} onNavigate={onNavigate} onClose={() => setDrawer(false)} />}
-      {converting && <ConvertDialog defaultResponsible={profile?.username ?? ''} onConvert={convert} onClose={() => setConverting(false)} />}
+      {drawer && <SimulationsDrawer canWrite={canWrite} onOpen={openSimulation} onClose={() => setDrawer(false)} />}
     </div>
   )
 }
-

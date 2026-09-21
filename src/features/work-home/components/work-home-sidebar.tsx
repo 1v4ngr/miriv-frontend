@@ -1,4 +1,4 @@
-import { Activity, Archive, Beaker, ClipboardCheck, FileText, FlaskConical, Home, ListChecks, Settings, Wine } from 'lucide-react'
+import { Activity, FileText, FlaskConical, Home, Settings, Wine } from 'lucide-react'
 import type { NavigationBadges } from '../hooks/use-navigation-badges'
 import type { CurrentUserProfile } from '../../../services/profile-api'
 
@@ -20,10 +20,6 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Bodega', icon: Wine },
   { label: 'Laboratorio', icon: FlaskConical, badgeKey: 'laboratory' },
   { label: 'Seguimiento', icon: Activity, badgeKey: 'tracking' },
-  { label: 'Actividad', icon: ClipboardCheck },
-  { label: 'Incidencias', icon: Archive, badgeKey: 'incidents' },
-  { label: 'Tareas', icon: ListChecks },
-  { label: 'Elaboración', icon: Beaker },
   { label: 'Informes', icon: FileText },
   { label: 'Administración', icon: Settings },
 ]

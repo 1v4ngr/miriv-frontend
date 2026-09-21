@@ -11,7 +11,7 @@ export interface BlendPayload {
   totalMax: number | null
 }
 
-export interface BlendSummary { id: string; name: string; status: 'DRAFT' | 'CONVERTED'; destinationDepositCode: string | null; author: string | null; updatedAt: string; taskCode: string | null }
+export interface BlendSummary { id: string; name: string; status: 'DRAFT' | 'CONVERTED'; destinationDepositCode: string | null; author: string | null; updatedAt: string }
 export interface BlendView extends BlendSummary {
   payload: BlendPayload
   result: unknown
@@ -19,7 +19,6 @@ export interface BlendView extends BlendSummary {
   plannedMovements: string[]
 }
 export interface BlendInput { name: string; destinationDepositCode: string | null; payload: BlendPayload; result?: unknown; version?: number }
-export interface ConvertInput { responsible: string; dueAt: string; priority: string }
 
 const base = '/api/blends'
 
@@ -30,5 +29,4 @@ export const blendApi = {
   save: (id: string, input: BlendInput) => apiRequest<BlendView>(`${base}/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
   duplicate: (id: string) => apiRequest<BlendView>(`${base}/${id}/duplicate`, { method: 'POST' }),
   remove: (id: string) => apiRequest<void>(`${base}/${id}`, { method: 'DELETE' }),
-  convert: (id: string, input: ConvertInput) => apiRequest<BlendView>(`${base}/${id}/convert`, { method: 'POST', body: JSON.stringify(input) }),
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Archive, FlaskConical, Home, ListChecks, MoreHorizontal, Wine, X } from 'lucide-react'
+import { Home, MoreHorizontal, Wine, X } from 'lucide-react'
 import { navigationItems } from './work-home-sidebar'
 import type { NavigationBadges } from '../hooks/use-navigation-badges'
 
@@ -7,21 +7,19 @@ interface MobileBottomNavProps {
   activeItem: string
   onNavigate: (item: string) => void
   laboratoryMode?: boolean
-  incidentsMode?: boolean
   badges?: NavigationBadges
 }
 
 const items = [
   { label: 'Inicio', icon: Home },
   { label: 'Bodega', icon: Wine },
-  { label: 'Tareas', icon: ListChecks },
   { label: 'Más', icon: MoreHorizontal },
 ]
 
-export function MobileBottomNav({ activeItem, onNavigate, laboratoryMode = false, incidentsMode = false, badges = {} }: MobileBottomNavProps) {
+export function MobileBottomNav({ activeItem, onNavigate, laboratoryMode = false, badges = {} }: MobileBottomNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const visibleItems = laboratoryMode ? [items[0], items[1], { label: 'Laboratorio', icon: FlaskConical }, items[3]] : incidentsMode ? [items[0], items[1], { label: 'Incidencias', icon: Archive }, items[3]] : items
-  const pinned = new Set(['Inicio', 'Bodega', 'Tareas', ...(laboratoryMode ? ['Laboratorio'] : []), ...(incidentsMode ? ['Incidencias'] : [])])
+  const visibleItems = laboratoryMode ? [items[0], items[1], { label: 'Laboratorio', icon: Home }, items[2]] : items
+  const pinned = new Set(['Inicio', 'Bodega', ...(laboratoryMode ? ['Laboratorio'] : [])])
   const menuItems = navigationItems.filter((item) => !pinned.has(item.label))
   const handleTap = (label: string) => { if (label === 'Más') { setMenuOpen(true); return } onNavigate(label) }
   return (

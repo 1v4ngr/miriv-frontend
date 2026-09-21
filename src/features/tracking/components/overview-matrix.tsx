@@ -64,8 +64,7 @@ export function OverviewMatrix({ rows, parameters, onOpenRow, selected, onToggle
                 ? <div className="font-semibold text-[#8e6a10]">{row.daysSinceLastSample === null ? 'Nunca muestreado' : `Sin muestra ${formatAge(row.daysSinceLastSample)}`}</div>
                 : null}
               {row.openSamples > 0 && <div>{row.openSamples} muestra(s) abierta(s)</div>}
-              {row.openTasks > 0 && <div>{row.openTasks} tarea(s){row.nextTaskDueAt ? ` · ${formatRelative(row.nextTaskDueAt)}` : ''}</div>}
-              {row.openSamples === 0 && row.openTasks === 0 && row.daysSinceLastSample !== null && row.daysSinceLastSample <= STALE_DAYS && '—'}
+              {row.openSamples === 0 && row.daysSinceLastSample !== null && row.daysSinceLastSample <= STALE_DAYS && '—'}
             </td>
           </tr>
         ))}

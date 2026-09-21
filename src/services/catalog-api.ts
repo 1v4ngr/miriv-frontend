@@ -15,8 +15,6 @@ export interface CatalogItemInput {
 }
 
 export type CatalogResource =
-  | 'product-types'
-  | 'colors'
   | 'destinations'
   | 'internal-categories'
   | 'varieties'
@@ -31,8 +29,6 @@ export const catalogResources: Array<{
 }> = [
   { path: 'varieties', label: 'Variedades', deletable: false, hasDescription: false },
   { path: 'internal-categories', label: 'Categorías internas', deletable: false, hasDescription: true },
-  { path: 'product-types', label: 'Tipos de producto', deletable: true, hasDescription: true },
-  { path: 'colors', label: 'Colores', deletable: false, hasDescription: false },
   { path: 'destinations', label: 'Destinos', deletable: false, hasDescription: false },
 ]
 
@@ -53,16 +49,10 @@ export const catalogApi = {
       body: JSON.stringify(active),
     })
   },
-  remove(path: CatalogResource, id: string) {
-    return apiRequest<void>(`/api/catalogs/${path}/${id}`, { method: 'DELETE' })
-  },
   // Convenience getters — keep existing call sites working.
   getVarieties() { return catalogApi.list('varieties') },
   getInternalCategories() { return catalogApi.list('internal-categories') },
-  getProductTypes() { return catalogApi.list('product-types') },
-  getColors() { return catalogApi.list('colors') },
   getDestinations() { return catalogApi.list('destinations') },
   createVariety(input: Pick<CatalogItem, 'code' | 'name'>) { return catalogApi.create('varieties', input) },
   createInternalCategory(input: Pick<CatalogItem, 'code' | 'name'>) { return catalogApi.create('internal-categories', input) },
-  createProductType(input: Pick<CatalogItem, 'code' | 'name'>) { return catalogApi.create('product-types', input) },
 }

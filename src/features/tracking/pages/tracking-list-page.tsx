@@ -40,7 +40,7 @@ export function TrackingListPage({ onOpenCurves, onCompare, onSimulate }: Props)
     crit: rows.filter((row) => row.worstStatus === 'CRIT').length,
     warn: rows.filter((row) => row.worstStatus === 'WARN').length,
     stale: rows.filter((row) => row.daysSinceLastSample === null || row.daysSinceLastSample > STALE_DAYS).length,
-    open: rows.filter((row) => row.openSamples > 0 || row.openTasks > 0).length,
+    open: rows.filter((row) => row.openSamples > 0).length,
   }), [rows])
 
   const categories = [...new Set(rows.map((row) => row.category).filter((value): value is string => !!value))].sort()
@@ -56,7 +56,7 @@ export function TrackingListPage({ onOpenCurves, onCompare, onSimulate }: Props)
     if (quick === 'crit') return row.worstStatus === 'CRIT'
     if (quick === 'warn') return row.worstStatus === 'WARN' || row.worstStatus === 'CRIT'
     if (quick === 'stale') return stale(row)
-    if (quick === 'open') return row.openSamples > 0 || row.openTasks > 0
+    if (quick === 'open') return row.openSamples > 0
     return true
   })
   const toggle = (code: string) => setSelected((current) => (current.includes(code) ? current.filter((item) => item !== code) : [...current, code]))

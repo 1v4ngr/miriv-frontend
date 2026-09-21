@@ -20,7 +20,6 @@ export function UserAccessPanel({ username, onChanged }: { username: string; onC
   const [draftPermission, setDraftPermission] = useState('')
   const [draftReason, setDraftReason] = useState('')
   const [statusReason, setStatusReason] = useState('')
-  const [pendingWork, setPendingWork] = useState<{ openTaskCodes: string[]; openIncidentCodes: string[] }>()
   const [newPassword, setNewPassword] = useState('')
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
@@ -28,7 +27,7 @@ export function UserAccessPanel({ username, onChanged }: { username: string; onC
 
   useEffect(() => {
     let active = true
-    setAccount(undefined); setNotice(''); setError(''); setPendingWork(undefined)
+    setAccount(undefined); setNotice(''); setError('')
     Promise.all([adminAccountsApi.list(), adminAccountsApi.listRoles(), adminAccountsApi.listPermissions()])
       .then(([list, roleList, permissionList]) => {
         if (!active) return
@@ -77,7 +76,7 @@ export function UserAccessPanel({ username, onChanged }: { username: string; onC
     if (newPassword.length < 10) { setError('La contraseña debe tener al menos 10 caracteres.'); return }
     run(async () => { await adminAccountsApi.resetPassword(account.id, newPassword); setNewPassword('') }, 'Contraseña restablecida. Comunícasela a la persona por un canal seguro.')
   }
-  const loadPendingWork = () => run(async () => { setPendingWork(await adminAccountsApi.pendingWork(account.id)) }, '')
+  
   const changeStatus = (deactivate: boolean) => {
     if (statusReason.trim().length < 3) { setError('Indica el motivo (mínimo 3 caracteres).'); return }
     run(async () => {
@@ -164,14 +163,6 @@ export function UserAccessPanel({ username, onChanged }: { username: string; onC
       {!isSelf && !locked && (
         <section>
           <h3 className="text-xs font-semibold">Estado de la cuenta · {account.active ? 'Activa' : 'Desactivada'}</h3>
-          {account.active && !pendingWork && <button type="button" disabled={busy} onClick={loadPendingWork} className="mt-2 text-xs font-semibold text-plum underline">Ver trabajo pendiente antes de desactivar</button>}
-          {pendingWork && (
-            <p className="mt-2 rounded-xl bg-field p-3 text-xs">
-              {pendingWork.openTaskCodes.length + pendingWork.openIncidentCodes.length === 0
-                ? 'No tiene tareas ni incidencias abiertas.'
-                : `Reasigna antes de desactivar · tareas: ${pendingWork.openTaskCodes.join(', ') || '—'} · incidencias: ${pendingWork.openIncidentCodes.join(', ') || '—'}`}
-            </p>
-          )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <input value={statusReason} onChange={(event) => setStatusReason(event.target.value)} placeholder="Motivo del cambio" className={`${input} min-w-[240px]`} />
             {account.active

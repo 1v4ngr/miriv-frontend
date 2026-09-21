@@ -1,29 +1,148 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Bell, Check, History, Plus, Save } from 'lucide-react'
+import { Bell, Check } from 'lucide-react'
 import { adminAuditApi, type AuditEntry } from '../services/admin-audit-api'
-import { catalogApi } from '../../../services/catalog-api'
 
 const card = 'rounded-2xl border border-border bg-white p-4'
-const input = 'mt-1 w-full rounded-xl border border-border bg-field p-3 text-sm font-normal text-ink'
 
-export function RulesPage() { const [rule, setRule] = useState('AL-02'); const [threshold, setThreshold] = useState('0,60 g/L'); const [notice, setNotice] = useState(''); const rows = [['AL-02', 'Acidez volátil sobre umbral', 'v3 · crítica', 'Vigente'], ['AL-05', 'Control analítico vencido', 'v2 · media', 'Vigente'], ['AL-09', 'Fin de fermentación propuesto', 'v1 · falta umbral', 'Borrador']]; return <div className="mx-auto grid max-w-6xl gap-4 xl:grid-cols-[260px_minmax(0,1fr)]"><aside className={card}><div className="flex justify-between"><h1 className="text-lg font-semibold">Reglas</h1><button onClick={() => setNotice('Nueva regla creada como borrador.')} className="rounded-lg bg-plum px-2 py-1 text-xs font-semibold text-white"><Plus className="inline size-3" /> Nueva</button></div><div className="mt-3 space-y-1">{rows.map(([code, title, detail, state]) => <button onClick={() => setRule(code)} key={code} className={`w-full rounded-xl p-3 text-left ${rule === code ? 'bg-plum-soft text-plum' : 'hover:bg-field'}`}><span className="flex justify-between font-mono text-xs"><span>{code}</span><span className="rounded-full bg-[#dceadf] px-1.5 py-0.5 text-[9px] text-[#1f5c3a]">{state}</span></span><span className="mt-1 block text-xs font-semibold">{title}</span><span className="mt-1 block text-[10.5px] text-muted">{detail}</span></button>)}</div></aside><main className="space-y-4"><header className={card}><div className="flex flex-wrap justify-between gap-3"><div><h1 className="text-lg font-semibold">{rule} · Acidez volátil sobre umbral</h1><p className="mt-1 text-xs text-muted">v3 vigente · severidad crítica · responsable María Solana</p></div><div className="flex gap-2"><button onClick={() => setNotice('Comparación de versiones preparada.')} className="rounded-xl border border-border px-3 py-2 text-xs font-semibold">Comparar versiones</button><button onClick={() => setNotice('Borrador guardado.')} className="rounded-xl bg-plum px-3 py-2 text-xs font-semibold text-white"><Save className="mr-1 inline size-3.5" />Guardar borrador</button></div></div></header><section className={card}><h2 className="text-sm font-semibold">Condición</h2><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Field label="Parámetro" value="Acidez volátil" /><Field label="Umbral" value={threshold} onChange={setThreshold} /><Field label="Ventana" value="15 días" /><Field label="Mín. mediciones" value="2" /><Field label="Antigüedad máx." value="7 días" /><Field label="Persistencia" value="2 lecturas seguidas" /><Field label="Severidad" value="Crítica" /></div></section><section className={card}><h2 className="text-sm font-semibold">Recomendación vinculada</h2><p className="mt-3 rounded-xl border border-border bg-field p-3 text-xs">Verificar sulfitación y programar control en 48 h <span className="text-muted">· comprobación, no intervención automática</span></p></section><p className="rounded-xl bg-[#dceadf] p-3 text-xs text-[#1f5c3a]">Configuración completa · efectiva desde 20 sep. La activación crea avisos para revisión manual.</p>{notice && <Notice text={notice} />}</main></div> }
-
-export function ReportsPage() { const [type, setType] = useState('Trazabilidad'); const [generated, setGenerated] = useState(false); return <div className="mx-auto grid max-w-6xl gap-4 xl:grid-cols-[300px_minmax(0,1fr)]"><aside className={card}><h1 className="text-lg font-semibold">Nuevo informe</h1><label className="mt-4 block text-xs font-semibold">Tipo<select value={type} onChange={(event) => setType(event.target.value)} className={input}><option>Trazabilidad</option><option>Ficha de contenido</option><option>Analíticas</option><option>Incidencias</option></select></label><Field label="Alcance" value="Centro Norte · campaña 2026" /><div className="mt-3 grid grid-cols-2 gap-2"><Field label="Desde" value="01 sep" /><Field label="Hasta" value="16 sep" /></div><label className="mt-4 flex items-center gap-2 text-xs"><input type="checkbox" /> Incluir provisionales e históricos sustituidos</label><button onClick={() => setGenerated(true)} className="mt-5 w-full rounded-xl bg-plum py-3 text-xs font-semibold text-white">Generar informe</button></aside><main className="space-y-4"><section className={card}><h2 className="text-lg font-semibold">Previsualización</h2><div className="mt-4 rounded-xl border border-border p-4"><h3 className="font-semibold">Informe de {type} · Centro Norte</h3><dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4"><Metric label="Periodo" value="1–16 sep 2026" /><Metric label="Generado" value="16 sep 09:30" /><Metric label="Autor" value="María Solana" /><Metric label="Registros" value="214" /></dl><p className="mt-4 rounded-xl bg-[#f5eed0] p-3 text-xs text-[#6b5a10]">Incluye 6 valores provisionales pendientes de validación. El rango se refiere a fecha de toma de muestra.</p></div></section><section className={card}><h2 className="text-sm font-semibold">Trabajos generados</h2><div className="mt-3 space-y-2 text-xs">{[['Trazabilidad · Centro Norte', '16 sep', '214', 'Disponible'], ['Analíticas · septiembre', '15 sep', '—', 'Preparando'], ['Incidencias · agosto', '2 sep', '88', 'Fallido']].map((row) => <div key={row[0]} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3"><span>{row[0]}</span><span className="font-mono">{row[1]}</span><span className="font-mono">{row[2]}</span><span>{row[3]}</span></div>)}</div>{generated && <Notice text="Informe generado y añadido a la lista de trabajos." />}</section></main></div> }
-
-
-export function AuditDemoPage() { return <div /> }
-export function ActivityPage({ onOpenOperation }: { onOpenOperation: (id: string) => void }) {
-  const [tab, setTab] = useState<'activity' | 'operations'>('activity')
-  const operations = [['OP-2026-071', 'Sulfitado · DEP-014 · C-2026-114', 'Ejecutada con desviación', '16 sep 08:30'], ['OP-2026-069', 'Remontado · DEP-007 · C-2026-101', 'Ejecutada según lo previsto', '15 sep 07:10'], ['OP-2026-066', 'Bazuqueo · DEP-014 · C-2026-114', 'Ejecutada según lo previsto', '14 sep 18:00']]
-  return <div className="mx-auto max-w-5xl space-y-4"><header className={card}><h1 className="text-lg font-semibold">Actividad</h1><p className="mt-1 text-xs text-muted">Operaciones con previsto y real separados; el resto de cambios queda en un registro aparte.</p><div className="mt-3 flex gap-2"><button onClick={() => setTab('activity')} className={`h-9 rounded-xl px-3 text-[12px] font-semibold ${tab === 'activity' ? 'bg-plum-soft text-plum' : 'border border-border'}`}>Registro</button><button onClick={() => setTab('operations')} className={`h-9 rounded-xl px-3 text-[12px] font-semibold ${tab === 'operations' ? 'bg-plum-soft text-plum' : 'border border-border'}`}>Operaciones</button></div></header>
-    {tab === 'activity' ? <section className={card}><div className="space-y-2">{[['Analítica MU-26-0418', 'Resultado validado para C-2026-114 · DEP-014', 'Hoy · 09:20'], ['Movimiento MOV-2026-0388', 'Trasiego registrado en DEP-007', 'Ayer · 16:40'], ['Plan Tinto reserva v3', 'Nueva versión aprobada', '15 sep · María Solana'], ['Lote L-2026-034', 'Alta de lote con variedad pendiente', '15 sep · Ana Ruiz']].map((row) => <div key={row[0]} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4"><div><p className="text-sm font-semibold">{row[0]}</p><p className="mt-1 text-xs text-copy">{row[1]}</p></div><span className="font-mono text-[11px] text-muted">{row[2]}</span></div>)}</div></section>
-    : <section className={card}><div className="space-y-2">{operations.map((row) => <button key={row[0]} onClick={() => onOpenOperation(row[0])} className="flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4 text-left hover:bg-plum-soft"><div><p className="font-mono text-sm font-semibold">{row[0]}</p><p className="mt-1 text-xs text-copy">{row[1]}</p></div><div className="text-right"><p className={`text-[11px] font-semibold ${row[2].includes('desviación') ? 'text-[#8a4715]' : 'text-[#1f5c3a]'}`}>{row[2]}</p><p className="mt-1 font-mono text-[11px] text-muted">{row[3]}</p></div></button>)}</div></section>}
-  </div>
+export function ReportsPage() {
+  const [type, setType] = useState('Trazabilidad')
+  const [generated, setGenerated] = useState(false)
+  return (
+    <div className="mx-auto grid max-w-6xl gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <aside className={card}>
+        <h1 className="text-lg font-semibold">Nuevo informe</h1>
+        <label className="mt-4 block text-xs font-semibold">Tipo
+          <select value={type} onChange={(event) => setType(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-field p-3 text-sm font-normal text-ink">
+            <option>Trazabilidad</option>
+            <option>Ficha de contenido</option>
+            <option>Analíticas</option>
+          </select>
+        </label>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Field label="Desde" value="01 sep" />
+          <Field label="Hasta" value="16 sep" />
+        </div>
+        <button onClick={() => setGenerated(true)} className="mt-5 w-full rounded-xl bg-plum py-3 text-xs font-semibold text-white">
+          Generar informe
+        </button>
+      </aside>
+      <main className="space-y-4">
+        <section className={card}>
+          <h2 className="text-lg font-semibold">Previsualización</h2>
+          <div className="mt-4 rounded-xl border border-border p-4">
+            <h3 className="font-semibold">Informe de {type} · Centro Norte</h3>
+            <dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+              <Metric label="Periodo" value="1–16 sep 2026" />
+              <Metric label="Generado" value="16 sep 09:30" />
+              <Metric label="Autor" value="María Solana" />
+              <Metric label="Registros" value="214" />
+            </dl>
+          </div>
+        </section>
+        {generated && <Notice text="Informe generado y añadido a la lista de trabajos." />}
+      </main>
+    </div>
+  )
 }
-export function AccountPage() { const [read, setRead] = useState(false); return <SimplePage title="Cuenta, notificaciones y sincronización" subtitle="Los avisos personales no resuelven incidencias ni completan tareas." rows={[["Incidencia crítica en DEP-014", 'Acidez volátil sobre umbral', 'Hace 2 h'], ['Importación de analíticas finalizada', '2 avisos requieren revisión', 'Hoy'], ['Tarea vencida', 'Analítica de control completa', 'Ayer']]} action={<button onClick={() => setRead(!read)} className="rounded-xl bg-plum px-3 py-2 text-xs font-semibold text-white"><Bell className="mr-1 inline size-3.5" />{read ? 'Marcados como leídos' : 'Marcar como leído'}</button>} /> }
-function SimplePage({ title, subtitle, rows, action }: { title: string; subtitle: string; rows: string[][]; action?: ReactNode }) { return <div className="mx-auto max-w-5xl space-y-4"><header className={card}><div className="flex flex-wrap justify-between gap-3"><div><h1 className="text-lg font-semibold">{title}</h1><p className="mt-1 text-xs text-muted">{subtitle}</p></div>{action}</div></header><section className={card}><div className="space-y-2">{rows.map((row) => <div key={row[0]} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4"><div><p className="text-sm font-semibold">{row[0]}</p><p className="mt-1 text-xs text-copy">{row[1]}</p></div><span className="font-mono text-[11px] text-muted">{row[2]}</span></div>)}</div></section></div> }
 
-export function AuditPage() { const [entries, setEntries] = useState<AuditEntry[]>([]); const [error, setError] = useState(''); useEffect(() => { adminAuditApi.list().then(setEntries).catch((cause) => setError(cause instanceof Error ? cause.message : 'No se ha podido cargar la auditoría.')) }, []); return <div className="mx-auto max-w-5xl space-y-4"><section className={card}><h1 className="text-lg font-semibold">Auditoría y versiones</h1><p className="mt-1 text-xs text-muted">Cambios trazables, correcciones y evidencia vigente.</p>{error && <p role="alert" className="mt-3 text-xs text-[#8e1f33]">{error}</p>}<div className="mt-4 space-y-2">{entries.map((entry, index) => <div key={`${entry.createdAt}-${index}`} className="rounded-xl border border-border p-3 text-xs"><div className="flex justify-between gap-3"><strong>{entry.entityName} · {entry.action}</strong><span className="text-muted">{new Date(entry.createdAt).toLocaleString('es-ES')}</span></div><p className="mt-1 text-muted">{entry.reason || 'Sin motivo indicado'} · {entry.author}</p></div>)}</div></section></div> }
-function Field({ label, value, onChange }: { label: string; value: string; onChange?: (value: string) => void }) { return <label className="mt-3 block text-xs font-semibold text-copy">{label}<input value={value} onChange={(event) => onChange?.(event.target.value)} readOnly={!onChange} className={input} /></label> }
-function Metric({ label, value }: { label: string; value: string }) { return <div><dt className="text-[10px] text-muted">{label}</dt><dd className="mt-1 text-xs font-semibold">{value}</dd></div> }
-function Notice({ text }: { text: string }) { return <p role="status" className="mt-3 rounded-xl bg-[#dceadf] p-3 text-xs text-[#1f5c3a]"><Check className="mr-1 inline size-3.5" />{text}</p> }
+export function AccountPage() {
+  const [read, setRead] = useState(false)
+  return (
+    <SimplePage
+      title="Cuenta y sincronización"
+      subtitle="Configuración personal y de notificaciones."
+      rows={[['Sincronización', 'Centro Norte sincronizado', 'Hoy']]}
+      action={
+        <button onClick={() => setRead(!read)} className="rounded-xl bg-plum px-3 py-2 text-xs font-semibold text-white">
+          <Bell className="mr-1 inline size-3.5" />{read ? 'Marcados como leídos' : 'Marcar como leído'}
+        </button>
+      }
+    />
+  )
+}
+
+export function AuditPage() {
+  const [entries, setEntries] = useState<AuditEntry[]>([])
+  const [error, setError] = useState('')
+  useEffect(() => {
+    adminAuditApi.list().then(setEntries).catch((cause) =>
+      setError(cause instanceof Error ? cause.message : 'No se ha podido cargar la auditoría.'),
+    )
+  }, [])
+  return (
+    <div className="mx-auto max-w-5xl space-y-4">
+      <section className={card}>
+        <h1 className="text-lg font-semibold">Auditoría y versiones</h1>
+        <p className="mt-1 text-xs text-muted">Cambios trazables, correcciones y evidencia vigente.</p>
+        {error && <p role="alert" className="mt-3 text-xs text-[#8e1f33]">{error}</p>}
+        <div className="mt-4 space-y-2">
+          {entries.map((entry, index) => (
+            <div key={`${entry.createdAt}-${index}`} className="rounded-xl border border-border p-3 text-xs">
+              <div className="flex justify-between gap-3">
+                <strong>{entry.entityName} · {entry.action}</strong>
+                <span className="text-muted">{new Date(entry.createdAt).toLocaleString('es-ES')}</span>
+              </div>
+              <p className="mt-1 text-muted">{entry.reason || 'Sin motivo indicado'} · {entry.author}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function Field({ label, value, onChange }: { label: string; value: string; onChange?: (value: string) => void }) {
+  const input = 'mt-1 w-full rounded-xl border border-border bg-field p-3 text-sm font-normal text-ink'
+  return (
+    <label className="mt-3 block text-xs font-semibold text-copy">
+      {label}
+      <input value={value} onChange={(event) => onChange?.(event.target.value)} readOnly={!onChange} className={input} />
+    </label>
+  )
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[10px] text-muted">{label}</dt>
+      <dd className="mt-1 text-xs font-semibold">{value}</dd>
+    </div>
+  )
+}
+
+function Notice({ text }: { text: string }) {
+  return (
+    <p role="status" className="mt-3 rounded-xl bg-[#dceadf] p-3 text-xs text-[#1f5c3a]">
+      <Check className="mr-1 inline size-3.5" />{text}
+    </p>
+  )
+}
+
+function SimplePage({ title, subtitle, rows, action }: { title: string; subtitle: string; rows: string[][]; action?: ReactNode }) {
+  return (
+    <div className="mx-auto max-w-5xl space-y-4">
+      <header className={card}>
+        <div className="flex flex-wrap justify-between gap-3">
+          <div>
+            <h1 className="text-lg font-semibold">{title}</h1>
+            <p className="mt-1 text-xs text-muted">{subtitle}</p>
+          </div>
+          {action}
+        </div>
+      </header>
+      <section className={card}>
+        <div className="space-y-2">
+          {rows.map((row) => (
+            <div key={row[0]} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4">
+              <div>
+                <p className="text-sm font-semibold">{row[0]}</p>
+                <p className="mt-1 text-xs text-copy">{row[1]}</p>
+              </div>
+              <span className="font-mono text-[11px] text-muted">{row[2]}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}

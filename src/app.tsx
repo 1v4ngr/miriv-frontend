@@ -19,14 +19,8 @@ import { CurvesPage } from './features/tracking/pages/curves-page'
 import { TrackingListPage } from './features/tracking/pages/tracking-list-page'
 import { DashboardPage } from './features/dashboard/pages/dashboard-page'
 import { BlendPage } from './features/blend/pages/blend-page'
-import { IncidentsInboxPage } from './features/incidents/pages/incidents-inbox-page'
-import { IncidentDetailPage } from './features/incidents/pages/incident-detail-page'
-import { TasksPage } from './features/tasks/pages/tasks-page'
-import { TaskDetailPage } from './features/tasks/pages/task-detail-page'
-import { PlansPage } from './features/plans/pages/plans-page'
-import { AccountPage, ActivityPage, AuditPage, ReportsPage, RulesPage } from './features/system/pages/system-pages'
+import { AccountPage, AuditPage, ReportsPage } from './features/system/pages/system-pages'
 import { AdministrationManagementPage } from './features/system/pages/administration-management-page'
-import { OperationDetailPage } from './features/operations/pages/operation-detail-page'
 import { clearAccessToken, hasActiveSession } from './services/api-client'
 
 function getRoute(): string {
@@ -80,14 +74,9 @@ export function App() {
   if (route === 'blend' || route.startsWith('blend/') || route.startsWith('blend?')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Seguimiento" onNavigate={navigate}><BlendPage key={route.split('?')[0]} route={route} onNavigate={navigate} /></CellarShell>
   if (route === 'tracking') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Seguimiento" onNavigate={navigate}><TrackingListPage onOpenCurves={(code) => navigate(`tracking/${encodeURIComponent(code)}`)} onCompare={(codes, parameters) => navigate(`tracking/compare?c=${codes.join(',')}&p=${parameters.join(',')}`)} onSimulate={(codes) => navigate(`blend?c=${codes.join(',')}`)} /></CellarShell>
   if (route.startsWith('tracking/')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Seguimiento" onNavigate={navigate}><CurvesPage key={route} route={route} onBack={() => navigate('tracking')} onNavigate={navigate} /></CellarShell>
-  if (route === 'incidents' || route.startsWith('incidents/')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Incidencias" onNavigate={navigate}>{route === 'incidents' ? <IncidentsInboxPage onOpen={(id) => navigate(`incidents/${encodeURIComponent(id)}`)} /> : <IncidentDetailPage id={decodeURIComponent(route.slice('incidents/'.length))} onBack={() => navigate('incidents')} onOpenContent={openContent} />}</CellarShell>
-  if (route === 'tasks' || route.startsWith('tasks/')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Tareas" onNavigate={navigate}>{route === 'tasks' ? <TasksPage onOpen={(id) => navigate(`tasks/${encodeURIComponent(id)}`)} /> : <TaskDetailPage id={decodeURIComponent(route.slice('tasks/'.length))} onBack={() => navigate('tasks')} onOpenContent={openContent} onOpenLaboratory={openLaboratory} onNavigate={navigate} />}</CellarShell>
-  if (route === 'plans') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Elaboración" onNavigate={navigate}><PlansPage /></CellarShell>
-  if (route === 'rules') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Elaboración" onNavigate={navigate}><RulesPage /></CellarShell>
   if (route === 'reports') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Informes" onNavigate={navigate}><ReportsPage /></CellarShell>
   if (route === 'admin') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Administración" onNavigate={navigate}><AdministrationManagementPage /></CellarShell>
   if (route === 'audit') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Administración" onNavigate={navigate}><AuditPage /></CellarShell>
   if (route === 'account') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Administración" onNavigate={navigate}><AccountPage /></CellarShell>
-  if (route === 'activity' || route.startsWith('activity/operations/')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Actividad" onNavigate={navigate}>{route === 'activity' ? <ActivityPage onOpenOperation={(id) => navigate(`activity/operations/${encodeURIComponent(id)}`)} /> : <OperationDetailPage id={decodeURIComponent(route.slice('activity/operations/'.length))} onBack={() => navigate('activity')} onOpenContent={openContent} />}</CellarShell>
   return <WorkHomePage onOpenLogin={() => navigate('login')} onNavigate={navigate} />
 }

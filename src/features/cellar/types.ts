@@ -27,7 +27,6 @@ export interface Deposit {
   priority: CellarPriority
   lastControl?: string
   lastControlAge?: string
-  nextTask?: string
   occupations: Occupation[]
   cleaningHistory: { date: string; action: string; responsible: string; result: string }[]
 }

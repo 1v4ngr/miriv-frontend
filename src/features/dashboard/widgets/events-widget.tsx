@@ -1,4 +1,4 @@
-import { ArrowRightLeft, ClipboardCheck, FlaskConical, Wrench } from 'lucide-react'
+import { ArrowRightLeft, ClipboardCheck, FlaskConical } from 'lucide-react'
 import { EmptyState, ErrorState, LoadingState } from '../../../components/ui/page-state'
 import { useResource } from '../../../hooks/use-resource'
 import { formatDateTime } from '../../../lib/format'
@@ -14,10 +14,9 @@ import type { WidgetProps, WidgetSettingsProps } from './types'
 
 const GROUPS: Array<{ value: string; label: string; types: TrackingEvent['type'][] }> = [
   { value: 'movements', label: 'Movimientos', types: ['TRANSFER', 'ENTRY', 'MIX', 'SPLIT', 'EXIT', 'LOSS', 'ADJUSTMENT'] },
-  { value: 'operations', label: 'Operaciones', types: ['OPERATION'] },
   { value: 'reviews', label: 'Revisiones de estado', types: ['STATE_REVIEW'] },
 ]
-const iconOf = (type: string) => (type === 'OPERATION' ? Wrench : type === 'STATE_REVIEW' ? ClipboardCheck : type === 'ENTRY' ? FlaskConical : ArrowRightLeft)
+const iconOf = (type: string) => (type === 'STATE_REVIEW' ? ClipboardCheck : type === 'ENTRY' ? FlaskConical : ArrowRightLeft)
 const select = 'rounded-xl border border-border bg-white px-2 py-1.5 text-xs font-normal text-copy'
 
 /** Newest-first list of what happened to the chosen tanks. */

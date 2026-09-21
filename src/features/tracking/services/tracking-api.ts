@@ -26,7 +26,7 @@ export interface SeriesPoint {
 export interface TargetRange { content: string; parameter: string; warnMin: number | null; warnMax: number | null; critMin: number | null; critMax: number | null }
 export interface SeriesResponse { contents: ContentInfo[]; parameters: ParameterInfo[]; points: SeriesPoint[]; targets: TargetRange[] }
 
-export interface TrackingEvent { content: string; at: string; type: 'TRANSFER' | 'ENTRY' | 'MIX' | 'SPLIT' | 'EXIT' | 'LOSS' | 'ADJUSTMENT' | 'OPERATION' | 'STATE_REVIEW'; label: string; detail: string }
+export interface TrackingEvent { content: string; at: string; type: 'TRANSFER' | 'ENTRY' | 'MIX' | 'SPLIT' | 'EXIT' | 'LOSS' | 'ADJUSTMENT' | 'STATE_REVIEW'; label: string; detail: string }
 
 export type Status = 'OK' | 'WARN' | 'CRIT' | 'UNKNOWN' | 'NONE'
 export interface Reading { value: number | null; qualifier: Qualifier; limit: number | null; takenAt: string; sampleCode: string; daysAgo: number; status: Status }
@@ -43,8 +43,6 @@ export interface OverviewRow {
   malolacticState: string | null
   openSamples: number
   daysSinceLastSample: number | null
-  openTasks: number
-  nextTaskDueAt: string | null
   worstStatus: Status
   cells: OverviewCell[]
 }

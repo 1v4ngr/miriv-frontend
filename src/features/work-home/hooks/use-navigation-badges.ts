@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { incidentsApi } from '../../incidents/services/incidents-api'
 import { laboratoryApi } from '../../laboratory/services/laboratory-api'
 import { trackingApi } from '../../tracking/services/tracking-api'
 
 export interface NavigationBadges {
   laboratory?: number
-  incidents?: number
   /** Tracking alerts that hold right now and have not been acknowledged. */
   tracking?: number
 }
@@ -19,13 +17,10 @@ export function useNavigationBadges(): NavigationBadges {
 
   const refreshBadges = useCallback(async () => {
     // Each count is independent: one failing endpoint (e.g. no permission) must not blank the other.
-    const [samples, incidents, alerts] = await Promise.allSettled([laboratoryApi.getSamples(), incidentsApi.getAll(), trackingApi.alerts()])
+    const [samples, alerts] = await Promise.allSettled([laboratoryApi.getSamples(), trackingApi.alerts()])
     setBadges({
       laboratory: samples.status === 'fulfilled'
         ? samples.value.filter((sample) => !CLOSED_SAMPLE_STATUSES.has(sample.status)).length
-        : undefined,
-      incidents: incidents.status === 'fulfilled'
-        ? incidents.value.filter((incident) => incident.status !== 'closed').length
         : undefined,
       tracking: alerts.status === 'fulfilled' ? alerts.value.length : undefined,
     })
