@@ -11,6 +11,8 @@ interface TargetsTabProps {
   onEdit: (target: TargetView | 'new') => void
   onAskDelete: (target: TargetView) => void
   deletingId?: string
+  /** Bumped from the parent after every successful write so this list refreshes in place. */
+  reloadToken?: number
 }
 
 const LIMITS = ['warnMin', 'warnMax', 'critMin', 'critMax'] as const
@@ -20,8 +22,8 @@ const LIMIT_LABEL: Record<Limit, string> = {
 }
 
 /** Global / category / phase analytical targets. Renders the table only; the modal lives in the parent. */
-export function TargetsTab({ canEdit, onEdit, onAskDelete, deletingId }: TargetsTabProps) {
-  const targets = useResource(() => trackingApi.listTargets(), [])
+export function TargetsTab({ canEdit, onEdit, onAskDelete, deletingId, reloadToken }: TargetsTabProps) {
+  const targets = useResource(() => trackingApi.listTargets(), [reloadToken])
   const sorted = useMemo(() => {
     const list = [...(targets.data ?? [])]
     list.sort((a, b) => `${a.parameterName}`.localeCompare(`${b.parameterName}`, 'es'))

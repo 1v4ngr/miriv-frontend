@@ -11,6 +11,8 @@ interface AlertRulesTabProps {
   onAskDelete: (rule: AlertRule) => void
   onToggle: (rule: AlertRule) => void
   deletingId?: string
+  /** Bumped from the parent after every successful write so this list refreshes in place. */
+  reloadToken?: number
 }
 
 const SEVERITY: Record<string, string> = {
@@ -21,9 +23,9 @@ const SEVERITY: Record<string, string> = {
 const SEVERITY_LABEL: Record<string, string> = { INFO: 'Info', WARN: 'Aviso', CRIT: 'Crítico' }
 
 /** Alert rules list for the global scope (admin). The editing modal lives in the parent. */
-export function AlertRulesTab({ canEdit, onEdit, onAskDelete, onToggle, deletingId }: AlertRulesTabProps) {
-  const rules = useResource(() => trackingApi.alertRules(), [])
-  const parameters = useResource(() => trackingApi.parameters(true), [])
+export function AlertRulesTab({ canEdit, onEdit, onAskDelete, onToggle, deletingId, reloadToken }: AlertRulesTabProps) {
+  const rules = useResource(() => trackingApi.alertRules(), [reloadToken])
+  const parameters = useResource(() => trackingApi.parameters(true), [reloadToken])
 
   const list = rules.data ?? []
   return (

@@ -98,3 +98,29 @@ export async function apiRequestOrUndefined<T>(path: string, init?: RequestInit)
     throw error
   }
 }
+
+/** Authenticated file download (reports): returns the body as a Blob plus the server's file name. */
+export async function apiDownload(path: string): Promise<{ blob: Blob; fileName: string | null }> {
+  const headers = new Headers()
+  const token = getAccessToken()
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  let response: Response
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, { headers })
+  } catch {
+    throw new ApiRequestError(0, DEFAULT_MESSAGES[0], { code: 'NETWORK' })
+  }
+  if (response.status === 401) {
+    clearAccessToken()
+    window.dispatchEvent(new Event('miriv:session-expired'))
+  }
+  if (!response.ok) {
+    const payload = await response.json().catch(() => undefined) as { message?: string; code?: string } | undefined
+    throw new ApiRequestError(response.status, payload?.message ?? DEFAULT_MESSAGES[response.status] ?? 'No se ha podido descargar el fichero.', { code: payload?.code })
+  }
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1]
+  const plain = /filename="?([^";]+)"?/i.exec(disposition)?.[1]
+  const fileName = encoded ? decodeURIComponent(encoded) : plain ?? null
+  return { blob: await response.blob(), fileName }
+}

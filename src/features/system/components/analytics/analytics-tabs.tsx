@@ -13,14 +13,16 @@ import { ParametersTab } from './parameters-tab'
 import { TemplatesTab } from './templates-tab'
 import { TargetsTab } from './targets-tab'
 import { AlertRulesTab } from './alert-rules-tab'
+import { ReportPhasesTab } from '../../../reports/components/report-phases-tab'
 
-type AnaliticaTab = 'overview' | 'parameters' | 'templates' | 'targets' | 'rules'
+type AnaliticaTab = 'overview' | 'parameters' | 'templates' | 'targets' | 'rules' | 'report-phases'
 const TABS: Array<{ id: AnaliticaTab; label: string }> = [
   { id: 'overview', label: 'Resumen' },
   { id: 'parameters', label: 'Parámetros' },
   { id: 'templates', label: 'Plantillas' },
   { id: 'targets', label: 'Objetivos analíticos' },
   { id: 'rules', label: 'Avisos' },
+  { id: 'report-phases', label: 'Fases de informe' },
 ]
 
 interface EditingState {
@@ -30,6 +32,8 @@ interface EditingState {
   rule?: AlertRule | 'new'
 }
 interface DeletingState {
+  parameter?: ParameterView
+  template?: PanelView
   target?: TargetView
   rule?: AlertRule
 }
@@ -62,8 +66,12 @@ export function AnalyticsTabs({ canTargets, canAlerts, initialTab = 'overview' }
     [categories.data],
   )
 
+  /** Bumped whenever a write commits. Sub-tabs include this in their own `useResource` deps so that
+   * mutations made from a modal (delete, save) refresh them without the parent having to share data. */
+  const [reloadToken, setReloadToken] = useState(0)
   const reload = () => {
     parameters.reload(); panels.reload(); targets.reload(); rules.reload(); parameterInfo.reload()
+    setReloadToken((token) => token + 1)
   }
 
   const closeAll = () => { setEditing(EMPTY); setDeleting({}) }
@@ -108,21 +116,28 @@ export function AnalyticsTabs({ canTargets, canAlerts, initialTab = 'overview' }
             onNavigate={setTab}
             onNewParameter={() => openParameter('new')}
             onNewTemplate={() => openTemplate('new')}
+            reloadToken={reloadToken}
           />
         )}
         {tab === 'parameters' && canTargets && (
           <ParametersTab
             canEdit
             onEdit={openParameter}
+            onAskDelete={(parameter) => setDeleting({ parameter })}
             editingId={editing.parameter === 'new' ? 'new' : editing.parameter?.code}
+            deletingId={deleting.parameter?.code}
+            reloadToken={reloadToken}
           />
         )}
         {tab === 'templates' && canTargets && (
           <TemplatesTab
             canEdit
             onEdit={openTemplate}
+            onAskDelete={(panel) => setDeleting({ template: panel })}
             targets={targets.data ?? []}
             editingCode={editing.template === 'new' ? 'new' : editing.template?.code}
+            deletingCode={deleting.template?.code}
+            reloadToken={reloadToken}
           />
         )}
         {tab === 'targets' && canTargets && (
@@ -131,8 +146,10 @@ export function AnalyticsTabs({ canTargets, canAlerts, initialTab = 'overview' }
             onEdit={openTarget}
             onAskDelete={(target) => setDeleting({ target })}
             deletingId={deleting.target?.id}
+            reloadToken={reloadToken}
           />
         )}
+        {tab === 'report-phases' && canTargets && <ReportPhasesTab canEdit />}
         {tab === 'rules' && canAlerts && (
           <AlertRulesTab
             canEdit
@@ -146,11 +163,13 @@ export function AnalyticsTabs({ canTargets, canAlerts, initialTab = 'overview' }
                   active: !rule.active,
                 })
                 rules.reload()
+                setReloadToken((token) => token + 1)
               } catch {
                 /* silent — toggle is a one-click action with no UI affordance for errors yet */
               }
             }}
             deletingId={deleting.rule?.id}
+            reloadToken={reloadToken}
           />
         )}
       </div>
@@ -195,6 +214,29 @@ export function AnalyticsTabs({ canTargets, canAlerts, initialTab = 'overview' }
         />
       )}
 
+      {deleting.parameter && (
+        <ConfirmDeleteModal
+          title="Eliminar parámetro"
+          message={buildParameterDeleteMessage(deleting.parameter)}
+          confirmLabel="Eliminar parámetro"
+          onClose={closeAll}
+          onConfirm={async () => {
+            await panelsApi.deleteParameter(deleting.parameter!.code); closeAll(); reload()
+          }}
+        />
+      )}
+      {deleting.template && (
+        <ConfirmDeleteModal
+          title="Eliminar plantilla"
+          message={buildTemplateDeleteMessage(deleting.template)}
+          confirmLabel="Eliminar plantilla"
+          onClose={closeAll}
+          onConfirm={async () => {
+            await panelsApi.deletePanel(deleting.template!.code); closeAll(); reload()
+          }}
+        />
+      )}
+
       {deleting.target && (
         <ConfirmDeleteModal
           title="Eliminar objetivo analítico"
@@ -231,6 +273,22 @@ function pickInitial(requested: AnaliticaTab, canTargets: boolean, canAlerts: bo
 function buildTargetDeleteMessage(target: TargetView): string {
   const where = [target.categoryName ?? 'todas las categorías', target.phase ? (fermentationLabels[target.phase] ?? target.phase) : 'cualquier fase'].join(' / ')
   return `¿Eliminar el objetivo de ${target.parameterName} (${where})? La matriz y las curvas dejarán de usarlo.`
+}
+
+function buildParameterDeleteMessage(parameter: ParameterView): string {
+  const pieces = [`${parameter.name} (${parameter.code})`]
+  if (parameter.panels > 0) pieces.push(`forma parte de ${parameter.panels} plantilla(s)`)
+  return pieces.length === 1
+    ? `¿Eliminar el parámetro ${pieces[0]}? No se eliminará el historial de análisis, pero cualquier resultado que lo siga usando bloqueará esta acción.`
+    : `¿Eliminar el parámetro ${pieces[0]}? Hoy ${pieces[1]}. Si algún resultado lo sigue usando, el backend rechaza el borrado y tendrás que dejarlo como inactivo.`
+}
+
+function buildTemplateDeleteMessage(panel: PanelView): string {
+  const pieces = [`${panel.name} (${panel.code})`]
+  if (panel.samples > 0) pieces.push(`${panel.samples} análisis ya la han usado`)
+  return pieces.length === 1
+    ? `¿Eliminar la plantilla ${pieces[0]}? No se eliminarán las asignaciones a tipos de contenido, pero si algún análisis la sigue usando el backend rechaza el borrado y tendrás que dejarla como inactiva.`
+    : `¿Eliminar la plantilla ${pieces[0]}? Hoy ${pieces[1]}: el backend rechazará el borrado y tendrás que dejar la plantilla como inactiva.`
 }
 
 function SubTabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {

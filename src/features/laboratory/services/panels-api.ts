@@ -55,6 +55,10 @@ export const panelsApi = {
   updateParameter(code: string, input: ParameterInput) {
     return apiRequest<ParameterView>(`/api/catalogs/parameters/${encodeURIComponent(code)}`, { method: 'PUT', body: JSON.stringify(input) })
   },
+  /** Hard delete: refuses (409) if any analysis result still references the parameter. */
+  deleteParameter(code: string) {
+    return apiRequest<void>(`/api/catalogs/parameters/${encodeURIComponent(code)}`, { method: 'DELETE' })
+  },
   /** Every template, or — with a category — the active ones it offers, the default first. */
   panels(category?: string) {
     return apiRequest<PanelView[]>(`/api/catalogs/panels${category ? `?category=${encodeURIComponent(category)}` : ''}`)
@@ -64,5 +68,9 @@ export const panelsApi = {
   },
   updatePanel(code: string, input: PanelUpdate) {
     return apiRequest<PanelView>(`/api/catalogs/panels/${encodeURIComponent(code)}`, { method: 'PUT', body: JSON.stringify(input) })
+  },
+  /** Hard delete: refuses (409) if any analysis has been registered against the template. */
+  deletePanel(code: string) {
+    return apiRequest<void>(`/api/catalogs/panels/${encodeURIComponent(code)}`, { method: 'DELETE' })
   },
 }

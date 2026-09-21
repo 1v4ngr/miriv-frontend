@@ -27,22 +27,24 @@ export function CellarShell({ children, search, onSearchChange, activeSubsection
     if (item === 'Administración') onNavigate('admin')
   }
 
-  const sidebarItem = activeSubsection === 'Laboratorio' || activeSubsection === 'Seguimiento' || activeSubsection === 'Informes' || activeSubsection === 'Administración' ? activeSubsection : 'Bodega'
-  const showBodegaTabs = activeSubsection !== 'Laboratorio' && activeSubsection !== 'Seguimiento' && activeSubsection !== 'Informes' && activeSubsection !== 'Administración'
+  const sidebarItem = activeSubsection === 'Laboratorio' ? 'Laboratorio'
+    : activeSubsection === 'Seguimiento' || activeSubsection === 'Informes' || activeSubsection === 'Administración' ? activeSubsection
+    : 'Bodega'
+  const showBodegaTabs = activeSubsection !== 'Seguimiento' && activeSubsection !== 'Informes' && activeSubsection !== 'Administración' && activeSubsection !== 'Laboratorio'
 
   return (
     <main className="min-h-screen bg-[#f2eef1] text-ink">
       <div className="flex min-h-screen w-full">
         <WorkHomeSidebar activeItem={sidebarItem} onNavigate={handleNavigate} badges={badges} profile={profile} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <WorkHomeHeader center={profile?.centerName ?? 'Cargando…'} campaign="Campaña 2026" search={search} onSearchChange={onSearchChange} searchPlaceholder={activeSubsection === 'Laboratorio' ? 'Buscar muestra o depósito' : 'Buscar depósito, lote o contenido'} onOpenNotices={() => onNavigate('account')} onOpenProfile={() => setShowAccount(true)} profile={profile} />
+          <WorkHomeHeader center={profile?.centerName ?? 'Cargando…'} campaign="Campaña 2026" search={search} onSearchChange={onSearchChange} searchPlaceholder="Buscar depósito, lote o contenido" onOpenNotices={() => onNavigate('account')} onOpenProfile={() => setShowAccount(true)} profile={profile} />
           <div className="w-full min-w-0 flex-1 px-4 pb-24 pt-4 sm:px-5 lg:px-6 lg:pb-8">
             {showBodegaTabs && <nav aria-label="Secciones de bodega" className="mb-5 flex items-center gap-1 border-b border-[#e5d9df]">
               {(['Depósitos', 'Lotes', 'Movimientos'] as const).map((label) => <button key={label} type="button" onClick={() => onNavigate(label === 'Depósitos' ? 'deposits' : label === 'Lotes' ? 'lots' : 'movements')} aria-current={activeSubsection === label ? 'page' : undefined} className={`border-b-2 px-4 py-2.5 text-[12.5px] font-semibold transition-colors ${activeSubsection === label ? 'border-plum text-plum' : 'border-transparent text-muted hover:text-plum'}`}>{label}</button>)}
             </nav>}
             {children}
           </div>
-          <MobileBottomNav activeItem={sidebarItem} onNavigate={handleNavigate} laboratoryMode={activeSubsection === 'Laboratorio'} badges={badges} />
+          <MobileBottomNav activeItem={sidebarItem} onNavigate={handleNavigate} badges={badges} />
         </div>
       </div>
       <AccountMenu open={showAccount} onClose={() => setShowAccount(false)} onLogout={() => onNavigate('login')} />

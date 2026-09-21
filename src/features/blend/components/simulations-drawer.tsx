@@ -31,6 +31,7 @@ export function SimulationsDrawer({ canWrite, onOpen, onClose }: Props) {
             </div>
             <p className="mt-1 text-[11px] text-muted">{[item.destinationDepositCode && `Destino ${item.destinationDepositCode}`, item.author, formatDateTime(item.updatedAt)].filter(Boolean).join(' · ')}</p>
             {item.taskCode && <span className="mt-1 block text-[11px] text-muted">Vinculada a tarea {item.taskCode}</span>}
+            
             {canWrite && (
               <div className="mt-2 flex gap-3 text-[11px]">
                 <button type="button" className="flex items-center gap-1 font-semibold text-plum" onClick={() => act(() => blendApi.duplicate(item.id))}><Copy className="size-3.5" />Duplicar</button>

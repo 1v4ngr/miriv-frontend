@@ -9,6 +9,9 @@ interface AnaliticaOverviewProps {
   onNavigate: (tab: 'parameters' | 'templates' | 'targets' | 'rules') => void
   onNewParameter: () => void
   onNewTemplate: () => void
+  /** Bumped from the parent after writes so the counter cards reflect the latest state when the user
+   * comes back to the Resumen tab — without needing a full page refresh. */
+  reloadToken?: number
 }
 
 interface Counts {
@@ -21,7 +24,7 @@ interface Counts {
 }
 
 /** Loads counts in parallel and exposes four clickable summary cards. */
-function useCounts(): Counts {
+function useCounts(reloadToken?: number): Counts {
   const [state, setState] = useState<Counts>({
     parameters: undefined, templates: undefined, targets: undefined, rules: undefined,
     loading: true, error: '',
@@ -52,7 +55,7 @@ function useCounts(): Counts {
       if (active) setState((prev) => ({ ...prev, loading: false, error: 'No se han podido cargar los contadores.' }))
     })
     return () => { active = false }
-  }, [])
+  }, [reloadToken])
 
   return state
 }
@@ -60,8 +63,8 @@ function useCounts(): Counts {
 const card = 'rounded-2xl border border-border bg-white p-4'
 
 /** "Resumen" tab of the Analítica section. Four counters plus quick links. */
-export function AnaliticaOverview({ canTargets, canAlerts, onNavigate, onNewParameter, onNewTemplate }: AnaliticaOverviewProps) {
-  const counts = useCounts()
+export function AnaliticaOverview({ canTargets, canAlerts, onNavigate, onNewParameter, onNewTemplate, reloadToken }: AnaliticaOverviewProps) {
+  const counts = useCounts(reloadToken)
 
   return (
     <section className={card}>

@@ -81,7 +81,7 @@ export function UserAccessPanel({ username, onChanged }: { username: string; onC
     if (statusReason.trim().length < 3) { setError('Indica el motivo (mínimo 3 caracteres).'); return }
     run(async () => {
       const updated = deactivate ? await adminAccountsApi.deactivate(account.id, statusReason.trim()) : await adminAccountsApi.reactivate(account.id, statusReason.trim())
-      setStatusReason(''); setPendingWork(undefined)
+      setStatusReason('')
       return updated
     }, deactivate ? 'Cuenta desactivada.' : 'Cuenta reactivada.')
   }

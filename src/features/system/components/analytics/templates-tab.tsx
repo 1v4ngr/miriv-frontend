@@ -7,8 +7,12 @@ import type { TargetView } from '../../../tracking/services/tracking-api'
 interface TemplatesTabProps {
   canEdit: boolean
   onEdit: (panel: PanelView | 'new') => void
+  onAskDelete?: (panel: PanelView) => void
   targets: TargetView[]
   editingCode?: string
+  deletingCode?: string
+  /** Bumped from the parent after every successful write so this list refreshes in place. */
+  reloadToken?: number
 }
 
 function buildTargetSummary(targets: TargetView[]) {
@@ -34,8 +38,8 @@ function targetChipsForTemplate(template: PanelView, targets: TargetView[]): Arr
 const card = 'rounded-2xl border border-border bg-white p-4'
 
 /** Templates listing card grid: each tile exposes the parameter count and how many targets apply to it. */
-export function TemplatesTab({ canEdit, onEdit, targets, editingCode }: TemplatesTabProps) {
-  const panels = useResource(() => panelsApi.panels(), [])
+export function TemplatesTab({ canEdit, onEdit, onAskDelete, targets, editingCode, deletingCode, reloadToken }: TemplatesTabProps) {
+  const panels = useResource(() => panelsApi.panels(), [reloadToken])
   const summary = useMemo(() => buildTargetSummary(targets), [targets])
 
   if (panels.loading) return <p className="p-4 text-center text-xs text-muted">Cargando plantillas…</p>
@@ -68,8 +72,8 @@ export function TemplatesTab({ canEdit, onEdit, targets, editingCode }: Template
           return (
             <div
               key={panel.code}
-              className={`${card} text-left transition ${canEdit ? 'cursor-pointer hover:border-plum' : ''} ${panel.active ? '' : 'opacity-60'} ${editingCode === panel.code ? 'opacity-40' : ''}`}
-              onClick={canEdit ? () => onEdit(panel) : undefined}
+              className={`${card} text-left transition ${canEdit ? 'cursor-pointer hover:border-plum' : ''} ${panel.active ? '' : 'opacity-60'} ${editingCode === panel.code || deletingCode === panel.code ? 'opacity-40' : ''}`}
+              onClick={canEdit && !onAskDelete ? () => onEdit(panel) : undefined}
               role={canEdit ? 'button' : undefined}
               tabIndex={canEdit ? 0 : undefined}
             >
@@ -108,11 +112,15 @@ export function TemplatesTab({ canEdit, onEdit, targets, editingCode }: Template
                 <div className="mt-3 flex justify-end gap-3 border-t border-border pt-2">
                   <button type="button" className="text-xs font-semibold text-plum"
                     onClick={(event) => { event.stopPropagation(); onEdit(panel) }}>Editar</button>
+                  {onAskDelete && (
+                    <button type="button" className="text-xs font-semibold text-[#8e1f33]"
+                      onClick={(event) => { event.stopPropagation(); onAskDelete(panel) }}>Eliminar</button>
+                  )}
                 </div>
               )}
-              {canEdit && (
+              {canEdit && onAskDelete && (
                 <p className="mt-2 text-[11px] text-muted">
-                  Las plantillas no se eliminan: desactívalas para que dejen de ofrecerse al registrar muestras.
+                  Eliminar es definitivo y solo funciona si ningún análisis la ha usado todavía.
                 </p>
               )}
             </div>

@@ -6,12 +6,16 @@ import { panelsApi, type ParameterView } from '../../../laboratory/services/pane
 interface ParametersTabProps {
   canEdit: boolean
   onEdit: (parameter: ParameterView | 'new') => void
+  onAskDelete?: (parameter: ParameterView) => void
   editingId?: string
+  deletingId?: string
+  /** Bumped from the parent after every successful write so this list refreshes in place. */
+  reloadToken?: number
 }
 
 /** Catalogue of analysable parameters: code, name, unit, plausibility bounds. Owns no modal — parent renders it. */
-export function ParametersTab({ canEdit, onEdit, editingId }: ParametersTabProps) {
-  const parameters = useResource(() => panelsApi.parameters(), [])
+export function ParametersTab({ canEdit, onEdit, onAskDelete, editingId, deletingId, reloadToken }: ParametersTabProps) {
+  const parameters = useResource(() => panelsApi.parameters(), [reloadToken])
   const [query, setQuery] = useState('')
   const shown = useMemo(() => {
     const list = parameters.data ?? []
@@ -66,7 +70,7 @@ export function ParametersTab({ canEdit, onEdit, editingId }: ParametersTabProps
               <tr
                 key={parameter.code}
                 onClick={canEdit ? () => onEdit(parameter) : undefined}
-                className={`border-t border-border ${canEdit ? 'cursor-pointer hover:bg-field' : ''} ${editingId === parameter.code ? 'opacity-50' : ''}`}
+                className={`border-t border-border ${canEdit ? 'cursor-pointer hover:bg-field' : ''} ${editingId === parameter.code ? 'opacity-50' : ''} ${deletingId === parameter.code ? 'opacity-50' : ''}`}
                 aria-disabled={editingId === parameter.code}
               >
                 <td className="px-3 py-2 font-semibold">{parameter.name}</td>
@@ -76,20 +80,29 @@ export function ParametersTab({ canEdit, onEdit, editingId }: ParametersTabProps
                 <td className="px-3 py-2">{parameter.panels}</td>
                 <td className="px-3 py-2">{parameter.active ? 'Activo' : <span className="text-muted">Inactivo</span>}</td>
                 <td className="px-3 py-2 text-right">
-                  <button
-                    type="button"
-                    className="text-xs font-semibold text-plum"
-                    onClick={(event) => { event.stopPropagation(); onEdit(parameter) }}
-                  >Editar</button>
+                  <div className="inline-flex gap-3">
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-plum"
+                      onClick={(event) => { event.stopPropagation(); onEdit(parameter) }}
+                    >Editar</button>
+                    {onAskDelete && (
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-[#8e1f33]"
+                        onClick={(event) => { event.stopPropagation(); onAskDelete(parameter) }}
+                      >Eliminar</button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {canEdit && (
+      {canEdit && onAskDelete && (
         <p className="mt-2 text-[11px] text-muted">
-          Los parámetros no se eliminan: desactívalos para que dejen de ofrecerse al registrar plantillas.
+          ¿Solo quieres dejarlo de usar? Mantenlo inactivo. Eliminar es definitivo y solo funciona cuando ningún resultado analítico lo sigue usando.
         </p>
       )}
     </>

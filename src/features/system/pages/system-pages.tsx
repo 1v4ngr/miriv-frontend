@@ -1,49 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Bell, Check } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { adminAuditApi, type AuditEntry } from '../services/admin-audit-api'
 
 const card = 'rounded-2xl border border-border bg-white p-4'
-
-export function ReportsPage() {
-  const [type, setType] = useState('Trazabilidad')
-  const [generated, setGenerated] = useState(false)
-  return (
-    <div className="mx-auto grid max-w-6xl gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
-      <aside className={card}>
-        <h1 className="text-lg font-semibold">Nuevo informe</h1>
-        <label className="mt-4 block text-xs font-semibold">Tipo
-          <select value={type} onChange={(event) => setType(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-field p-3 text-sm font-normal text-ink">
-            <option>Trazabilidad</option>
-            <option>Ficha de contenido</option>
-            <option>Analíticas</option>
-          </select>
-        </label>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <Field label="Desde" value="01 sep" />
-          <Field label="Hasta" value="16 sep" />
-        </div>
-        <button onClick={() => setGenerated(true)} className="mt-5 w-full rounded-xl bg-plum py-3 text-xs font-semibold text-white">
-          Generar informe
-        </button>
-      </aside>
-      <main className="space-y-4">
-        <section className={card}>
-          <h2 className="text-lg font-semibold">Previsualización</h2>
-          <div className="mt-4 rounded-xl border border-border p-4">
-            <h3 className="font-semibold">Informe de {type} · Centro Norte</h3>
-            <dl className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-              <Metric label="Periodo" value="1–16 sep 2026" />
-              <Metric label="Generado" value="16 sep 09:30" />
-              <Metric label="Autor" value="María Solana" />
-              <Metric label="Registros" value="214" />
-            </dl>
-          </div>
-        </section>
-        {generated && <Notice text="Informe generado y añadido a la lista de trabajos." />}
-      </main>
-    </div>
-  )
-}
 
 export function AccountPage() {
   const [read, setRead] = useState(false)
@@ -88,33 +47,6 @@ export function AuditPage() {
         </div>
       </section>
     </div>
-  )
-}
-
-function Field({ label, value, onChange }: { label: string; value: string; onChange?: (value: string) => void }) {
-  const input = 'mt-1 w-full rounded-xl border border-border bg-field p-3 text-sm font-normal text-ink'
-  return (
-    <label className="mt-3 block text-xs font-semibold text-copy">
-      {label}
-      <input value={value} onChange={(event) => onChange?.(event.target.value)} readOnly={!onChange} className={input} />
-    </label>
-  )
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-[10px] text-muted">{label}</dt>
-      <dd className="mt-1 text-xs font-semibold">{value}</dd>
-    </div>
-  )
-}
-
-function Notice({ text }: { text: string }) {
-  return (
-    <p role="status" className="mt-3 rounded-xl bg-[#dceadf] p-3 text-xs text-[#1f5c3a]">
-      <Check className="mr-1 inline size-3.5" />{text}
-    </p>
   )
 }
 
