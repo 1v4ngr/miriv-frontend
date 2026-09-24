@@ -1,16 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="MIRIV">
-  <!--
-    Wine glass from lucide (ISC), the same icon family the interface uses.
-    The media query lightens it on dark browser themes, where the plum would sink into the tab bar.
-  -->
-  <style>
-    .icon { stroke: #6d4656; }
-    @media (prefers-color-scheme: dark) { .icon { stroke: #f3e7ee; } }
-  </style>
-  <g class="icon" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M8 22h8"/>
-    <path d="M7 10h10"/>
-    <path d="M12 15v7"/>
-    <path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="MIRIV">
+  <!-- Browser tab: the MIRIV mark as a full glass (signed in). The M is Cormorant Garamond 500 (OFL) as a path. -->
+  <defs>
+    <linearGradient id="depth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2745"/><stop offset="1" stop-color="#5e1429"/></linearGradient>
+    <clipPath id="glass"><circle cx="50" cy="50" r="43"/></clipPath>
+    <clipPath id="wine"><path d="M-10 51 q7.5 -1.4 15 0 t15 0 t15 0 t15 0 t15 0 t15 0 t15 0 t15 0 V120 H-10 Z"/></clipPath>
+  </defs>
+  <circle cx="50" cy="50" r="49" fill="#ffffff"/>
+  <circle cx="50" cy="50" r="45" fill="url(#depth)"/>
+  <path transform="translate(50 51.5) scale(0.054 -0.054) translate(-427 -312.5)" fill="#fbf1f5" d="M119 114 129 602 154 600 144 114Q143 62 162.5 37.0Q182 12 228 12Q231 12 231.0 6.0Q231 0 228 0Q206 0 183.0 1.0Q160 2 131 2Q104 2 80.0 1.0Q56 0 35 0Q33 0 33.0 6.0Q33 12 35 12Q77 12 97.5 37.0Q118 62 119 114ZM819 12Q821 12 821.0 6.0Q821 0 819 0Q794 0 763.0 1.0Q732 2 697 2Q664 2 635.0 1.0Q606 0 583 0Q580 0 580.0 6.0Q580 12 583 12Q632 12 646.0 25.0Q660 38 657 81L637 552L676 608L417 7Q416 3 409.5 3.0Q403 3 401 7L140 542Q105 613 42 613Q40 613 40.0 619.0Q40 625 42 625Q60 625 79.5 624.0Q99 623 113 623Q132 623 147.5 624.0Q163 625 171 625Q185 625 193.0 615.5Q201 606 217 573L444 112L407 48L648 600Q653 612 660.5 618.5Q668 625 678 625Q685 625 695.5 624.0Q706 623 720 623Q748 623 767.0 624.0Q786 625 806 625Q808 625 808.0 619.0Q808 613 806 613Q758 613 736.0 597.5Q714 582 715 541L736 81Q738 52 744.0 37.0Q750 22 767.0 17.0Q784 12 819 12Z"/>
+  <path d="M21 36 A31 31 0 0 1 37 20" fill="none" stroke="#ffffff" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round"/>
 </svg>

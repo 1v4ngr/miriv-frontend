@@ -1,7 +1,5 @@
 import { useId } from 'react'
-
-// Liquid colour follows the wine type so the tank reads at a glance.
-const LIQUID: Record<string, string> = { tinto: '#7b1e3a', blanco: '#d9b93a', rosado: '#e0789d', mosto: '#8aa545', 'vino base': '#c69246' }
+import { wineColor } from '../deposit-badges'
 
 // Winery tank in a 100 × 112 box: rounded shoulders, cylindrical body, sloped bottom to a centre outlet.
 const OUTLINE = 'M14 26 C14 17 30 13 50 13 C70 13 86 17 86 26 V82 C86 85 84 86 82 87 L56 95 C52 96 48 96 44 95 L18 87 C16 86 14 85 14 82 Z'
@@ -9,7 +7,7 @@ const CUT_X = 50
 const LEVEL_TOP = 17 // y of a 100 % full tank
 const LEVEL_BOTTOM = 95 // y of an empty one
 // One wave period is 32 units; the path is several periods wide and slides one period per loop.
-const WAVE = 'M-32 0 q8 -2.2 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 V140 H-32 Z'
+export const WAVE = 'M-32 0 q8 -2.2 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 V140 H-32 Z'
 const STROKE = '#8f7d86'
 const STEEL = '#f3eef1'
 const DIMPLES = Array.from({ length: 4 }, (_, row) => Array.from({ length: 6 }, (_, col) => [18 + col * 6 + (row % 2) * 3, 38 + row * 5])).flat()
@@ -20,10 +18,10 @@ const DIMPLES = Array.from({ length: 4 }, (_, row) => Array.from({ length: 6 }, 
  * SVG so it stays crisp at any size and matches the line icons of the app; motion stops for people who
  * prefer reduced motion.
  */
-export function TankLevel({ percent, category, className = 'h-24 w-[86px]' }: { percent: number; category?: string | null; className?: string }) {
+export function TankLevel({ percent, category, className = 'h-24 w-[86px]', still = false }: { percent: number; category?: string | null; className?: string; /** No wave: for many small tanks at once. */ still?: boolean }) {
   const id = useId().replace(/:/g, '')
   const level = Math.max(0, Math.min(100, percent))
-  const liquid = LIQUID[(category ?? '').toLocaleLowerCase('es')] ?? '#6d4656'
+  const liquid = wineColor(category)
   const surfaceY = LEVEL_BOTTOM - (LEVEL_BOTTOM - LEVEL_TOP) * (level / 100)
   const tubeY = Math.max(24, Math.min(80, surfaceY))
 
@@ -36,7 +34,7 @@ export function TankLevel({ percent, category, className = 'h-24 w-[86px]' }: { 
       </defs>
       <style>{`
         @keyframes ${id}-wave { from { transform: translateX(-32px) } to { transform: translateX(0) } }
-        .${id}-wave { animation: ${id}-wave 3.4s linear infinite }
+        .${id}-wave { animation: ${still ? 'none' : `${id}-wave 3.4s linear infinite`} }
         .${id}-level { transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1) }
         @media (prefers-reduced-motion: reduce) { .${id}-wave { animation: none } .${id}-level { transition: none } }
       `}</style>

@@ -23,12 +23,43 @@ import { AccountPage, AuditPage } from './features/system/pages/system-pages'
 import { ReportsPage } from './features/reports/pages/reports-page'
 import { AdministrationManagementPage } from './features/system/pages/administration-management-page'
 import { clearAccessToken, hasActiveSession } from './services/api-client'
+import { BrandIntro, type BrandDirection, type MarkOrigin } from './components/intro/brand-intro'
+import { SIGN_OUT_EVENT } from './components/account-menu'
+import { startSessionRefresh } from './services/session-refresh'
+import { backTargetFor, scrollToAnchor } from './lib/back-target'
 
 function getRoute(): string {
   return window.location.hash.slice(1) || 'home'
 }
 
+/** App shell: the routes, plus the opening animation right after signing in (once per sign-in). */
 export function App() {
+  const [intro, setIntro] = useState<{ from: MarkOrigin | null; direction: BrandDirection } | null>(null)
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  // While the app is open the session renews itself, so nobody is sent back to the login mid-task.
+  useEffect(() => startSessionRefresh(), [])
+
+  // Signing out: the app plays the reverse animation and goes to the login once the veil covers the screen.
+  useEffect(() => {
+    const onSignOut = (event: Event) => {
+      if (reducedMotion) return
+      event.preventDefault()
+      setIntro({ from: (event as CustomEvent<MarkOrigin | null>).detail, direction: 'out' })
+      window.setTimeout(() => { window.location.hash = 'login' }, 650)
+    }
+    window.addEventListener(SIGN_OUT_EVENT, onSignOut)
+    return () => window.removeEventListener(SIGN_OUT_EVENT, onSignOut)
+  }, [reducedMotion])
+
+  return <>
+    <AppRoutes onSignedIn={(from) => { if (reducedMotion) return 0; setIntro({ from, direction: 'in' }); return 650 }} />
+    {intro && <BrandIntro key={intro.direction} from={intro.from} direction={intro.direction} onDone={() => setIntro(null)} />}
+  </>
+}
+
+/** `onSignedIn` starts the opening and returns how long the login should stay mounted under it (ms). */
+function AppRoutes({ onSignedIn }: { onSignedIn: (from: MarkOrigin | null) => number }) {
   const initialHash = getRoute()
   const [route, setRoute] = useState(() => {
     if (!hasActiveSession() && initialHash && initialHash !== 'login') sessionStorage.setItem('miriv:return-to', initialHash)
@@ -62,9 +93,14 @@ export function App() {
   const openContent = (code: string) => navigate(`contents/${encodeURIComponent(code)}`)
   const openLot = (code: string) => navigate(`lots/${encodeURIComponent(code)}`)
 
-  if (route === 'login') return <LoginPage onLoginSuccess={() => { const next = sessionStorage.getItem('miriv:return-to'); sessionStorage.removeItem('miriv:return-to'); navigate(next && next !== 'login' ? next : 'home') }} />
+  if (route === 'login') return <LoginPage onLoginSuccess={(from) => {
+    const handOff = onSignedIn(from ?? null)
+    const next = sessionStorage.getItem('miriv:return-to'); sessionStorage.removeItem('miriv:return-to')
+    // The login stays under the opening veil while it fades in, then the app replaces it unseen.
+    window.setTimeout(() => navigate(next && next !== 'login' ? next : 'home'), handOff)
+  }} />
   if (route === 'laboratory' || route === 'laboratory/new' || route.startsWith('laboratory/new/') || route === 'laboratory/import' || route.startsWith('laboratory/results/') || route.startsWith('laboratory/review/')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Laboratorio" onNavigate={navigate}>{route === 'laboratory' ? <LaboratoryInboxPage search={cellarSearch} onOpenContent={openContent} onCreateSample={() => navigate('laboratory/new')} onEnterResults={(code) => navigate(`laboratory/results/${encodeURIComponent(code)}`)} onReview={(code) => navigate(`laboratory/review/${encodeURIComponent(code)}`)} onImport={() => navigate('laboratory/import')} /> : (route === 'laboratory/new' || route.startsWith('laboratory/new/')) ? <SampleFormPage initialDeposit={route.startsWith('laboratory/new/') ? decodeURIComponent(route.slice('laboratory/new/'.length)) || undefined : undefined} onBack={() => navigate('laboratory')} onSaved={(code, introduceResults) => navigate(introduceResults ? `laboratory/results/${encodeURIComponent(code)}` : 'laboratory')} /> : route === 'laboratory/import' ? <ImportAnalysisPage onBack={() => navigate('laboratory')} /> : route.startsWith('laboratory/results/') ? <ResultsEntryPage code={decodeURIComponent(route.slice('laboratory/results/'.length))} onBack={() => navigate('laboratory')} onReview={(code) => navigate(`laboratory/review/${encodeURIComponent(code)}`)} /> : <AnalysisReviewPage code={decodeURIComponent(route.slice('laboratory/review/'.length))} onBack={() => navigate('laboratory')} />}</CellarShell>
-  if (route === 'deposits' || (route.startsWith('deposits/') && !route.includes('/movement'))) return <CellarShell search={cellarSearch} onSearchChange={(value) => { setCellarSearch(value); if (route !== 'deposits' && value) navigate('deposits') }} activeSubsection="Depósitos" onNavigate={navigate}>{route === 'deposits' ? <DepositsPage search={cellarSearch} onOpenDeposit={openDeposit} /> : <DepositDetailPage code={decodeURIComponent(route.slice('deposits/'.length))} onBack={() => navigate('deposits')} onOpenTracking={(content) => navigate(`tracking/${encodeURIComponent(content)}`)} onOpenLots={() => navigate('lots')} onOpenContent={openContent} onRegisterMovement={(code) => navigate(`deposits/${encodeURIComponent(code)}/movement`)} onRegisterSample={(code) => navigate(`laboratory/new/${encodeURIComponent(code)}`)} onRegisterEntry={(code) => navigate(`lots/new/${encodeURIComponent(code)}`)} onOpenReport={(code) => navigate(`reports?deposit=${encodeURIComponent(code)}`)} />}</CellarShell>
+  if (route === 'deposits' || (route.startsWith('deposits/') && !route.includes('/movement'))) return <CellarShell search={cellarSearch} onSearchChange={(value) => { setCellarSearch(value); if (route !== 'deposits' && value) navigate('deposits') }} activeSubsection="Depósitos" onNavigate={navigate}>{route === 'deposits' ? <DepositsPage search={cellarSearch} onOpenDeposit={openDeposit} /> : <DepositDetailPage code={decodeURIComponent(route.slice('deposits/'.length))} backLabel={backTargetFor(route)?.label} onBack={() => { const back = backTargetFor(route); navigate(back?.route ?? 'deposits'); if (back?.anchor) scrollToAnchor(back.anchor) }} onOpenTracking={(content) => navigate(`tracking/${encodeURIComponent(content)}`)} onOpenLots={() => navigate('lots')} onOpenContent={openContent} onRegisterMovement={(code) => navigate(`deposits/${encodeURIComponent(code)}/movement`)} onRegisterSample={(code) => navigate(`laboratory/new/${encodeURIComponent(code)}`)} onRegisterEntry={(code) => navigate(`lots/new/${encodeURIComponent(code)}`)} onOpenReport={(code) => navigate(`reports?deposit=${encodeURIComponent(code)}`)} />}</CellarShell>
   if (route.startsWith('deposits/') && route.includes('/movement')) { const code = decodeURIComponent(route.slice('deposits/'.length, route.indexOf('/movement'))); return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Depósitos" onNavigate={navigate}><MovementWizardPage sourceCode={code} onBack={() => openDeposit(code)} onSaved={(movementCode) => navigate(`movements/${encodeURIComponent(movementCode)}`)} /></CellarShell> }
   if (route === 'lots/new' || route.startsWith('lots/new/')) { const openFormForDeposit = decodeURIComponent(route.slice('lots/new/'.length)); return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Lotes" onNavigate={navigate}><LotsPage search={cellarSearch} onOpenLot={openLot} openFormForDeposit={openFormForDeposit || undefined} /></CellarShell> }
   if (route === 'lots' || route.startsWith('lots/')) return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Lotes" onNavigate={navigate}>{route === 'lots' ? <LotsPage search={cellarSearch} onOpenLot={openLot} /> : <LotDetailPage code={decodeURIComponent(route.slice('lots/'.length))} onBack={() => navigate('lots')} onOpenContent={openContent} />}</CellarShell>
@@ -79,5 +115,5 @@ export function App() {
   if (route === 'admin') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Administración" onNavigate={navigate}><AdministrationManagementPage /></CellarShell>
   if (route === 'audit') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Administración" onNavigate={navigate}><AuditPage /></CellarShell>
   if (route === 'account') return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Administración" onNavigate={navigate}><AccountPage /></CellarShell>
-  return <WorkHomePage onOpenLogin={() => navigate('login')} onNavigate={navigate} />
+  return <CellarShell search={cellarSearch} onSearchChange={setCellarSearch} activeSubsection="Inicio" onNavigate={navigate}><WorkHomePage onNavigate={navigate} /></CellarShell>
 }

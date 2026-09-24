@@ -17,7 +17,7 @@ export function useNavigationBadges(): NavigationBadges {
 
   const refreshBadges = useCallback(async () => {
     // Each count is independent: one failing endpoint (e.g. no permission) must not blank the other.
-    const [samples, alerts] = await Promise.allSettled([laboratoryApi.getSamples(), trackingApi.alerts()])
+    const [samples, alerts] = await Promise.allSettled([laboratoryApi.getSampleSummaries(), trackingApi.alerts()])
     setBadges({
       laboratory: samples.status === 'fulfilled'
         ? samples.value.filter((sample) => !CLOSED_SAMPLE_STATUSES.has(sample.status)).length

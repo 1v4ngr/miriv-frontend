@@ -1,4 +1,8 @@
 import { useState, type FormEvent } from 'react'
+import { motion } from 'motion/react'
+import { WineBackdrop } from '../components/login/wine-backdrop'
+import { WineMark, renderedLevel } from '../components/login/wine-mark'
+import type { MarkOrigin } from '../components/intro/brand-intro'
 import { ArrowLeft, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
 import { authApi, type LoginResponse } from '../services/auth-api'
 
@@ -8,16 +12,18 @@ interface LoginForm {
 }
 
 interface BrandMarkProps {
+  /** Wine in the glass: it rises as the credentials are typed. */
+  level: number
   compact?: boolean
+  /** The opening animation has taken the mark: hide this one. */
+  handedOff?: boolean
 }
 
-function BrandMark({ compact = false }: BrandMarkProps) {
+function BrandMark({ compact = false, level, handedOff = false }: BrandMarkProps) {
   return (
     <div className="flex flex-col items-center gap-5 text-center">
-      <div className={`${compact ? 'size-20' : 'size-28'} flex items-center justify-center rounded-full border border-[#dcc8d4] bg-white shadow-[0_16px_36px_-28px_rgba(70,40,55,0.5)]`}>
-        <span className={`${compact ? 'text-[44px]' : 'text-[60px]'} font-display font-medium leading-none text-plum`}>M</span>
-      </div>
-      <div className={`${compact ? 'text-[32px]' : 'text-[48px]'} font-display font-medium leading-none tracking-[0.22em] text-[#3d2f36]`}>MIRIV</div>
+      <span data-login-mark style={{ visibility: handedOff ? 'hidden' : undefined }}><WineMark level={level} levelMs={600} size={compact ? 80 : 112} /></span>
+      <span data-login-wordmark style={{ visibility: handedOff ? 'hidden' : undefined }} className={`${compact ? 'text-[32px]' : 'text-[48px]'} inline-block whitespace-nowrap font-display font-medium leading-none tracking-[0.22em] text-[#3d2f36]`}>MIRIV</span>
     </div>
   )
 }
@@ -120,7 +126,7 @@ function LoginCard({ form, showPassword, rememberSession, loginState, loginRespo
   const hasError = loginState === 'error'
 
   return (
-    <section className="w-full max-w-[440px] rounded-[22px] border border-border bg-white p-6 shadow-[0_18px_40px_-28px_rgba(70,40,55,0.45)] sm:p-8" aria-labelledby="login-title">
+    <section className="w-full max-w-[440px] rounded-[22px] border border-white/70 bg-white/85 p-6 shadow-[0_24px_60px_-30px_rgba(70,40,55,0.45)] backdrop-blur-xl sm:p-8" aria-labelledby="login-title">
       <div className="mb-5 space-y-1.5">
         <h1 id="login-title" className="text-[24px] font-semibold tracking-[-0.02em]">Acceder</h1>
         <p className="text-[14px] leading-[1.6] text-copy">Usa la cuenta que te ha facilitado la cooperativa.</p>
@@ -155,7 +161,22 @@ function LoginCard({ form, showPassword, rememberSession, loginState, loginRespo
   )
 }
 
-export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
+/** Viewport position of the visible login mark, where the opening animation starts. */
+function loginMarkOrigin(): MarkOrigin | null {
+  const visible = (selector: string) => [...document.querySelectorAll<HTMLElement>(selector)].find((node) => node.getBoundingClientRect().width > 0)?.getBoundingClientRect()
+  const svg = [...document.querySelectorAll<SVGSVGElement>('[data-login-mark] svg')].find((node) => node.getBoundingClientRect().width > 0)
+  const mark = svg?.getBoundingClientRect()
+  const word = visible('[data-login-wordmark]')
+  return mark ? { x: mark.x, y: mark.y, size: mark.width, level: renderedLevel(svg), word: word ? { x: word.x, y: word.y, width: word.width } : undefined } : null
+}
+
+/** Each field fills a quarter of the glass as it is typed (up to 8 characters): half full when both are in. */
+function formLevel(form: LoginForm) {
+  const part = (value: string) => Math.min(value.trim().length, 8) / 8
+  return 25 * part(form.username) + 25 * part(form.password)
+}
+
+export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: (from: MarkOrigin | null) => void }) {
   const [form, setForm] = useState<LoginForm>({ username: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [rememberSession, setRememberSession] = useState(true)
@@ -164,6 +185,11 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isRecoveryOpen, setIsRecoveryOpen] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [failures, setFailures] = useState(0)
+  // After a successful sign-in the card fades away first; then the opening animation takes the mark.
+  const [leaving, setLeaving] = useState(false)
+  // Once the opening animation has the mark, this one hides (same pixel, so the swap is invisible).
+  const [handedOff, setHandedOff] = useState(false)
 
   const handleChange = (field: keyof LoginForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -173,20 +199,33 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!form.username.trim() || !form.password) {
+      setLoginResponse({ ok: false, message: 'Escribe tu usuario y tu contraseña.' })
+      setLoginState('error')
+      setFailures((count) => count + 1)
+      return
+    }
     setIsSubmitting(true)
     setLoginState('idle')
 
     try {
       const response = await authApi.login({ ...form, rememberSession })
       if (response.ok) {
-        onLoginSuccess?.()
+        // The card fades away, then the opening animation takes the mark from here and carries it into the app.
+        setLeaving(true)
+        await new Promise((resolve) => setTimeout(resolve, 260))
+        const origin = loginMarkOrigin()
+        setHandedOff(true)
+        onLoginSuccess?.(origin)
         return
       }
       setLoginResponse(response)
       setLoginState('error')
+      setFailures((count) => count + 1)
     } catch (error) {
       setLoginResponse({ ok: false, message: error instanceof Error ? error.message : 'No se ha podido completar el acceso.' })
       setLoginState('error')
+      setFailures((count) => count + 1)
     } finally {
       setIsSubmitting(false)
     }
@@ -197,17 +236,23 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess?: () => void }) {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(150deg,#f7f0f4_0%,#f2eef1_45%,#efe9f0_100%)] text-ink">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1100px] items-center justify-center px-4 py-7 sm:px-8 lg:px-12">
+    <main className="relative min-h-screen overflow-hidden text-ink">
+      <WineBackdrop />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1100px] items-center justify-center px-4 py-7 sm:px-8 lg:px-12">
         <div className="grid w-full max-w-[850px] items-center gap-8 lg:grid-cols-[320px_minmax(0,440px)] lg:gap-[56px]">
-          <div className="hidden lg:block">
-            <BrandMark />
-            <p className="mt-7 text-center text-[12px] text-muted">Seguimiento enológico claro y trazable</p>
-          </div>
+          <motion.div className="hidden lg:block" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+            <BrandMark level={formLevel(form)} handedOff={handedOff} />
+            <motion.p animate={{ opacity: leaving ? 0 : 1 }} transition={{ duration: 0.25 }} className="mt-7 text-center text-[12px] tracking-wide text-[#6f5c66]">Seguimiento enológico claro y trazable</motion.p>
+          </motion.div>
 
           <div className="flex w-full flex-col items-center gap-5">
-            <div className="lg:hidden"><BrandMark compact /></div>
+            <motion.div className="lg:hidden" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}><BrandMark compact level={formLevel(form)} handedOff={handedOff} /></motion.div>
+            {/* Card rises in on arrival; a failed attempt gives it a short shake. */}
+            <motion.div key={failures} className="flex w-full justify-center" initial={failures ? false : { opacity: 0, y: 16 }}
+              animate={leaving ? { opacity: 0, y: 8, scale: 0.98 } : failures ? { x: [0, -9, 8, -5, 4, 0] } : { opacity: 1, y: 0 }}
+              transition={leaving ? { duration: 0.25, ease: 'easeIn' } : failures ? { duration: 0.45 } : { duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
             <LoginCard form={form} showPassword={showPassword} rememberSession={rememberSession} loginState={loginState} loginResponse={loginResponse} isSubmitting={isSubmitting} onChange={handleChange} onTogglePassword={() => setShowPassword((current) => !current)} onToggleSession={setRememberSession} onSubmit={handleSubmit} onRecovery={handleRecovery} onHelp={() => setIsHelpOpen(true)} />
+            </motion.div>
           </div>
         </div>
       </div>

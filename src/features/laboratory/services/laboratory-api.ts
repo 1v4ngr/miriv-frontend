@@ -3,6 +3,8 @@ import { apiRequest } from '../../../services/api-client'
 
 export interface LaboratoryApi {
   getSamples(): Promise<Sample[]>
+  /** Inbox list in one query: counts and status, but no results or history (load a sample to get those). */
+  getSampleSummaries(): Promise<Sample[]>
   getSample(code: string): Promise<Sample | undefined>
   createSample(input: NewSample): Promise<Sample>
   saveResults(code: string, input: ResultsInput): Promise<Sample>
@@ -15,6 +17,7 @@ export interface LaboratoryApi {
 
 export const laboratoryApi: LaboratoryApi = {
   getSamples() { return apiRequest<Sample[]>('/api/laboratory/samples') },
+  getSampleSummaries() { return apiRequest<Sample[]>('/api/laboratory/samples?view=summary') },
   async getSample(code) { try { return await apiRequest<Sample>(`/api/laboratory/samples/${encodeURIComponent(code)}`) } catch (error) { if ((error as { status?: number }).status === 404) return undefined; throw error } },
   createSample(input) { return apiRequest<Sample>('/api/laboratory/samples', { method: 'POST', body: JSON.stringify(input) }) },
   saveResults(code, input) { return apiRequest<Sample>(`/api/laboratory/samples/${encodeURIComponent(code)}/results`, { method: 'PUT', body: JSON.stringify(input) }) },

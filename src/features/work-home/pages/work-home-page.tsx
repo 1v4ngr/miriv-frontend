@@ -1,107 +1,119 @@
-import { useEffect, useMemo, useState } from 'react'
-import { AlertCircle, ArrowLeft, RefreshCw, X } from 'lucide-react'
-import { StatusBadge } from '../../../components/ui/status-badge'
-import { AccountMenu } from '../../../components/account-menu'
-import { MobileBottomNav } from '../components/mobile-bottom-nav'
-import { QuickActions } from '../components/quick-actions'
-import { RecentActivity } from '../components/recent-activity'
-import { WorkHomeHeader } from '../components/work-home-header'
-import { useNavigationBadges } from '../hooks/use-navigation-badges'
+import { useMemo } from 'react'
+import { AlertCircle, ClipboardPlus, Move, RefreshCw, Search } from 'lucide-react'
+import { Can } from '../../../components/can'
+import { ActionTile } from '../../../components/ui/action-tile'
+import { StatTile } from '../../../components/ui/stat-tile'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
-import { workHomeApi } from '../services/work-home-api'
-import type { DashboardMetric, WorkHomeData } from '../types'
-import { label as localize, metricLabels } from '../../../lib/labels'
+import { formatLiters } from '../../../lib/format'
+import { activeOccupation } from '../../cellar/utils'
+import { useHomeOverview } from '../components/home/use-home-overview'
+import { AttentionList, attentionItems } from '../components/home/attention-list'
+import { useAssistantView } from '../../assistant/view-context'
+import { setBackTarget } from '../../../lib/back-target'
+import { SamplesChart } from '../components/home/samples-chart'
+import { CategoryChart } from '../components/home/category-chart'
+import { PhaseDistribution } from '../components/home/phase-distribution'
+import { CellarMap } from '../components/home/cellar-map'
+import { RecentMovements } from '../components/home/recent-movements'
 
 interface WorkHomePageProps {
-  onOpenLogin?: () => void
   onNavigate?: (path: string) => void
 }
 
-interface DetailPanel {
-  title: string
-  description: string
-  kind: 'action' | 'notices'
-}
+const FERMENTING = new Set(['ACTIVE', 'SLOW', 'SUSPECTED_STOP'])
 
-function MetricCard({ metric }: { metric: DashboardMetric }) {
-  const displayLabel = localize(metricLabels, metric.label, metric.label)
-  return (
-    <article className="flex min-h-[106px] flex-col justify-between rounded-2xl border border-border bg-white p-4">
-      <span className="text-[12px] font-semibold text-copy">{displayLabel}</span>
-      <span className="font-mono text-[25px] leading-none text-ink">{metric.value}</span>
-      {metric.detail && <span className={`text-[11.5px] ${metric.tone === 'warning' ? 'text-[#7a4a22]' : 'text-muted'}`}>{metric.detail}</span>}
-    </article>
-  )
-}
+const QUICK_ACTIONS = [
+  { label: 'Nuevo análisis', short: 'Análisis', icon: ClipboardPlus, path: 'laboratory/new', permission: 'SAMPLE_REGISTER', primary: true },
+  { label: 'Movimiento', short: 'Movimiento', icon: Move, path: 'movements', permission: 'MOVEMENT_REGISTER', primary: false },
+  { label: 'Buscar depósito', short: 'Depósitos', icon: Search, path: 'deposits', permission: undefined, primary: false },
+] as const
 
-function DetailDrawer({ panel, onClose }: { panel: DetailPanel; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-30 flex justify-end bg-[#2e262a]/30" onMouseDown={onClose}>
-      <section role="dialog" aria-modal="true" aria-labelledby="detail-title" onMouseDown={(event) => event.stopPropagation()} className="flex h-full w-full max-w-[410px] flex-col overflow-y-auto border-l border-border bg-[#fdfbfc] p-5 shadow-xl sm:p-6">
-        <div className="flex items-start justify-between gap-4"><div><div className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted">MIRIV · Inicio</div><h2 id="detail-title" className="text-[21px] font-semibold tracking-[-0.02em]">{panel.title}</h2></div><button type="button" onClick={onClose} className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border hover:bg-plum-soft" aria-label="Cerrar panel"><X className="size-4" /></button></div>
-        <p className="mt-3 text-[13px] leading-5 text-copy">{panel.description}</p>
-        {panel.kind === 'action' && <div className="mt-4 rounded-2xl border border-border bg-white p-4 text-[12px] leading-5 text-muted">Esta acción abrirá su formulario en la vista correspondiente cuando se implemente. El panel de inicio conserva el contexto de trabajo.</div>}
-        <button type="button" onClick={onClose} className="mt-auto pt-8 text-left text-[12px] font-semibold text-plum hover:text-plum-dark"><ArrowLeft className="mr-1 inline size-3.5" />Volver al inicio</button>
-      </section>
-    </div>
-  )
-}
-
-export function WorkHomePage({ onOpenLogin, onNavigate }: WorkHomePageProps) {
-  const badges = useNavigationBadges()
+/**
+ * Home content (inside the shared app shell, so the top bar and navigation stay mounted): what needs
+ * attention first, then the state of the cellar. Every block reads endpoints the other
+ * screens already use; on phones the blocks stack by priority (attention, analyses, categories, phases,
+ * map, movements), on wide screens they sit in two columns.
+ */
+export function WorkHomePage({ onNavigate }: WorkHomePageProps) {
   const profile = useCurrentProfile()
-  const [data, setData] = useState<WorkHomeData>()
-  const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [activeItem, setActiveItem] = useState('Inicio')
-  const [panel, setPanel] = useState<DetailPanel>()
-  const [error, setError] = useState('')
-  const [showAccount, setShowAccount] = useState(false)
-
-  useEffect(() => {
-    let mounted = true
-    workHomeApi.getWorkHome().then((response) => { if (mounted) setData(response) }).catch(() => { if (mounted) setError('No se ha podido cargar el inicio de trabajo.') }).finally(() => { if (mounted) setIsLoading(false) })
-    return () => { mounted = false }
-  }, [])
-
-  const filteredActivity = useMemo(() => data?.recentActivity.filter((item) => `${item.time} ${item.content}`.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'))) ?? [], [data, search])
-
-  const handleNavigate = (item: string) => {
-    if (item === 'Bodega') { onNavigate?.('deposits'); return }
-    if (item === 'Laboratorio') { onNavigate?.('laboratory'); return }
-    if (item === 'Seguimiento') { onNavigate?.('tracking'); return }
-    if (item === 'Informes') { onNavigate?.('reports'); return }
-    if (item === 'Administración') { onNavigate?.('admin'); return }
-    setActiveItem(item)
-    if (item === 'Inicio') { setPanel(undefined); return }
-    setPanel({ kind: 'action', title: item, description: `La sección ${item} forma parte de las siguientes vistas del proyecto. Desde Inicio puedes consultar el estado actual.` })
+  const overview = useHomeOverview()
+  const data = overview.home
+  const go = (path: string) => onNavigate?.(path)
+  // Deposits opened from the home come back here, scrolled to the block they were opened from.
+  const openDepositFrom = (anchor: string) => (code: string) => {
+    const route = `deposits/${encodeURIComponent(code)}`
+    setBackTarget(route, { route: 'home', label: 'Volver a inicio', anchor })
+    go(route)
   }
 
-  if (isLoading) return <main className="flex min-h-screen items-center justify-center bg-[#f2eef1] text-sm text-muted"><RefreshCw className="mr-2 size-4 animate-spin" />Cargando inicio…</main>
-  if (!data) return <main className="flex min-h-screen items-center justify-center bg-[#f2eef1] p-5"><div className="rounded-2xl border border-[#f0d9de] bg-white p-6 text-center text-sm"><AlertCircle className="mx-auto mb-3 size-6 text-[#8e3b4a]" />{error || 'No hay datos disponibles.'}</div></main>
+  const stats = useMemo(() => {
+    const capacity = overview.deposits.reduce((sum, deposit) => sum + deposit.capacityLiters, 0)
+    const liters = overview.deposits.reduce((sum, deposit) => sum + (activeOccupation(deposit)?.volumeLiters ?? 0), 0)
+    const occupied = overview.deposits.filter((deposit) => activeOccupation(deposit)).length
+    const fermenting = [...overview.phaseByDeposit.values()].filter((phase) => phase && (phase.alcoholicStates.some((state) => FERMENTING.has(state)) || phase.malolacticStates.some((state) => FERMENTING.has(state)))).length
+    const flagged = overview.tracking?.rows.filter((row) => row.worstStatus === 'CRIT' || row.worstStatus === 'WARN') ?? []
+    const critical = flagged.filter((row) => row.worstStatus === 'CRIT').length
+    const pending = data?.metrics.find((metric) => metric.label === 'PENDING_VALIDATIONS')?.value ?? '—'
+    return { capacity, liters, occupied, fermenting, flagged: flagged.length, critical, pending }
+  }, [overview, data])
+
+  // What the home shows, for the assistant.
+  useAssistantView(overview.loading || !data ? null : {
+    screen: 'home', title: 'Inicio',
+    data: {
+      ocupacion: { porcentaje: stats.capacity ? Math.round(stats.liters / stats.capacity * 100) : 0, litros: stats.liters, depositosOcupados: stats.occupied, depositos: overview.deposits.length },
+      enFermentacion: stats.fermenting, fueraDeRango: stats.flagged, criticos: stats.critical, analisisPorValidar: stats.pending,
+      necesitanAtencion: attentionItems(overview.tracking).slice(0, 15).map((item) => ({ deposito: item.deposit, motivo: item.title, detalle: item.detail })),
+      analisisUltimos30Dias: (data.samplesPerDay ?? []).reduce((sum, day) => sum + day.count, 0),
+      movimientosRecientes: data.recentActivity.slice(0, 6).map((item) => `${item.at?.slice(0, 10) ?? ''} ${item.type} ${item.destination ?? item.source ?? ''} ${item.liters ?? ''} L`.trim()),
+    },
+    suggestions: ['¿Qué es lo más urgente hoy?', '¿Qué depósitos debería analizar hoy?', 'Resúmeme el estado de la bodega'],
+  })
+
+  if (overview.loading) return <p className="flex items-center justify-center py-20 text-sm text-muted"><RefreshCw className="mr-2 size-4 animate-spin" />Cargando inicio…</p>
+  if (!data) return <div className="flex justify-center py-16"><div className="rounded-2xl border border-[#f0d9de] bg-white p-6 text-center text-sm"><AlertCircle className="mx-auto mb-3 size-6 text-[#8e3b4a]" />{overview.error || 'No hay datos disponibles.'}</div></div>
 
   const dateLabel = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long' }).format(new Date())
+  const percent = stats.capacity ? Math.round(stats.liters / stats.capacity * 100) : 0
 
   return (
-    <main className="min-h-screen bg-[#f2eef1] text-ink">
-      <div className="flex min-h-screen w-full">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <WorkHomeHeader center={profile?.centerName ?? data.center} campaign={data.campaign} search={search} onSearchChange={setSearch} onOpenNotices={() => setPanel({ kind: 'notices', title: 'Avisos', description: 'Resumen de avisos sin leer de la campaña actual.' })} onOpenProfile={() => setShowAccount(true)} profile={profile} nav={{ activeItem: activeItem, onNavigate: handleNavigate, badges }} />
-          <div className="w-full min-w-0 flex-1 space-y-5 p-4 pb-24 sm:p-5 lg:p-6">
-            <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="m-0 text-[22px] font-semibold tracking-tight sm:text-[24px]">Hoy, {dateLabel}</h1><p className="mt-1 text-[12px] text-muted">{data.center} · {data.campaign} · datos a {data.updatedAt}</p></div></div>
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">{data.metrics.map((metric) => <MetricCard key={metric.label} metric={metric} />)}</div>
-            <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(270px,1fr)]">
-              <section className="min-w-0 rounded-[18px] border border-border bg-[#fdfbfc] p-4 sm:p-5" aria-labelledby="alerts-title"><div className="flex flex-wrap items-baseline justify-between gap-2"><h2 id="alerts-title" className="m-0 text-[16px] font-semibold sm:text-[17px]">Alertas activas</h2><span className="text-[11.5px] text-muted">Consulta Seguimiento para revisar el detalle.</span></div><div className="mt-4 rounded-xl border border-dashed border-border bg-white p-6 text-center text-[12.5px] text-muted">No hay prioridades en el inicio. Accede a Seguimiento para ver las alertas y curvas por contenido.</div></section>
-              <div className="flex min-w-0 flex-col gap-4"><QuickActions onAction={(action) => { if (action === 'Buscar depósito') { onNavigate?.('deposits'); return } if (action === 'Nuevo análisis') { onNavigate?.('laboratory'); return } setPanel({ kind: 'action', title: action, description: `El formulario de ${action.toLocaleLowerCase('es')} pertenece a su módulo.` }) }} /><RecentActivity items={filteredActivity} /></div>
-            </div>
-          </div>
-          <MobileBottomNav activeItem={activeItem} onNavigate={handleNavigate} badges={badges} />
+  <div data-intro-stagger className="space-y-3 sm:space-y-4">
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0"><h1 className="m-0 text-[20px] font-semibold tracking-tight sm:text-[24px]">Hoy, {dateLabel}</h1><p className="mt-0.5 truncate text-[11.5px] text-muted sm:mt-1 sm:text-[12px]">{data.center} · Campaña {data.campaign} · datos a {data.updatedAt}</p></div>
+      <div className="hidden items-center gap-2 sm:flex">
+        {QUICK_ACTIONS.map((action) => (
+          <Can key={action.label} permission={action.permission} fallback={null}>
+            <button type="button" onClick={() => go(action.path)} className={`flex h-9 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-[12px] font-semibold ${action.primary ? 'bg-plum text-white hover:bg-plum-dark' : 'border border-border bg-white text-copy hover:bg-plum-soft'}`}><action.icon className="size-4" aria-hidden="true" />{action.label}</button>
+          </Can>
+        ))}
+      </div>
+    </div>
+    <div className="grid grid-cols-3 gap-2 sm:hidden">
+      {QUICK_ACTIONS.map((action) => <Can key={action.label} permission={action.permission} fallback={null}><ActionTile icon={action.icon} label={action.short} primary={action.primary} onClick={() => go(action.path)} /></Can>)}
+    </div>
+
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+      <StatTile label="Ocupación" value={`${percent} %`} hint={`${formatLiters(stats.liters)} L · ${stats.occupied}/${overview.deposits.length} dep.`} onClick={() => go('deposits')} />
+      <StatTile label="En fermentación" value={stats.fermenting} hint="depósitos" onClick={() => go('tracking')} />
+      <StatTile label="Fuera de rango" value={stats.flagged} tone={stats.critical ? 'danger' : stats.flagged ? 'warning' : undefined} hint={stats.critical ? `${stats.critical} crítico${stats.critical === 1 ? '' : 's'}` : 'avisos'} onClick={() => go('tracking')} />
+      <StatTile label="Por validar" value={stats.pending} hint="análisis" onClick={() => go('laboratory')} />
+    </div>
+
+    {/* Wide screens: analyses beside categories/phases, the full-width map, then attention + movements. Phones: one column in the same spirit (the row wrappers dissolve into the ordered flex column). */}
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="contents xl:grid xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] xl:items-stretch xl:gap-4">
+        <div className="order-1 min-w-0 xl:order-none [&>section]:h-full"><SamplesChart days={data.samplesPerDay ?? []} onOpen={() => go('laboratory')} /></div>
+        <div className="contents xl:flex xl:min-w-0 xl:flex-col xl:gap-4">
+          <div className="order-2 min-w-0 xl:order-none"><CategoryChart deposits={overview.deposits} /></div>
+          <div className="order-3 min-w-0 xl:order-none"><PhaseDistribution phases={overview.phases} phaseByDeposit={overview.phaseByDeposit} onOpen={() => go('deposits')} /></div>
         </div>
       </div>
-      {panel && <DetailDrawer panel={panel} onClose={() => { setPanel(undefined); setActiveItem('Inicio') }} />}
-      <AccountMenu open={showAccount} onClose={() => setShowAccount(false)} onLogout={() => onOpenLogin?.()} />
-      {error && <div className="fixed bottom-20 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-xl bg-[#8e3b4a] px-4 py-2.5 text-[12px] text-white shadow-lg" role="alert"><AlertCircle className="size-4" />{error}<button type="button" onClick={() => setError('')} aria-label="Cerrar aviso"><X className="size-3.5" /></button></div>}
-      <span className="hidden" aria-hidden="true">{StatusBadge.name}</span>
-    </main>
+      <div className="order-4 min-w-0 xl:order-none"><CellarMap deposits={overview.deposits} zones={profile?.zones} onOpenDeposit={openDepositFrom('mapa-bodega')} /></div>
+      <div className="contents xl:grid xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] xl:items-stretch xl:gap-4">
+        <div className="order-5 min-w-0 xl:order-none [&>section]:h-full"><AttentionList tracking={overview.tracking} onOpenDeposit={openDepositFrom('necesitan-atencion')} onOpenTracking={() => go('tracking')} /></div>
+        <div className="order-6 min-w-0 xl:order-none [&>section]:h-full"><RecentMovements items={data.recentActivity} onOpenMovement={(code) => go(`movements/${encodeURIComponent(code)}`)} onOpenAll={() => go('movements')} /></div>
+      </div>
+    </div>
+  </div>
   )
 }

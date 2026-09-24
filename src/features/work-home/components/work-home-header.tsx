@@ -1,6 +1,7 @@
 import { Bell, Search } from 'lucide-react'
 import type { CurrentUserProfile } from '../../../services/profile-api'
 import { TopNav, type TopNavProps } from './top-nav'
+import { WineMark } from '../../../components/login/wine-mark'
 
 interface WorkHomeHeaderProps {
   center: string
@@ -24,7 +25,8 @@ export function WorkHomeHeader({ center, campaign, search, onSearchChange, onOpe
     <header className="shrink-0 border-b border-border bg-[#fdfbfc] px-4 py-3 sm:px-5 lg:px-6">
       <div className="flex min-h-10 items-center gap-2 sm:gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-4">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <span className="hidden font-mono text-[15px] font-semibold uppercase tracking-wider text-plum lg:inline">MIRIV</span>
+          {/* data-brand-mark: where the opening animation lands after signing in. */}
+          <span data-brand-mark className="flex shrink-0 items-center gap-2"><WineMark level={100} size={30} /><span data-brand-wordmark className="hidden whitespace-nowrap font-display text-[19px] font-medium leading-none tracking-[0.22em] text-[#3d2f36] lg:inline-block">MIRIV</span></span>
           <span className="hidden text-[20px] font-light text-[#d6c8cf] lg:inline" aria-hidden="true">/</span>
           <div className="min-w-0 truncate rounded-xl bg-plum-soft px-3 py-2 text-[12px] font-semibold text-plum sm:text-[13px]">{center}</div>
           <div className="hidden shrink-0 rounded-xl border border-[#e0d2d9] px-3 py-2 text-[12px] font-medium text-copy sm:block lg:hidden 2xl:block">{campaign}</div>

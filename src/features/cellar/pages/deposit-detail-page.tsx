@@ -5,6 +5,8 @@ import { cellarApi } from '../services/cellar-api'
 import type { Deposit, NewDeposit } from '../types'
 import { activeOccupation, formatLiters, statusClass, statusLabel } from '../utils'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
+import { StatTile } from '../../../components/ui/stat-tile'
+import { ActionTile, actionTileClass } from '../../../components/ui/action-tile'
 import { formatAge, statusClass as readingStatusClass } from '../../tracking/utils'
 import { LocationBadge } from '../components/deposit-badges'
 import { TankLevel } from '../components/deposit-detail/tank-level'
@@ -14,6 +16,8 @@ import { EvolutionCard } from '../components/deposit-detail/evolution-card'
 import { ActivityFeed } from '../components/deposit-detail/activity-feed'
 import { defaultChartParameters, keyReadings, overallStatus, phaseLabel, phaseOf, phaseParameters, readingsByTemplate, useContentInsights } from '../components/deposit-detail/content-insights'
 import { PhaseCard } from '../components/deposit-detail/phase-card'
+import { useAssistantView } from '../../assistant/view-context'
+import { depositDetailView } from '../assistant-views'
 
 interface DepositDetailPageProps {
   code: string
@@ -25,6 +29,8 @@ interface DepositDetailPageProps {
   onRegisterEntry?: (code: string) => void
   onOpenReport?: (code: string) => void
   onOpenTracking?: (contentCode: string) => void
+  /** Text of the back link (the page it goes back to). */
+  backLabel?: string
 }
 
 function EditDeposit({ deposit, onClose, onSaved }: { deposit: Deposit; onClose: () => void; onSaved: (deposit: Deposit) => void }) {
@@ -37,16 +43,10 @@ function EditDeposit({ deposit, onClose, onSaved }: { deposit: Deposit; onClose:
 
 const overallText = { OK: 'En rango', WARN: 'Aviso', CRIT: 'Crítico' } as const
 
-function Vital({ label, value, hint, children }: { label: string; value: ReactNode; hint?: ReactNode; children?: ReactNode }) {
-  return <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-white px-3.5 py-3 sm:px-4">{children}<div className="min-w-0"><div className="text-[11px] text-muted">{label}</div><div className="truncate text-[16px] font-semibold text-ink">{value}</div>{hint && <div className="truncate text-[10.5px] text-muted">{hint}</div>}</div></div>
-}
 
 function Collapsible({ title, count, defaultOpen = false, children }: { title: string; count?: number; defaultOpen?: boolean; children: ReactNode }) {
   return <details open={defaultOpen} className="group rounded-[18px] border border-border bg-white [&_summary::-webkit-details-marker]:hidden"><summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3.5 text-[13px] font-semibold sm:px-5">{title}{count !== undefined && <span className="ml-1.5 font-mono text-[11px] font-normal text-muted">{count}</span>}<ChevronDown className="ml-auto size-4 text-muted transition group-open:rotate-180" aria-hidden="true" /></summary><div className="border-t border-border px-4 pb-4 pt-3 sm:px-5">{children}</div></details>
 }
-
-/** Mobile action tile: icon over a short label, thumb-sized. */
-const tileClass = 'flex h-14 flex-col items-center justify-center gap-1 rounded-2xl border text-[11px] font-semibold transition-colors'
 
 function ActionsMenu({ items, tile = false }: { items: { label: string; icon: typeof Pencil; onClick: () => void; danger?: boolean }[]; tile?: boolean }) {
   const [open, setOpen] = useState(false)
@@ -59,10 +59,10 @@ function ActionsMenu({ items, tile = false }: { items: { label: string; icon: ty
     document.addEventListener('keydown', onKey)
     return () => { document.removeEventListener('mousedown', onPointer); document.removeEventListener('keydown', onKey) }
   }, [open])
-  return <div ref={ref} className="relative">{tile ? <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} className={`${tileClass} w-full border-border bg-white text-copy active:bg-plum-soft`}><MoreHorizontal className="size-5" aria-hidden="true" />Más</button> : <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Más acciones" className="flex size-9 items-center justify-center rounded-xl border border-border bg-white text-copy hover:bg-plum-soft"><MoreHorizontal className="size-4" /></button>}{open && <div role="menu" className="absolute right-0 top-full z-30 mt-2 w-52 rounded-2xl border border-border bg-white p-1.5 shadow-[0_12px_32px_rgba(46,38,42,0.14)]">{items.map((item) => { const Icon = item.icon; return <button key={item.label} type="button" role="menuitem" onClick={() => { setOpen(false); item.onClick() }} className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12.5px] font-medium ${item.danger ? 'text-[#8e1f33] hover:bg-[#fdf0f3]' : 'text-ink hover:bg-[#f7f1f4]'}`}><Icon className="size-4" aria-hidden="true" />{item.label}</button> })}</div>}</div>
+  return <div ref={ref} className="relative">{tile ? <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} className={`${actionTileClass} w-full border-border bg-white text-copy active:bg-plum-soft`}><MoreHorizontal className="size-5" aria-hidden="true" />Más</button> : <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Más acciones" className="flex size-9 items-center justify-center rounded-xl border border-border bg-white text-copy hover:bg-plum-soft"><MoreHorizontal className="size-4" /></button>}{open && <div role="menu" className="absolute right-0 top-full z-30 mt-2 w-52 rounded-2xl border border-border bg-white p-1.5 shadow-[0_12px_32px_rgba(46,38,42,0.14)]">{items.map((item) => { const Icon = item.icon; return <button key={item.label} type="button" role="menuitem" onClick={() => { setOpen(false); item.onClick() }} className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12.5px] font-medium ${item.danger ? 'text-[#8e1f33] hover:bg-[#fdf0f3]' : 'text-ink hover:bg-[#f7f1f4]'}`}><Icon className="size-4" aria-hidden="true" />{item.label}</button> })}</div>}</div>
 }
 
-export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onRegisterMovement, onRegisterSample, onRegisterEntry, onOpenReport, onOpenTracking }: DepositDetailPageProps) {
+export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onRegisterMovement, onRegisterSample, onRegisterEntry, onOpenReport, onOpenTracking, backLabel = 'Volver a depósitos' }: DepositDetailPageProps) {
   const [deposit, setDeposit] = useState<Deposit>()
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -77,6 +77,8 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
   useEffect(() => { let mounted = true; setLoading(true); cellarApi.getDeposit(code).then((data) => { if (mounted) setDeposit(data) }).finally(() => { if (mounted) setLoading(false) }); return () => { mounted = false } }, [code])
   const occupation = deposit ? activeOccupation(deposit) : undefined
   const insights = useContentInsights(occupation?.contentCode, occupation?.entryDate, version)
+  // What this page shows, for the assistant ("¿cómo ves este depósito?").
+  useAssistantView(deposit && !insights.loading ? depositDetailView(deposit, insights) : null)
 
   if (loading) return <p className="p-6 text-center text-[12px] text-muted">Cargando depósito…</p>
   if (!deposit) return <div className="rounded-2xl border border-border bg-white p-6"><p className="text-[13px]">No se encuentra el depósito {code}.</p><button type="button" onClick={onBack} className="text-[12px] font-semibold text-plum">Volver a depósitos</button></div>
@@ -105,7 +107,7 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
   const occupationsList = history.length === 0 ? <p className="text-[12px] text-muted">Sin ocupaciones anteriores.</p> : <ul className="divide-y divide-border">{history.map((item) => { const eliminated = item.volumeLiters === 0 && Boolean(item.exitDate); return <li key={`${item.contentCode}-${item.entryDate}`}><button type="button" onClick={() => onOpenContent(item.contentCode)} className="flex w-full items-center gap-3 py-2 text-left text-[12px] hover:text-plum"><span className={`font-mono font-semibold ${eliminated ? 'text-muted line-through' : ''}`}>{item.contentCode}</span><span className="text-muted">{item.category ?? '—'} · {item.lotCode}</span><span className="ml-auto whitespace-nowrap text-[11px] text-muted">{formatDate(item.entryDate)} → {formatDate(item.exitDate)}</span></button></li> })}</ul>
 
   return <div className="space-y-4">
-    <button type="button" onClick={onBack} className="flex items-center gap-1 text-[11.5px] font-semibold text-plum hover:underline"><ArrowLeft className="size-3.5" />Volver a depósitos</button>
+    <button type="button" onClick={onBack} className="flex items-center gap-1 text-[11.5px] font-semibold text-plum hover:underline"><ArrowLeft className="size-3.5" />{backLabel}</button>
 
     <header className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[18px] border border-border bg-white p-4 sm:p-5">
       <TankLevel percent={fill} category={occupation?.category} className="h-[72px] w-16 shrink-0 sm:h-24 sm:w-[86px]" />
@@ -130,9 +132,9 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
       {/* Mobile: full-width row of thumb-sized tiles. */}
       <div className="grid w-full grid-cols-3 gap-2 sm:hidden">
         {occupation ? <>
-          <button type="button" onClick={registerSample} className={`${tileClass} border-transparent bg-plum text-white active:bg-plum-dark`}><FlaskConical className="size-5" aria-hidden="true" />Muestra</button>
-          <button type="button" onClick={() => onRegisterMovement(deposit.code)} className={`${tileClass} border-border bg-white text-copy active:bg-plum-soft`}><ArrowLeftRight className="size-5" aria-hidden="true" />Movimiento</button>
-        </> : deposit.status === 'available' ? <button type="button" onClick={registerEntry} className={`${tileClass} col-span-2 border-transparent bg-plum text-white active:bg-plum-dark`}><LogIn className="size-5" aria-hidden="true" />Registrar entrada</button> : <span className="col-span-2" />}
+          <ActionTile icon={FlaskConical} label="Muestra" primary onClick={registerSample} />
+          <ActionTile icon={ArrowLeftRight} label="Movimiento" onClick={() => onRegisterMovement(deposit.code)} />
+        </> : deposit.status === 'available' ? <ActionTile icon={LogIn} label="Registrar entrada" primary className="col-span-2" onClick={registerEntry} /> : <span className="col-span-2" />}
         <ActionsMenu items={menu} tile />
       </div>
     </header>
@@ -142,9 +144,9 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
 
     {occupation ? <>
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-        <Vital label="Volumen" value={`${formatLiters(occupiedLiters)} L`} hint={`${fill} % de la capacidad útil`} />
+        <StatTile label="Volumen" value={`${formatLiters(occupiedLiters)} L`} hint={`${fill} % de la capacidad útil`} />
         <PhaseCard contentCode={occupation.contentCode} current={insights.current} phases={insights.phases} occupation={occupation} loading={insights.loading} onChanged={reload} />
-        <Vital label="Último análisis" value={insights.loading ? '…' : formatAge(lastDays)} hint={openSamples ? `${openSamples} muestra${openSamples === 1 ? '' : 's'} abierta${openSamples === 1 ? '' : 's'}` : 'Sin muestras abiertas'} />
+        <StatTile label="Último análisis" value={insights.loading ? '…' : formatAge(lastDays)} hint={openSamples ? `${openSamples} muestra${openSamples === 1 ? '' : 's'} abierta${openSamples === 1 ? '' : 's'}` : 'Sin muestras abiertas'} />
       </div>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
         <div className="min-w-0 space-y-4">
@@ -160,10 +162,10 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
       </div>
     </> : <>
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-        <Vital label="Estado" value={statusLabel(deposit)} />
-        <Vital label="Capacidad útil" value={`${formatLiters(deposit.capacityLiters)} L`} hint={deposit.refrigerated ? 'Refrigerado' : 'Sin refrigeración'} />
-        <Vital label="Última limpieza" value={lastCleaning ? formatDate(lastCleaning.date) : '—'} hint={lastCleaning?.result} />
-        <Vital label="Último contenido" value={history[0] ? history[0].contentCode : '—'} hint={history[0] ? `${history[0].category ?? '—'} · salió ${formatDate(history[0].exitDate)}` : undefined} />
+        <StatTile label="Estado" value={statusLabel(deposit)} />
+        <StatTile label="Capacidad útil" value={`${formatLiters(deposit.capacityLiters)} L`} hint={deposit.refrigerated ? 'Refrigerado' : 'Sin refrigeración'} />
+        <StatTile label="Última limpieza" value={lastCleaning ? formatDate(lastCleaning.date) : '—'} hint={lastCleaning?.result} />
+        <StatTile label="Último contenido" value={history[0] ? history[0].contentCode : '—'} hint={history[0] ? `${history[0].category ?? '—'} · salió ${formatDate(history[0].exitDate)}` : undefined} />
       </div>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
         <div className="min-w-0 space-y-4">

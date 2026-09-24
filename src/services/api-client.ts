@@ -47,6 +47,17 @@ export function saveAccessToken(token: string, rememberSession: boolean): void {
   storage.setItem(rememberSession ? PERSISTENT_TOKEN_KEY : SESSION_TOKEN_KEY, token)
 }
 
+/** Replaces the token after a renewal, in the same storage it was in (kept or per-browser-session). */
+export function replaceAccessToken(token: string): void {
+  if (localStorage.getItem(PERSISTENT_TOKEN_KEY)) localStorage.setItem(PERSISTENT_TOKEN_KEY, token)
+  else sessionStorage.setItem(SESSION_TOKEN_KEY, token)
+}
+
+/** Base URL of the API, for calls that must not go through apiRequest (the renewal itself). */
+export function apiUrl(path: string): string {
+  return `${apiBaseUrl}${path}`
+}
+
 export function clearAccessToken(): void {
   localStorage.removeItem(PERSISTENT_TOKEN_KEY)
   sessionStorage.removeItem(SESSION_TOKEN_KEY)
@@ -56,7 +67,11 @@ export function hasActiveSession(): boolean {
   return Boolean(getAccessToken())
 }
 
-export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+// Set by session-refresh (avoids an import cycle): renews the token once when a request is refused.
+let renew: (() => Promise<boolean>) | undefined
+export function setSessionRenewer(renewer: () => Promise<boolean>): void { renew = renewer }
+
+export async function apiRequest<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
   const headers = new Headers(init.headers)
   const token = getAccessToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
@@ -70,6 +85,8 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   }
 
   const isAuthCall = path.startsWith('/api/auth/')
+  // A token that ran out while the app slept is renewed once and the request repeated, before giving up.
+  if (response.status === 401 && !isAuthCall && !retried && token && renew && await renew()) return apiRequest<T>(path, init, true)
   if (response.status === 401 && !isAuthCall) {
     clearAccessToken()
     window.dispatchEvent(new Event('miriv:session-expired'))

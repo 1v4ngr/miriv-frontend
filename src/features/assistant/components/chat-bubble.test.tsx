@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { ChatBubble, depositFromHash } from './chat-bubble'
+import { ChatBubble } from './chat-bubble'
+import { viewFromRoute } from '../view-context'
 import { MarkdownMessage } from './markdown-message'
 
 function setViewport(phone: boolean) {
@@ -11,12 +12,11 @@ function setViewport(phone: boolean) {
   })) as unknown as typeof window.matchMedia
 }
 
-describe('depositFromHash', () => {
-  it('extracts the code only on deposit detail routes', () => {
-    expect(depositFromHash('#deposits/D-01')).toBe('D-01')
-    expect(depositFromHash('#deposits/D%2001')).toBe('D 01')
-    expect(depositFromHash('#deposits/D-01/movement')).toBeUndefined()
-    expect(depositFromHash('#deposits')).toBeUndefined()
+describe('viewFromRoute', () => {
+  it('names the screen from the route when the screen publishes nothing', () => {
+    expect(viewFromRoute('#deposits/D%2001')).toMatchObject({ screen: 'deposits-detail', title: 'Depósitos D 01' })
+    expect(viewFromRoute('#laboratory')).toMatchObject({ screen: 'laboratory', title: 'Laboratorio' })
+    expect(viewFromRoute('')).toMatchObject({ screen: 'home', title: 'Inicio' })
   })
 })
 
@@ -33,6 +33,15 @@ describe('MarkdownMessage', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
     expect(document.querySelector('b')).toBeNull()
   })
+  it('opens internal links in place and external ones in a new tab', () => {
+    const onNavigate = vi.fn()
+    render(<MarkdownMessage text={'[Depósito 239](#deposits/239) · [Web](https://example.com)'} onNavigate={onNavigate} />)
+    const internal = screen.getByRole('link', { name: 'Depósito 239' })
+    expect(internal).not.toHaveAttribute('target')
+    fireEvent.click(internal)
+    expect(onNavigate).toHaveBeenCalled()
+    expect(screen.getByRole('link', { name: 'Web' })).toHaveAttribute('target', '_blank')
+  })
 })
 
 describe('ChatBubble', () => {
@@ -48,7 +57,7 @@ describe('ChatBubble', () => {
     render(<ChatBubble />)
     fireEvent.click(screen.getByLabelText('Abrir asistente'))
     expect(screen.getByRole('dialog', { name: 'Asistente MIRIV' })).toHaveAttribute('aria-modal', 'true')
-    expect(screen.getByText('Depósito D-01')).toBeInTheDocument()
+    expect(screen.getByText('Viendo: Depósitos D-01')).toBeInTheDocument()
   })
 
   it('opens as a floating panel on desktop', () => {

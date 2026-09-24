@@ -47,7 +47,7 @@ export function SampleFormPage({ onBack, onSaved, initialDeposit }: Props) {
   const [depositPickerOpen, setDepositPickerOpen] = useState(false)
   const profile = useCurrentProfile()
   useEffect(() => { cellarApi.getDeposits().then((items) => setDeposits(items.flatMap((deposit) => { const occupation = activeOccupation(deposit); return occupation ? [{ code: deposit.code, contentCode: occupation.contentCode, lotCode: occupation.lotCode, category: occupation.category }] : [] }))).finally(() => setLoadingDeposits(false)) }, [])
-  useEffect(() => { laboratoryApi.getSamples().then(setSamples).catch(() => undefined) }, [])
+  useEffect(() => { laboratoryApi.getSampleSummaries().then(setSamples).catch(() => undefined) }, [])
   useEffect(() => { profileApi.listCenterMembers().then(setCenterMembers).catch(() => undefined) }, [])
   useEffect(() => { if (profile) setForm((current) => (current.responsible ? current : { ...current, responsible: profile.username ?? profile.displayName })) }, [profile])
   useEffect(() => { if (deposits.length === 0) return; if (initialDeposit) { const target = deposits.find((deposit) => deposit.code === initialDeposit); if (target) { setForm((current) => (current.originDeposit === target.code ? current : { ...current, originDeposit: target.code, contentCode: target.contentCode, lotCode: target.lotCode, category: target.category })); return } } setForm((current) => (current.originDeposit ? current : { ...current, originDeposit: deposits[0].code, contentCode: deposits[0].contentCode, lotCode: deposits[0].lotCode, category: deposits[0].category })) }, [deposits, initialDeposit])

@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import type { ECharts, EChartsOption } from 'echarts'
 
 /**
  * Thin wrapper over ECharts for small, self-contained visuals (gauges, sparklines). ECharts is loaded
  * lazily, the chart follows its box size and is disposed on unmount.
  */
-export function EChart({ option, className, label }: { option: EChartsOption; className?: string; label: string }) {
+export function EChart({ option, className, label, style }: { option: EChartsOption; className?: string; label: string; style?: CSSProperties }) {
   const host = useRef<HTMLDivElement>(null)
   const chart = useRef<ECharts | undefined>(undefined)
 
@@ -16,7 +16,8 @@ export function EChart({ option, className, label }: { option: EChartsOption; cl
     void import('echarts').then((echarts) => {
       if (disposed) return
       chart.current ??= echarts.init(element, undefined, { renderer: 'svg' })
-      chart.current.setOption(option, true)
+      // Charts speak the app's typeface unless an option says otherwise.
+      chart.current.setOption({ textStyle: { fontFamily: getComputedStyle(element).fontFamily }, ...option }, true)
     })
     return () => { disposed = true }
   }, [option])
@@ -29,5 +30,5 @@ export function EChart({ option, className, label }: { option: EChartsOption; cl
     return () => { observer.disconnect(); chart.current?.dispose(); chart.current = undefined }
   }, [])
 
-  return <div ref={host} role="img" aria-label={label} className={className} />
+  return <div ref={host} role="img" aria-label={label} className={className} style={style} />
 }

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { parseSse } from './assistant-api'
+import { parseAgUiStream } from './assistant-api'
 
-describe('parseSse', () => {
-  it('parses complete events and keeps the partial remainder', () => {
-    const { events, rest } = parseSse('event: tool_call\ndata: {"tool":"get_deposit","args":{}}\n\nevent: final\ndata: {"te')
-    expect(events).toEqual([{ type: 'tool_call', tool: 'get_deposit', args: {} }])
-    expect(rest).toBe('event: final\ndata: {"te')
+describe('parseAgUiStream', () => {
+  it('parses complete AG-UI events and keeps the partial remainder', () => {
+    const { events, rest } = parseAgUiStream('data: {"type":"RUN_STARTED","threadId":"t","runId":"r"}\n\ndata: {"type":"TEXT_MES')
+    expect(events).toEqual([{ type: 'RUN_STARTED', threadId: 't', runId: 'r' }])
+    expect(rest).toBe('data: {"type":"TEXT_MES')
   })
-  it('handles events without data and skips malformed ones', () => {
-    const { events } = parseSse('event: done\ndata: {}\n\nevent: final\ndata: {oops\n\n')
-    expect(events).toEqual([{ type: 'done' }])
+  it('skips malformed blocks and blocks without a type', () => {
+    const { events } = parseAgUiStream('data: {oops\n\ndata: {"no":"type"}\n\ndata: {"type":"RUN_FINISHED","threadId":"t","runId":"r"}\n\n')
+    expect(events).toEqual([{ type: 'RUN_FINISHED', threadId: 't', runId: 'r' }])
   })
 })

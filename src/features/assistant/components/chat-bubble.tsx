@@ -4,12 +4,21 @@ import { hasActiveSession } from '../../../services/api-client'
 import { clearAssistantHistory, useAssistantChat } from '../hooks/use-assistant-chat'
 import { PHONE_QUERY, useMediaQuery } from '../hooks/use-media-query'
 import { MarkdownMessage } from './markdown-message'
+import { currentView, onViewChange, type AssistantView } from '../view-context'
 
-/** Deposit code when the user is on a deposit detail page (`#deposits/<code>`), so the AI can prioritise it. */
-export function depositFromHash(hash: string): string | undefined {
-  const route = hash.replace(/^#/, '')
-  const match = /^deposits\/([^/]+)$/.exec(route)
-  return match ? decodeURIComponent(match[1]) : undefined
+/** Suggestions when the screen offers none. */
+const DEFAULT_SUGGESTIONS = ['¿Qué depósitos necesitan atención hoy?', '¿Qué conviene analizar hoy?', '¿Cómo va la bodega?']
+
+/** The screen the user is on, kept up to date as they navigate (for the chat header and suggestions). */
+function useCurrentView(): AssistantView {
+  const [view, setView] = useState<AssistantView>(currentView)
+  useEffect(() => {
+    const update = () => setView(currentView())
+    const off = onViewChange(update)
+    window.addEventListener('hashchange', update)
+    return () => { off(); window.removeEventListener('hashchange', update) }
+  }, [])
+  return view
 }
 
 function useSession() {
@@ -33,14 +42,18 @@ function useSession() {
 export function ChatBubble() {
   const { active, hash } = useSession()
   if (!active || hash.replace(/^#/, '') === 'login') return null
-  return <ChatWidget depositCode={depositFromHash(hash)} />
+  return <ChatWidget />
 }
 
-function ChatWidget({ depositCode }: { depositCode?: string }) {
+function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState('')
   const phone = useMediaQuery(PHONE_QUERY)
-  const { messages, busy, status, send, stop, clear } = useAssistantChat(depositCode)
+  const { messages, busy, status, send, stop, clear } = useAssistantChat()
+  const view = useCurrentView()
+  const suggestions = view.suggestions?.length ? view.suggestions : DEFAULT_SUGGESTIONS
+  // An internal link in an answer opens that screen; on phones the sheet closes so the screen is visible.
+  const onNavigate = () => { if (phone) setOpen(false) }
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -76,7 +89,7 @@ function ChatWidget({ depositCode }: { depositCode?: string }) {
       <header className="flex items-center justify-between gap-2 bg-plum px-4 py-3 text-white">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">Asistente MIRIV</p>
-          <p className="truncate text-xs opacity-80">{depositCode ? `Depósito ${depositCode}` : 'Consulta tu bodega'}</p>
+          <p className="truncate text-xs opacity-80" title="El asistente ve lo que tienes en pantalla">Viendo: {view.title}</p>
         </div>
         <div className="flex flex-none gap-1">
           <button type="button" aria-label="Borrar conversación" title="Borrar conversación" onClick={clear}
@@ -88,14 +101,22 @@ function ChatWidget({ depositCode }: { depositCode?: string }) {
 
       <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain bg-field p-3 text-[13.5px] text-ink">
         {messages.length === 0 && (
-          <p className="text-muted">Pregúntame por el estado de un depósito, qué alertas hay o qué conviene hacer hoy.</p>
+          <div className="space-y-3">
+            <p className="text-muted">Veo lo mismo que tú: pregúntame por lo que tienes en pantalla, o por cualquier depósito de la bodega.</p>
+            <div className="flex flex-wrap gap-1.5" aria-label="Sugerencias">
+              {suggestions.map((suggestion) => (
+                <button key={suggestion} type="button" onClick={() => void send(suggestion)} disabled={busy}
+                  className="rounded-full border border-border bg-white px-3 py-1.5 text-left text-[12.5px] text-ink transition-colors hover:border-plum hover:text-plum">{suggestion}</button>
+              ))}
+            </div>
+          </div>
         )}
         {messages.map((message, index) => (
           <div key={index} className={message.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
             <div className={`max-w-[88%] rounded-2xl px-3 py-2 sm:max-w-[85%] ${message.role === 'user'
               ? 'bg-plum text-white'
               : message.error ? 'border border-red-200 bg-red-50 text-red-800' : 'w-full border border-border bg-white'}`}>
-              {message.role === 'user' ? <span className="whitespace-pre-wrap break-words">{message.content}</span> : <MarkdownMessage text={message.content} />}
+              {message.role === 'user' ? <span className="whitespace-pre-wrap break-words">{message.content}</span> : <MarkdownMessage text={message.content} onNavigate={onNavigate} />}
             </div>
           </div>
         ))}

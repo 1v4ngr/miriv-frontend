@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react'
-import { fermentationLabels, label as stateLabel } from '../../../../lib/labels'
 import { formatDate } from '../../../../lib/format'
 import { useCan } from '../../../../hooks/use-permissions'
 import { CenteredModal } from '../../../../components/ui/centered-modal'
@@ -86,10 +85,7 @@ export function PhaseCard({ contentCode, current, phases, occupation, loading, o
 
   return (
     <div className="group/phase order-last col-span-2 min-w-0 rounded-2xl border border-border bg-white px-3.5 py-3 sm:px-4 lg:order-none">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <span className="text-[11px] text-muted">Fase</span>
-        <span className="order-last w-full truncate text-[10.5px] text-muted sm:order-none sm:w-auto">FA {stateLabel(fermentationLabels, occupation.alcoholicState).toLocaleLowerCase('es')} · FML {stateLabel(fermentationLabels, occupation.malolacticState).toLocaleLowerCase('es')}</span>
-      </div>
+      <span className="text-[11px] text-muted">Fase</span>
 
       <div className="mt-0.5 flex items-center gap-2">
         {phase && <span className="size-2.5 shrink-0 rounded-full transition-colors" style={{ background: phase.color }} aria-hidden="true" />}

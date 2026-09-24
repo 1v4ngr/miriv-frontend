@@ -10,6 +10,8 @@ export interface Occupation {
   category: string
   alcoholicState: string
   malolacticState: string
+  /** When the last sample of this content was taken in this deposit; null if never analysed here. */
+  lastSampleAt?: string | null
 }
 
 export interface Deposit {

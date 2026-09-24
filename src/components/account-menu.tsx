@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, LogOut, Pencil, X } from 'lucide-react'
 import { clearAccessToken } from '../services/api-client'
+import type { MarkOrigin } from './intro/brand-intro'
+
+/** Asks the app to play the sign-out animation; `detail` is where the brand mark is now. */
+export const SIGN_OUT_EVENT = 'miriv:sign-out'
+
+function brandOrigin(): MarkOrigin | null {
+  const rect = (selector: string) => [...document.querySelectorAll<HTMLElement>(selector)].map((node) => node.getBoundingClientRect()).find((box) => box.width > 0)
+  const mark = rect('[data-brand-mark] svg')
+  const word = rect('[data-brand-wordmark]')
+  return mark ? { x: mark.x, y: mark.y, size: mark.width, level: 100, word: word ? { x: word.x, y: word.y, width: word.width } : undefined } : null
+}
 import { profileApi, type CenterOption } from '../services/profile-api'
 import { PROFILE_UPDATED_EVENT, useCurrentProfile } from '../hooks/use-current-profile'
 
@@ -58,6 +69,9 @@ export function AccountMenu({ open, onClose, onLogout }: AccountMenuProps) {
 
   const handleLogout = () => {
     clearAccessToken()
+    // The app may take over with the sign-out animation (it then navigates to the login itself).
+    const handled = !window.dispatchEvent(new CustomEvent(SIGN_OUT_EVENT, { cancelable: true, detail: brandOrigin() }))
+    if (handled) { onClose(); return }
     onLogout()
   }
 

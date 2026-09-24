@@ -29,6 +29,14 @@ export function LocationIcon({ zone }: { zone?: string | null }) {
   return <Icon className="size-3.5" aria-hidden="true" />
 }
 
+// Colour of the wine itself per category (tank liquid, charts). Content categories arrive as their display name.
+const WINE_HEX: Record<string, string> = { tinto: '#7b1e3a', blanco: '#d9b93a', rosado: '#e0789d', mosto: '#8aa545', 'vino base': '#c69246' }
+
+/** Solid colour of a category's wine; plum for unknown categories. */
+export function wineColor(category?: string | null) {
+  return WINE_HEX[(category ?? '').toLocaleLowerCase('es')] ?? '#6d4656'
+}
+
 // Content categories arrive as their display name (Tinto, Blanco, ...). Colors follow the product.
 const contentColors: Record<string, { dot: string; badge: string }> = {
   tinto: { dot: 'bg-[#7b1e3a]', badge: 'bg-[#f5dde4] text-[#7b1e3a]' },
@@ -47,4 +55,10 @@ export function ContentBadge({ category }: { category?: string | null }) {
   if (category === undefined) return <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-dashed border-[#d6c8cf] px-2 py-0.5 text-[10.5px] font-semibold text-muted">Vacío</span>
   const colors = category ? (contentColors[category.toLocaleLowerCase('es')] ?? fallbackContent) : fallbackContent
   return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${colors.badge}`}><span className={`size-1.5 rounded-full ${colors.dot}`} aria-hidden="true" />{category || 'Sin categoría'}</span>
+}
+
+/** The elaboration phase of a content (Administración › Analítica › Fases de elaboración): its colour and name. */
+export function PhaseBadge({ phase }: { phase?: { name: string; color: string } | null }) {
+  if (!phase) return <span className="text-[11px] text-muted">Sin fase</span>
+  return <span className="inline-flex max-w-full items-center gap-1.5 text-[11px] font-medium text-copy"><span className="size-2 shrink-0 rounded-full" style={{ background: phase.color }} aria-hidden="true" /><span className="truncate">{phase.name}</span></span>
 }

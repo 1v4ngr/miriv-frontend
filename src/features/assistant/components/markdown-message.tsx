@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm'
  * Assistant answers rendered as GitHub-flavoured markdown (tables, lists, code).
  * react-markdown does not render raw HTML unless rehype-raw is added, so model output stays inert.
  */
-export function MarkdownMessage({ text }: { text: string }) {
+export function MarkdownMessage({ text, onNavigate }: { text: string; /** Called after an internal link (#…) opens a screen. */ onNavigate?: () => void }) {
   return (
     <div className="space-y-2 break-words text-[13.5px] leading-relaxed">
       <ReactMarkdown
@@ -18,9 +18,10 @@ export function MarkdownMessage({ text }: { text: string }) {
           ul: ({ children }) => <ul className="ml-4 list-disc space-y-1">{children}</ul>,
           ol: ({ children }) => <ol className="ml-4 list-decimal space-y-1">{children}</ol>,
           li: ({ children }) => <li className="marker:text-plum">{children}</li>,
-          a: ({ children, href }) => (
-            <a href={href} target="_blank" rel="noreferrer noopener" className="text-plum underline">{children}</a>
-          ),
+          // Internal links (#deposits/239) open the screen in place; external ones in a new tab.
+          a: ({ children, href }) => href?.startsWith('#')
+            ? <a href={href} onClick={() => onNavigate?.()} className="font-medium text-plum underline decoration-plum/40 underline-offset-2 hover:decoration-plum">{children}</a>
+            : <a href={href} target="_blank" rel="noreferrer noopener" className="text-plum underline">{children}</a>,
           blockquote: ({ children }) => (
             <blockquote className="border-l-2 border-plum-soft pl-3 text-muted">{children}</blockquote>
           ),

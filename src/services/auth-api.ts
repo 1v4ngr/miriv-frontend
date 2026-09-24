@@ -1,4 +1,5 @@
 import { apiRequest, saveAccessToken } from './api-client'
+import { schedule as scheduleSessionRefresh } from './session-refresh'
 
 export interface LoginRequest {
   username: string
@@ -50,6 +51,7 @@ export const authApi: AuthApi = {
       body: JSON.stringify({ username: request.username, password: request.password }),
     })
     saveAccessToken(response.accessToken, request.rememberSession)
+    scheduleSessionRefresh()
     return {
       ok: true,
       user: {

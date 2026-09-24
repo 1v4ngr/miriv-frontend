@@ -1,31 +1,27 @@
+import type { BaseEvent, RunAgentInput } from '@ag-ui/core'
 import { ApiRequestError, clearAccessToken, getAccessToken } from '../../../services/api-client'
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
 export interface ChatMessage { role: 'user' | 'assistant'; content: string }
 
-export type AssistantEvent =
-  | { type: 'tool_call'; tool: string; args: Record<string, unknown> }
-  | { type: 'tool_result'; tool: string; ok: boolean }
-  | { type: 'final'; text: string }
-  | { type: 'error'; message: string }
-  | { type: 'done' }
+/** An AG-UI event as it arrives (https://docs.ag-ui.com/concepts/events): `type` plus its own fields. */
+export type AgUiEvent = BaseEvent & Record<string, unknown>
 
-/** Splits an SSE text buffer into complete events; returns the unconsumed remainder. */
-export function parseSse(buffer: string): { events: AssistantEvent[]; rest: string } {
-  const events: AssistantEvent[] = []
+/**
+ * Splits an AG-UI event stream (Server-Sent Events, one JSON event per `data:` block) into complete events;
+ * returns the unconsumed remainder. Malformed blocks are skipped.
+ */
+export function parseAgUiStream(buffer: string): { events: AgUiEvent[]; rest: string } {
+  const events: AgUiEvent[] = []
   const blocks = buffer.split('\n\n')
   const rest = blocks.pop() ?? ''
   for (const block of blocks) {
-    let type = ''
-    let data = ''
-    for (const line of block.split('\n')) {
-      if (line.startsWith('event:')) type = line.slice(6).trim()
-      else if (line.startsWith('data:')) data += line.slice(5).trim()
-    }
-    if (!type) continue
+    const data = block.split('\n').filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).join('')
+    if (!data) continue
     try {
-      events.push({ type, ...(data ? JSON.parse(data) : {}) } as AssistantEvent)
+      const event = JSON.parse(data) as AgUiEvent
+      if (typeof event.type === 'string') events.push(event)
     } catch {
       // ignore malformed event
     }
@@ -33,21 +29,17 @@ export function parseSse(buffer: string): { events: AssistantEvent[]; rest: stri
   return { events, rest }
 }
 
-export async function streamChat(
-  messages: ChatMessage[],
-  context: { depositCode?: string },
-  onEvent: (event: AssistantEvent) => void,
-  signal?: AbortSignal,
-): Promise<void> {
+/** Runs the agent over AG-UI: posts a RunAgentInput and hands each event of the answer stream to `onEvent`. */
+export async function runAssistant(input: RunAgentInput, onEvent: (event: AgUiEvent) => void, signal?: AbortSignal): Promise<void> {
   let response: Response
   try {
     response = await fetch(`${apiBaseUrl}/ai/chat`, {
       method: 'POST',
       signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken() ?? ''}` },
-      body: JSON.stringify({ messages, context }),
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', Authorization: `Bearer ${getAccessToken() ?? ''}` },
+      body: JSON.stringify(input),
     })
-  } catch (error) {
+  } catch {
     if (signal?.aborted) return
     throw new ApiRequestError(0, 'No hay conexión con el asistente.', { code: 'NETWORK' })
   }
@@ -68,7 +60,7 @@ export async function streamChat(
     const { value, done } = await reader.read()
     if (done) break
     buffer += decoder.decode(value, { stream: true })
-    const parsed = parseSse(buffer)
+    const parsed = parseAgUiStream(buffer)
     buffer = parsed.rest
     parsed.events.forEach(onEvent)
   }
