@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { FlaskConical, Home, MoreHorizontal, Wine, X } from 'lucide-react'
-import { navigationItems } from './work-home-sidebar'
+import { navigationItems } from './top-nav'
 import type { NavigationBadges } from '../hooks/use-navigation-badges'
 
 interface MobileBottomNavProps {

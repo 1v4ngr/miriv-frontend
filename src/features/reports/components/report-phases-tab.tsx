@@ -19,7 +19,7 @@ const EMPTY: ReportPhaseInput = {
 }
 
 /**
- * Administración › Analítica › Fases de informe. Each phase says when a content is in it (category and
+ * Administración › Analítica › Fases de elaboración. Each phase says when a content is in it (category and
  * fermentation states) and which parameters the report charts meanwhile. Order matters: first match wins.
  */
 export function ReportPhasesTab({ canEdit }: { canEdit: boolean }) {
@@ -71,9 +71,9 @@ export function ReportPhasesTab({ canEdit }: { canEdit: boolean }) {
       <div className={card}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="max-w-2xl">
-            <h2 className="text-sm font-semibold">Fases de informe</h2>
+            <h2 className="text-sm font-semibold">Fases de elaboración</h2>
             <p className="mt-1 text-xs text-muted">
-              El informe de estado de bodega agrupa los depósitos por fase y, en cada fase, grafica sus parámetros. La fase se calcula con la
+              Cada contenido está en una fase: el detalle del depósito la muestra y destaca sus parámetros, y el informe de estado de bodega agrupa los depósitos por fase. La fase se calcula con la
               categoría del contenido y sus estados de fermentación; se aplica la <strong>primera</strong> de la lista que encaja, así que el orden importa.
               Las fases pasadas se reconstruyen con las revisiones de estado (p. ej. un mosto que al terminar la alcohólica pasa a vino).
             </p>

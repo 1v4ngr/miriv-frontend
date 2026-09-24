@@ -55,6 +55,9 @@ export interface ReportPhase {
   parameterCodes: string[]
 }
 
+/** Phase a content is in now: the one set by hand (`manual`) or the one derived from its category and states (`automatic`). */
+export interface CurrentPhase { phase: ReportPhase | null; automatic: ReportPhase | null; manual: boolean; changedAt: string | null; changedBy: string | null }
+
 export type ReportPhaseInput = Omit<ReportPhase, 'id' | 'position' | 'code'> & { code?: string | null }
 
 export interface ReportOptions { zones: ReportOption[]; deposits: ReportDepositOption[]; categories: ReportOption[]; phases: ReportPhase[] }
@@ -67,6 +70,10 @@ export const reportsApi = {
   create(input: CreateReportInput) { return apiRequest<ReportJob>('/api/reports', { method: 'POST', body: JSON.stringify(input) }) },
   file(code: string, format: 'pdf' | 'xlsx') { return apiDownload(`/api/reports/${encodeURIComponent(code)}/file?format=${format}`) },
   phases() { return apiRequest<ReportPhase[]>('/api/report-phases') },
+  currentPhase(content: string) { return apiRequest<CurrentPhase>(`/api/report-phases/current?content=${encodeURIComponent(content)}`) },
+  /** Sets the content's phase by hand; `phaseId` null goes back to the automatic phase. */
+  /** `categoryCode` reclassifies the content in the same step when the new phase needs another category. */
+  setCurrentPhase(content: string, phaseId: string | null, reason?: string, categoryCode?: string) { return apiRequest<CurrentPhase>(`/api/report-phases/current?content=${encodeURIComponent(content)}`, { method: 'PUT', body: JSON.stringify({ phaseId, reason, categoryCode }) }) },
   createPhase(input: ReportPhaseInput) { return apiRequest<ReportPhase>('/api/admin/report-phases', { method: 'POST', body: JSON.stringify(input) }) },
   updatePhase(id: string, input: ReportPhaseInput) { return apiRequest<ReportPhase>(`/api/admin/report-phases/${id}`, { method: 'PUT', body: JSON.stringify(input) }) },
   deletePhase(id: string) { return apiRequest<void>(`/api/admin/report-phases/${id}`, { method: 'DELETE' }) },

@@ -22,7 +22,7 @@ const TABS: Array<{ id: AnaliticaTab; label: string }> = [
   { id: 'templates', label: 'Plantillas' },
   { id: 'targets', label: 'Objetivos analíticos' },
   { id: 'rules', label: 'Avisos' },
-  { id: 'report-phases', label: 'Fases de informe' },
+  { id: 'report-phases', label: 'Fases de elaboración' },
 ]
 
 interface EditingState {

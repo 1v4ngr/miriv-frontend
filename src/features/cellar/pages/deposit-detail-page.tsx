@@ -1,10 +1,19 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { fermentationLabels, label as stateLabel } from '../../../lib/labels'
-import { ArrowLeft, ExternalLink, FileText, Pencil, Trash2, X } from 'lucide-react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { formatDate } from '../../../lib/format'
+import { ArrowLeft, ArrowLeftRight, ChevronDown, FlaskConical, LogIn, ExternalLink, FileText, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react'
 import { cellarApi } from '../services/cellar-api'
 import type { Deposit, NewDeposit } from '../types'
 import { activeOccupation, formatLiters, statusClass, statusLabel } from '../utils'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
+import { formatAge, statusClass as readingStatusClass } from '../../tracking/utils'
+import { LocationBadge } from '../components/deposit-badges'
+import { TankLevel } from '../components/deposit-detail/tank-level'
+import { WineTypePicker } from '../components/deposit-detail/wine-type-picker'
+import { KeyReadings, TemplateReadings } from '../components/deposit-detail/key-readings'
+import { EvolutionCard } from '../components/deposit-detail/evolution-card'
+import { ActivityFeed } from '../components/deposit-detail/activity-feed'
+import { defaultChartParameters, keyReadings, overallStatus, phaseLabel, phaseOf, phaseParameters, readingsByTemplate, useContentInsights } from '../components/deposit-detail/content-insights'
+import { PhaseCard } from '../components/deposit-detail/phase-card'
 
 interface DepositDetailPageProps {
   code: string
@@ -15,10 +24,8 @@ interface DepositDetailPageProps {
   onRegisterSample?: (code: string) => void
   onRegisterEntry?: (code: string) => void
   onOpenReport?: (code: string) => void
+  onOpenTracking?: (contentCode: string) => void
 }
-
-type Tab = 'Características' | 'Ocupaciones' | 'Limpieza y mantenimiento'
-const tabs: Tab[] = ['Características', 'Ocupaciones', 'Limpieza y mantenimiento']
 
 function EditDeposit({ deposit, onClose, onSaved }: { deposit: Deposit; onClose: () => void; onSaved: (deposit: Deposit) => void }) {
   const [form, setForm] = useState<Pick<NewDeposit, 'zone' | 'position' | 'capacityLiters' | 'material' | 'refrigerated'>>({ zone: deposit.zone ?? '', position: deposit.position, capacityLiters: deposit.capacityLiters, material: deposit.material, refrigerated: deposit.refrigerated })
@@ -28,33 +35,149 @@ function EditDeposit({ deposit, onClose, onSaved }: { deposit: Deposit; onClose:
   return <div className="fixed inset-0 z-30 flex justify-end bg-[#2e262a]/30" onMouseDown={onClose}><section role="dialog" aria-modal="true" aria-labelledby="edit-deposit-title" onMouseDown={(event) => event.stopPropagation()} className="h-full w-full max-w-[420px] overflow-y-auto bg-[#fdfbfc] p-5 shadow-xl sm:p-6"><div className="flex items-center justify-between"><h2 id="edit-deposit-title" className="text-[20px] font-semibold">Editar {deposit.code}</h2><button type="button" onClick={onClose} aria-label="Cerrar" className="rounded-lg p-2 hover:bg-plum-soft"><X className="size-4" /></button></div><p className="mt-2 text-[12px] text-muted">El volumen del contenido se cambia mediante un movimiento, no aquí.</p><form onSubmit={handleSubmit} className="mt-5 space-y-4"><p className="rounded-xl bg-plum-soft p-3 font-mono text-[12px] text-plum">{deposit.code} · {deposit.center}</p>{([['Zona', 'zone'], ['Posición', 'position']] as const).map(([label, key]) => <label key={key} className="block text-[12px] font-semibold text-copy">{label}<input required={key === 'zone'} value={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-[13px] font-normal outline-none focus:border-[#b9899c]" /></label>)}<label className="block text-[12px] font-semibold text-copy">Capacidad útil (L)<input required type="number" min="1" value={form.capacityLiters} onChange={(event) => setForm({ ...form, capacityLiters: Number(event.target.value) })} className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-[13px] font-normal outline-none focus:border-[#b9899c]" /></label><label className="block text-[12px] font-semibold text-copy">Material<select value={form.material} onChange={(event) => setForm({ ...form, material: event.target.value })} className="mt-1.5 h-10 w-full rounded-xl border border-border bg-white px-3 text-[13px] font-normal"><option>Inox</option><option>Hormigón</option><option>Madera</option></select></label><label className="flex items-center gap-2 text-[12px] text-copy"><input type="checkbox" checked={form.refrigerated} onChange={(event) => setForm({ ...form, refrigerated: event.target.checked })} />Refrigerado</label>{error && <p role="alert" className="text-[12px] text-[#8e3b4a]">{error}</p>}<button type="submit" disabled={saving} className="min-h-10 w-full rounded-xl bg-plum text-[12.5px] font-semibold text-white disabled:opacity-60">{saving ? 'Guardando…' : 'Guardar cambios'}</button></form></section></div>
 }
 
-export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onRegisterMovement, onRegisterSample, onRegisterEntry, onOpenReport }: DepositDetailPageProps) {
+const overallText = { OK: 'En rango', WARN: 'Aviso', CRIT: 'Crítico' } as const
+
+function Vital({ label, value, hint, children }: { label: string; value: ReactNode; hint?: ReactNode; children?: ReactNode }) {
+  return <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-white px-3.5 py-3 sm:px-4">{children}<div className="min-w-0"><div className="text-[11px] text-muted">{label}</div><div className="truncate text-[16px] font-semibold text-ink">{value}</div>{hint && <div className="truncate text-[10.5px] text-muted">{hint}</div>}</div></div>
+}
+
+function Collapsible({ title, count, defaultOpen = false, children }: { title: string; count?: number; defaultOpen?: boolean; children: ReactNode }) {
+  return <details open={defaultOpen} className="group rounded-[18px] border border-border bg-white [&_summary::-webkit-details-marker]:hidden"><summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3.5 text-[13px] font-semibold sm:px-5">{title}{count !== undefined && <span className="ml-1.5 font-mono text-[11px] font-normal text-muted">{count}</span>}<ChevronDown className="ml-auto size-4 text-muted transition group-open:rotate-180" aria-hidden="true" /></summary><div className="border-t border-border px-4 pb-4 pt-3 sm:px-5">{children}</div></details>
+}
+
+/** Mobile action tile: icon over a short label, thumb-sized. */
+const tileClass = 'flex h-14 flex-col items-center justify-center gap-1 rounded-2xl border text-[11px] font-semibold transition-colors'
+
+function ActionsMenu({ items, tile = false }: { items: { label: string; icon: typeof Pencil; onClick: () => void; danger?: boolean }[]; tile?: boolean }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onPointer = (event: MouseEvent) => { if (!ref.current?.contains(event.target as Node)) setOpen(false) }
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onPointer); document.removeEventListener('keydown', onKey) }
+  }, [open])
+  return <div ref={ref} className="relative">{tile ? <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} className={`${tileClass} w-full border-border bg-white text-copy active:bg-plum-soft`}><MoreHorizontal className="size-5" aria-hidden="true" />Más</button> : <button type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open} aria-label="Más acciones" className="flex size-9 items-center justify-center rounded-xl border border-border bg-white text-copy hover:bg-plum-soft"><MoreHorizontal className="size-4" /></button>}{open && <div role="menu" className="absolute right-0 top-full z-30 mt-2 w-52 rounded-2xl border border-border bg-white p-1.5 shadow-[0_12px_32px_rgba(46,38,42,0.14)]">{items.map((item) => { const Icon = item.icon; return <button key={item.label} type="button" role="menuitem" onClick={() => { setOpen(false); item.onClick() }} className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12.5px] font-medium ${item.danger ? 'text-[#8e1f33] hover:bg-[#fdf0f3]' : 'text-ink hover:bg-[#f7f1f4]'}`}><Icon className="size-4" aria-hidden="true" />{item.label}</button> })}</div>}</div>
+}
+
+export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onRegisterMovement, onRegisterSample, onRegisterEntry, onOpenReport, onOpenTracking }: DepositDetailPageProps) {
   const [deposit, setDeposit] = useState<Deposit>()
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<Tab>('Ocupaciones')
   const [editing, setEditing] = useState(false)
   const [notice, setNotice] = useState('')
   const [clearing, setClearing] = useState(false)
   const [clearReason, setClearReason] = useState('')
   const [clearError, setClearError] = useState('')
   const [clearingBusy, setClearingBusy] = useState(false)
+  const [version, setVersion] = useState(0)
   const profile = useCurrentProfile()
 
   useEffect(() => { let mounted = true; setLoading(true); cellarApi.getDeposit(code).then((data) => { if (mounted) setDeposit(data) }).finally(() => { if (mounted) setLoading(false) }); return () => { mounted = false } }, [code])
+  const occupation = deposit ? activeOccupation(deposit) : undefined
+  const insights = useContentInsights(occupation?.contentCode, occupation?.entryDate, version)
+
   if (loading) return <p className="p-6 text-center text-[12px] text-muted">Cargando depósito…</p>
   if (!deposit) return <div className="rounded-2xl border border-border bg-white p-6"><p className="text-[13px]">No se encuentra el depósito {code}.</p><button type="button" onClick={onBack} className="text-[12px] font-semibold text-plum">Volver a depósitos</button></div>
 
-  const occupation = activeOccupation(deposit)
+  const reload = (message?: string) => { if (message) setNotice(message); cellarApi.getDeposit(code).then((data) => { if (data) setDeposit(data) }); setVersion((current) => current + 1) }
   const occupiedLiters = occupation?.volumeLiters ?? 0
   const fill = Math.round(occupiedLiters / deposit.capacityLiters * 100)
+  const parameters = occupation ? phaseParameters(insights, occupation) : []
+  const phaseName = insights.phase?.name ?? (occupation ? phaseLabel[phaseOf(occupation)] : '')
+  const readings = occupation ? keyReadings(insights, parameters) : []
+  const overall = overallStatus(readings, insights.latest)
+  const lastDays = insights.latest?.readings.length ? Math.min(...insights.latest.readings.map((reading) => reading.daysAgo)) : null
+  const openSamples = insights.samples.filter((sample) => sample.status !== 'Validado' && sample.status !== 'Invalidado').length
+  const history = deposit.occupations.filter((item) => item !== occupation)
+  const lastCleaning = deposit.cleaningHistory[0]
+  const needsCleaning = deposit.status === 'pending_cleaning' || deposit.status === 'cleaning'
+  const registerSample = () => (onRegisterSample ? onRegisterSample(deposit.code) : setNotice(`Registrar muestra para ${occupation?.contentCode}: vista de laboratorio pendiente.`))
+  const registerEntry = () => (onRegisterEntry ? onRegisterEntry(deposit.code) : onOpenLots())
+  const menu = [
+    { label: 'Editar depósito', icon: Pencil, onClick: () => setEditing(true) },
+    ...(onOpenReport ? [{ label: 'Informe', icon: FileText, onClick: () => onOpenReport(deposit.code) }] : []),
+    ...(occupation ? [{ label: 'Ficha del contenido', icon: ExternalLink, onClick: () => onOpenContent(occupation.contentCode) }, { label: 'Eliminar contenido', icon: Trash2, danger: true, onClick: () => { setClearing(true); setClearError('') } }] : []),
+  ]
 
-  return <div className="space-y-4"><button type="button" onClick={onBack} className="flex items-center gap-1 text-[11.5px] font-semibold text-plum hover:underline"><ArrowLeft className="size-3.5" />Volver a depósitos</button><header className="rounded-[18px] border border-border bg-white p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex flex-wrap items-center gap-2"><h1 className="m-0 font-mono text-[22px] font-medium">{deposit.code}</h1><span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusClass(deposit)}`}>{statusLabel(deposit)}</span></div><p className="mt-1 text-[12px] text-muted">{deposit.zone} · posición {deposit.position || 'sin indicar'} · útil {formatLiters(deposit.capacityLiters)} L</p><p className="mt-1 text-[11.5px] text-copy">Recipiente físico. El producto almacenado tiene su propia identidad e historial.</p></div><div className="flex flex-wrap gap-2"><button type="button" onClick={() => setEditing(true)} className="flex min-h-9 items-center gap-1 rounded-xl border border-border px-3 text-[11.5px] font-semibold hover:bg-plum-soft"><Pencil className="size-3.5" />Editar</button>{deposit.status === 'available' ? <button type="button" onClick={onRegisterEntry ? () => onRegisterEntry(deposit.code) : onOpenLots} className="min-h-9 rounded-xl bg-plum px-3 text-[11.5px] font-semibold text-white">Registrar entrada</button> : occupation ? <><button type="button" onClick={onRegisterSample ? () => onRegisterSample(deposit.code) : () => setNotice(`Registrar muestra para ${occupation.contentCode}: vista de laboratorio pendiente.`)} className="min-h-9 rounded-xl bg-plum px-3 text-[11.5px] font-semibold text-white">Registrar muestra</button><button type="button" onClick={() => onRegisterMovement(deposit.code)} className="min-h-9 rounded-xl border border-border px-3 text-[11.5px] font-semibold">Registrar movimiento</button>{onOpenReport && <button type="button" onClick={() => onOpenReport(deposit.code)} className="flex min-h-9 items-center gap-1 rounded-xl border border-border px-3 text-[11.5px] font-semibold hover:bg-plum-soft"><FileText className="size-3.5" />Informe</button>}<button type="button" onClick={() => { setClearing((current) => !current); setClearError('') }} className="min-h-9 rounded-xl border border-[#d6a8b3] bg-white px-3 text-[11.5px] font-semibold text-[#8e1f33] hover:bg-[#f7e0e6]"><Trash2 className="mr-1 inline size-3.5" />Eliminar contenido</button></> : null}</div></div></header>{clearing && occupation && <section className="space-y-3 rounded-[18px] border border-[#d6a8b3] bg-[#fdf5f7] p-4"><div><p className="text-[12.5px] font-semibold text-[#8e1f33]">Eliminar el contenido del depósito {deposit.code}</p><p className="mt-1 text-[11.5px] text-copy">Vas a retirar {formatLiters(occupiedLiters)} L del contenido <span className="font-mono">{occupation.contentCode}</span> (lote {occupation.lotCode}). Quedará registrado como movimiento <span className="font-mono">LOSS</span> y el depósito pasará a <span className="font-semibold">PENDING_CLEANING</span>. Esta acción no se puede deshacer.</p></div><label className="block text-[12px] font-semibold text-copy">Motivo / corrección<textarea required rows={2} value={clearReason} onChange={(event) => setClearReason(event.target.value)} placeholder="p. ej. Entré el lote equivocado en E-2" className="mt-1 w-full rounded-xl border border-border bg-white p-2 text-[12px] outline-none focus:border-[#b9899c]" /></label>{clearError && <p role="alert" className="text-[12px] text-[#8e3b4a]">{clearError}</p>}<div className="flex flex-wrap gap-2"><button type="button" disabled={clearingBusy || !clearReason.trim()} onClick={async () => { setClearingBusy(true); setClearError(''); try { await cellarApi.clearContent(deposit.code, clearReason, profile?.username ?? ''); const fresh = await cellarApi.getDeposit(deposit.code); if (fresh) setDeposit(fresh); setClearing(false); setClearReason(''); setNotice(`Contenido ${occupation.contentCode} retirado. El depósito queda pendiente de limpieza.`) } catch (cause) { setClearError(cause instanceof Error ? cause.message : 'No se ha podido eliminar el contenido.') } finally { setClearingBusy(false) } }} className="min-h-10 rounded-xl bg-[#8e1f33] px-4 text-[12px] font-semibold text-white disabled:opacity-60">{clearingBusy ? 'Eliminando…' : 'Confirmar eliminación'}</button><button type="button" onClick={() => { setClearing(false); setClearReason('') }} className="min-h-10 rounded-xl border border-border px-4 text-[12px] font-semibold">Cancelar</button></div></section>}
+  const technical = <dl className="grid gap-x-6 gap-y-2.5 text-[12px] sm:grid-cols-2">{[['Centro', deposit.center], ['Zona y posición', `${deposit.zone ?? '—'} · ${deposit.position || 'sin indicar'}`], ['Capacidad útil', `${formatLiters(deposit.capacityLiters)} L`], ['Capacidad nominal', deposit.nominalCapacityLiters ? `${formatLiters(deposit.nominalCapacityLiters)} L` : 'No indicada'], ['Material', deposit.material || '—'], ['Refrigeración', deposit.refrigerated ? 'Refrigerado' : 'Sin refrigeración']].map(([label, value]) => <div key={label} className="flex justify-between gap-3 border-b border-border pb-2 last:border-0 sm:[&:nth-last-child(2)]:border-0"><dt className="text-muted">{label}</dt><dd className="m-0 text-right font-medium text-ink">{value}</dd></div>)}</dl>
+  const occupationsList = history.length === 0 ? <p className="text-[12px] text-muted">Sin ocupaciones anteriores.</p> : <ul className="divide-y divide-border">{history.map((item) => { const eliminated = item.volumeLiters === 0 && Boolean(item.exitDate); return <li key={`${item.contentCode}-${item.entryDate}`}><button type="button" onClick={() => onOpenContent(item.contentCode)} className="flex w-full items-center gap-3 py-2 text-left text-[12px] hover:text-plum"><span className={`font-mono font-semibold ${eliminated ? 'text-muted line-through' : ''}`}>{item.contentCode}</span><span className="text-muted">{item.category ?? '—'} · {item.lotCode}</span><span className="ml-auto whitespace-nowrap text-[11px] text-muted">{formatDate(item.entryDate)} → {formatDate(item.exitDate)}</span></button></li> })}</ul>
+
+  return <div className="space-y-4">
+    <button type="button" onClick={onBack} className="flex items-center gap-1 text-[11.5px] font-semibold text-plum hover:underline"><ArrowLeft className="size-3.5" />Volver a depósitos</button>
+
+    <header className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[18px] border border-border bg-white p-4 sm:p-5">
+      <TankLevel percent={fill} category={occupation?.category} className="h-[72px] w-16 shrink-0 sm:h-24 sm:w-[86px]" />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="m-0 mr-1 font-mono text-[22px] font-medium leading-none sm:text-[26px]">{deposit.code}</h1>
+          <LocationBadge zone={deposit.zone} />
+          {occupation && <WineTypePicker contentCode={occupation.contentCode} category={occupation.category} onChanged={reload} />}
+          {occupation && overall !== 'NONE' && <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${readingStatusClass[overall]}`}>{overallText[overall]}</span>}
+          {(!occupation || deposit.priority !== 'none') && <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${statusClass(deposit)}`}>{statusLabel(deposit)}</span>}
+        </div>
+        <p className="mt-2 text-[12px] text-muted">{occupation ? <><button type="button" onClick={() => onOpenContent(occupation.contentCode)} className="font-mono font-semibold text-plum hover:underline">{occupation.contentCode}</button> · lote <span className="font-mono">{occupation.lotCode}</span> · desde {formatDate(occupation.entryDate)}</> : 'Sin contenido'} · {deposit.material} · {formatLiters(deposit.capacityLiters)} L útiles</p>
+      </div>
+      {/* Desktop: regular buttons. */}
+      <div className="hidden items-center gap-2 sm:flex">
+        {occupation ? <>
+          <button type="button" onClick={registerSample} className="h-9 whitespace-nowrap rounded-xl bg-plum px-3.5 text-[12px] font-semibold text-white hover:bg-plum-dark">Registrar muestra</button>
+          <button type="button" onClick={() => onRegisterMovement(deposit.code)} className="h-9 rounded-xl border border-border bg-white px-3.5 text-[12px] font-semibold hover:bg-plum-soft">Movimiento</button>
+        </> : deposit.status === 'available' && <button type="button" onClick={registerEntry} className="h-9 rounded-xl bg-plum px-3.5 text-[12px] font-semibold text-white hover:bg-plum-dark">Registrar entrada</button>}
+        <ActionsMenu items={menu} />
+      </div>
+      {/* Mobile: full-width row of thumb-sized tiles. */}
+      <div className="grid w-full grid-cols-3 gap-2 sm:hidden">
+        {occupation ? <>
+          <button type="button" onClick={registerSample} className={`${tileClass} border-transparent bg-plum text-white active:bg-plum-dark`}><FlaskConical className="size-5" aria-hidden="true" />Muestra</button>
+          <button type="button" onClick={() => onRegisterMovement(deposit.code)} className={`${tileClass} border-border bg-white text-copy active:bg-plum-soft`}><ArrowLeftRight className="size-5" aria-hidden="true" />Movimiento</button>
+        </> : deposit.status === 'available' ? <button type="button" onClick={registerEntry} className={`${tileClass} col-span-2 border-transparent bg-plum text-white active:bg-plum-dark`}><LogIn className="size-5" aria-hidden="true" />Registrar entrada</button> : <span className="col-span-2" />}
+        <ActionsMenu items={menu} tile />
+      </div>
+    </header>
+
+    {clearing && occupation && <section className="space-y-3 rounded-[18px] border border-[#d6a8b3] bg-[#fdf5f7] p-4"><div><p className="text-[12.5px] font-semibold text-[#8e1f33]">Eliminar el contenido del depósito {deposit.code}</p><p className="mt-1 text-[11.5px] text-copy">Vas a retirar {formatLiters(occupiedLiters)} L del contenido <span className="font-mono">{occupation.contentCode}</span> (lote {occupation.lotCode}). Quedará registrado como movimiento <span className="font-mono">LOSS</span> y el depósito pasará a pendiente de limpieza. Esta acción no se puede deshacer.</p></div><label className="block text-[12px] font-semibold text-copy">Motivo / corrección<textarea required rows={2} value={clearReason} onChange={(event) => setClearReason(event.target.value)} placeholder="p. ej. Entré el lote equivocado en E-2" className="mt-1 w-full rounded-xl border border-border bg-white p-2 text-[12px] outline-none focus:border-[#b9899c]" /></label>{clearError && <p role="alert" className="text-[12px] text-[#8e3b4a]">{clearError}</p>}<div className="flex flex-wrap gap-2"><button type="button" disabled={clearingBusy || !clearReason.trim()} onClick={async () => { setClearingBusy(true); setClearError(''); try { await cellarApi.clearContent(deposit.code, clearReason, profile?.username ?? ''); setClearing(false); setClearReason(''); reload(`Contenido ${occupation.contentCode} retirado. El depósito queda pendiente de limpieza.`) } catch (cause) { setClearError(cause instanceof Error ? cause.message : 'No se ha podido eliminar el contenido.') } finally { setClearingBusy(false) } }} className="min-h-10 rounded-xl bg-[#8e1f33] px-4 text-[12px] font-semibold text-white disabled:opacity-60">{clearingBusy ? 'Eliminando…' : 'Confirmar eliminación'}</button><button type="button" onClick={() => { setClearing(false); setClearReason('') }} className="min-h-10 rounded-xl border border-border px-4 text-[12px] font-semibold">Cancelar</button></div></section>}
     {notice && <div role="status" className="flex items-start justify-between gap-3 rounded-xl border border-border bg-white p-3 text-[12px] text-copy"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Cerrar aviso"><X className="size-3.5" /></button></div>}
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,1fr)]"><section className="min-w-0 rounded-[18px] border border-border bg-[#fdfbfc] p-4 sm:p-5"><div className="flex gap-1 overflow-x-auto border-b border-border" role="tablist" aria-label="Datos del depósito">{tabs.map((item) => <button key={item} type="button" role="tab" aria-selected={tab === item} onClick={() => setTab(item)} className={`shrink-0 border-b-2 px-3 py-2.5 text-[11.5px] font-semibold ${tab === item ? 'border-plum text-plum' : 'border-transparent text-muted'}`}>{item}</button>)}</div>
-      {tab === 'Características' && <div className="mt-4 grid gap-3 sm:grid-cols-2">{[['Identificador', deposit.code], ['Centro', deposit.center], ['Zona y posición', `${deposit.zone} · ${deposit.position || 'sin indicar'}`], ['Capacidad útil', `${formatLiters(deposit.capacityLiters)} L`], ['Capacidad nominal', deposit.nominalCapacityLiters ? `${formatLiters(deposit.nominalCapacityLiters)} L` : 'No indicada'], ['Material y refrigeración', `${deposit.material} · ${deposit.refrigerated ? 'refrigerado' : 'sin refrigeración'}`]].map(([label, value]) => <div key={label} className="rounded-xl border border-border bg-white p-3"><div className="text-[11px] text-muted">{label}</div><div className="mt-1 text-[12.5px] font-semibold">{value}</div></div>)}<p className="sm:col-span-2 text-[11.5px] leading-5 text-muted">El volumen ocupado procede de los movimientos y no se edita entre estas características.</p></div>}
-      {tab === 'Ocupaciones' && <div className="mt-4 space-y-2">{deposit.occupations.length === 0 ? <p className="rounded-xl bg-white p-5 text-[12px] text-muted">No hay ocupaciones registradas.</p> : deposit.occupations.map((item) => { const eliminated = item.volumeLiters === 0 && Boolean(item.exitDate); return <button type="button" key={`${item.contentCode}-${item.entryDate}`} onClick={() => onOpenContent(item.contentCode)} className={`relative grid w-full cursor-pointer grid-cols-2 gap-2 rounded-xl border p-3 text-left text-[11.5px] transition hover:border-plum hover:bg-plum-soft sm:grid-cols-[1.2fr_1fr_1fr_1fr_1fr] ${eliminated ? 'border-border bg-[#f7e0e6]/40 text-muted line-through' : 'border-border bg-white'}`}><div><span className="block text-[10px] text-muted sm:hidden">Contenido</span><span className="font-mono font-semibold">{item.contentCode}</span></div><div><span className="block text-[10px] text-muted sm:hidden">Lote</span><span className="font-mono">{item.lotCode}</span></div><div><span className="block text-[10px] text-muted sm:hidden">Entrada</span>{item.entryDate}</div><div><span className="block text-[10px] text-muted sm:hidden">Salida</span>{item.exitDate ?? <span className="font-semibold not-italic text-[#1f5c3a]">Actual</span>}</div><div><span className="block text-[10px] text-muted sm:hidden">Volumen</span><span className="not-italic">{formatLiters(item.volumeLiters)} L</span></div>{eliminated && <span className="absolute right-2 top-2 rounded-full bg-[#f7e0e6] px-2 py-0.5 text-[9.5px] font-semibold text-[#8e1f33] no-underline">Eliminada por corrección</span>}</button> })}<p className="text-[11px] text-muted">Las ocupaciones cerradas son historia y no se presentan como contenido actual.</p></div>}
-      {tab === 'Limpieza y mantenimiento' && <CleaningTab deposit={deposit} onChanged={(next) => setDeposit(next)} profile={profile} />}
-    </section><aside className="space-y-4">{occupation ? <section role="button" tabIndex={0} onClick={() => onOpenContent(occupation.contentCode)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenContent(occupation.contentCode) } }} aria-label={`Abrir ficha del contenido ${occupation.contentCode}`} className="cursor-pointer rounded-[18px] border border-border bg-[#fdfbfc] p-4 sm:p-5 transition hover:border-plum hover:bg-plum-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-plum"><div className="flex items-center justify-between gap-2"><h2 className="text-[16px] font-semibold">Contenido actual</h2><span className="flex items-center gap-2"><span className="rounded-full bg-plum-soft px-2 py-1 text-[10px] font-semibold text-plum">Ocupado</span><ExternalLink className="size-3.5 text-plum" /></span></div><p className="mt-3 font-mono text-[14px] font-semibold">{occupation.contentCode}</p><p className="mt-1 text-[12px] text-muted">{occupation.category} · {occupation.lotCode}</p><p className="mt-3 font-mono text-[22px]">{formatLiters(occupiedLiters)} L</p><div className="mt-1 h-1.5 rounded-full bg-[#efe6ea]"><div className="h-full rounded-full bg-plum" style={{ width: `${Math.min(100, fill)}%` }} /></div><p className="mt-1 text-[11px] text-muted">{fill} % de capacidad útil · el llenado no indica avance fermentativo</p><div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1"><div className="rounded-xl bg-white p-3 text-[11.5px]"><div className="text-muted">Fermentación alcohólica</div><strong className="mt-1 block">{stateLabel(fermentationLabels, occupation.alcoholicState)}</strong></div><div className="rounded-xl bg-white p-3 text-[11.5px]"><div className="text-muted">Maloláctica</div><strong className="mt-1 block">{stateLabel(fermentationLabels, occupation.malolacticState)}</strong></div></div>{deposit.priority !== 'none' && <p className="mt-3 text-[11.5px] font-semibold text-[#8e1f33]">Prioridad: {statusLabel(deposit)}</p>}</section> : <section className="rounded-[18px] border border-border bg-[#fdfbfc] p-4 sm:p-5"><div className="flex items-center justify-between gap-2"><h2 className="text-[16px] font-semibold">Contenido actual</h2></div><p className="mt-3 text-[12px] leading-5 text-muted">Sin contenido actual. No se muestran como vigentes los estados del producto anterior.</p></section>}{occupation && <section className="rounded-[18px] border border-border bg-[#fdfbfc] p-4 sm:p-5"><h2 className="text-[16px] font-semibold">Últimas medidas</h2><dl className="mt-3 space-y-2 text-[11.5px]">{(deposit.code === 'DEP-014' ? [['Acidez volátil', '0,72 g/L · 14 sep'], ['pH', '3,42 · 14 sep'], ['Temperatura', '18,6 °C · hoy 07:05'], ['Azúcares reductores', 'No medido']] : [['Último control', deposit.lastControl ?? 'Sin controles'], ['Vigencia', deposit.lastControlAge ?? 'Pendiente']]).map(([label, value]) => <div key={label} className="flex justify-between gap-3 border-b border-border pb-2"><dt className="text-muted">{label}</dt><dd className="m-0 text-right font-semibold">{value}</dd></div>)}</dl></section>}</aside></div>
+
+    {occupation ? <>
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <Vital label="Volumen" value={`${formatLiters(occupiedLiters)} L`} hint={`${fill} % de la capacidad útil`} />
+        <PhaseCard contentCode={occupation.contentCode} current={insights.current} phases={insights.phases} occupation={occupation} loading={insights.loading} onChanged={reload} />
+        <Vital label="Último análisis" value={insights.loading ? '…' : formatAge(lastDays)} hint={openSamples ? `${openSamples} muestra${openSamples === 1 ? '' : 's'} abierta${openSamples === 1 ? '' : 's'}` : 'Sin muestras abiertas'} />
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+        <div className="min-w-0 space-y-4">
+          <EvolutionCard series={insights.series} events={insights.events} defaults={defaultChartParameters(insights, parameters)} recommended={parameters} onOpenTracking={onOpenTracking ? () => onOpenTracking(occupation.contentCode) : undefined} />
+          <section className="rounded-[18px] border border-border bg-white p-4 sm:p-5"><div className="mb-3 flex items-baseline justify-between gap-2"><h2 className="text-[15px] font-semibold">Lecturas clave</h2><span className="text-[11px] text-muted">{phaseName}</span></div>{insights.loading ? <p className="text-[12px] text-muted">Cargando lecturas…</p> : <><KeyReadings readings={readings} /><TemplateReadings groups={readingsByTemplate(insights, 30)} days={30} /></>}</section>
+        </div>
+        <div className="min-w-0 space-y-4">
+          <ActivityFeed deposit={deposit} events={insights.events} alerts={insights.alerts} samples={insights.samples} />
+          <Collapsible title="Ficha técnica">{technical}</Collapsible>
+          <Collapsible title="Ocupaciones anteriores" count={history.length}>{occupationsList}</Collapsible>
+          <Collapsible title="Limpieza y mantenimiento" count={deposit.cleaningHistory.length}><CleaningTab deposit={deposit} onChanged={setDeposit} profile={profile} /></Collapsible>
+        </div>
+      </div>
+    </> : <>
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <Vital label="Estado" value={statusLabel(deposit)} />
+        <Vital label="Capacidad útil" value={`${formatLiters(deposit.capacityLiters)} L`} hint={deposit.refrigerated ? 'Refrigerado' : 'Sin refrigeración'} />
+        <Vital label="Última limpieza" value={lastCleaning ? formatDate(lastCleaning.date) : '—'} hint={lastCleaning?.result} />
+        <Vital label="Último contenido" value={history[0] ? history[0].contentCode : '—'} hint={history[0] ? `${history[0].category ?? '—'} · salió ${formatDate(history[0].exitDate)}` : undefined} />
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+        <div className="min-w-0 space-y-4">
+          {needsCleaning ? <section className="rounded-[18px] border border-border bg-white p-4 sm:p-5"><h2 className="text-[15px] font-semibold">Limpieza y mantenimiento</h2><CleaningTab deposit={deposit} onChanged={setDeposit} profile={profile} /></section>
+            : <section className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-border bg-white p-5"><div><h2 className="text-[15px] font-semibold">{deposit.status === 'available' ? 'Listo para una entrada' : statusLabel(deposit)}</h2><p className="mt-1 text-[12px] text-muted">{deposit.status === 'available' ? 'El depósito está vacío y limpio. No se muestran como vigentes los estados del producto anterior.' : 'El depósito no admite entradas en su estado actual.'}</p></div>{deposit.status === 'available' && <button type="button" onClick={onRegisterEntry ? () => onRegisterEntry(deposit.code) : onOpenLots} className="h-9 rounded-xl bg-plum px-3.5 text-[12px] font-semibold text-white hover:bg-plum-dark">Registrar entrada</button>}</section>}
+          <section className="rounded-[18px] border border-border bg-white p-4 sm:p-5"><h2 className="mb-2 text-[15px] font-semibold">Ocupaciones anteriores</h2>{occupationsList}</section>
+        </div>
+        <div className="min-w-0 space-y-4">
+          <ActivityFeed deposit={deposit} events={[]} alerts={[]} samples={[]} />
+          <Collapsible title="Ficha técnica" defaultOpen>{technical}</Collapsible>
+          {!needsCleaning && <Collapsible title="Limpieza y mantenimiento" count={deposit.cleaningHistory.length}><CleaningTab deposit={deposit} onChanged={setDeposit} profile={profile} /></Collapsible>}
+        </div>
+      </div>
+    </>}
     {editing && <EditDeposit deposit={deposit} onClose={() => setEditing(false)} onSaved={(updated) => { setDeposit(updated); setEditing(false) }} />}
   </div>
 }

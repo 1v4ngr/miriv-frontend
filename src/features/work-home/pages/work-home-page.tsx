@@ -6,7 +6,6 @@ import { MobileBottomNav } from '../components/mobile-bottom-nav'
 import { QuickActions } from '../components/quick-actions'
 import { RecentActivity } from '../components/recent-activity'
 import { WorkHomeHeader } from '../components/work-home-header'
-import { WorkHomeSidebar } from '../components/work-home-sidebar'
 import { useNavigationBadges } from '../hooks/use-navigation-badges'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
 import { workHomeApi } from '../services/work-home-api'
@@ -86,9 +85,8 @@ export function WorkHomePage({ onOpenLogin, onNavigate }: WorkHomePageProps) {
   return (
     <main className="min-h-screen bg-[#f2eef1] text-ink">
       <div className="flex min-h-screen w-full">
-        <WorkHomeSidebar activeItem={activeItem} onNavigate={handleNavigate} badges={badges} profile={profile} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <WorkHomeHeader center={profile?.centerName ?? data.center} campaign={data.campaign} search={search} onSearchChange={setSearch} onOpenNotices={() => setPanel({ kind: 'notices', title: 'Avisos', description: 'Resumen de avisos sin leer de la campaña actual.' })} onOpenProfile={() => setShowAccount(true)} profile={profile} />
+          <WorkHomeHeader center={profile?.centerName ?? data.center} campaign={data.campaign} search={search} onSearchChange={setSearch} onOpenNotices={() => setPanel({ kind: 'notices', title: 'Avisos', description: 'Resumen de avisos sin leer de la campaña actual.' })} onOpenProfile={() => setShowAccount(true)} profile={profile} nav={{ activeItem: activeItem, onNavigate: handleNavigate, badges }} />
           <div className="w-full min-w-0 flex-1 space-y-5 p-4 pb-24 sm:p-5 lg:p-6">
             <div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="m-0 text-[22px] font-semibold tracking-tight sm:text-[24px]">Hoy, {dateLabel}</h1><p className="mt-1 text-[12px] text-muted">{data.center} · {data.campaign} · datos a {data.updatedAt}</p></div></div>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">{data.metrics.map((metric) => <MetricCard key={metric.label} metric={metric} />)}</div>

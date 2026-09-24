@@ -25,9 +25,12 @@ export interface ReviewStateInput {
 export interface ContentApi {
   getContent(code: string): Promise<ContentRecord | undefined>
   reviewState(code: string, input: ReviewStateInput): Promise<void>
+  /** Changes the active content's category (Blanco, Tinto, Rosado…); `category` is its code or name. */
+  changeCategory(code: string, category: string, reason?: string): Promise<void>
 }
 
 export const contentApi: ContentApi = {
   async getContent(code) { try { return await apiRequest<ContentRecord>(`/api/contents/${encodeURIComponent(code)}`) } catch (error) { if ((error as { status?: number }).status === 404) return undefined; throw error } },
   async reviewState(code, input) { await apiRequest<void>(`/api/contents/${encodeURIComponent(code)}/state-reviews`, { method: 'POST', body: JSON.stringify(input) }) },
+  async changeCategory(code, category, reason) { await apiRequest<void>(`/api/contents/${encodeURIComponent(code)}/category`, { method: 'PATCH', body: JSON.stringify({ category, reason }) }) },
 }
