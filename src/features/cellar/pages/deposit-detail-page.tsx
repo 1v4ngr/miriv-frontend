@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { formatDate } from '../../../lib/format'
-import { ArrowLeft, ArrowLeftRight, ChevronDown, FlaskConical, LogIn, ExternalLink, FileText, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react'
+import { ArrowLeft, ArrowLeftRight, CalendarClock, ChevronDown, FlaskConical, LogIn, ExternalLink, FileText, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react'
 import { cellarApi } from '../services/cellar-api'
 import type { Deposit, NewDeposit } from '../types'
 import { activeOccupation, formatLiters, statusClass, statusLabel } from '../utils'
 import { useCurrentProfile } from '../../../hooks/use-current-profile'
+import { useCan } from '../../../hooks/use-permissions'
 import { StatTile } from '../../../components/ui/stat-tile'
 import { ActionTile, actionTileClass } from '../../../components/ui/action-tile'
 import { formatAge, statusClass as readingStatusClass } from '../../tracking/utils'
@@ -16,6 +17,7 @@ import { EvolutionCard } from '../components/deposit-detail/evolution-card'
 import { ActivityFeed } from '../components/deposit-detail/activity-feed'
 import { defaultChartParameters, keyReadings, overallStatus, phaseLabel, phaseOf, phaseParameters, readingsByTemplate, useContentInsights } from '../components/deposit-detail/content-insights'
 import { PhaseCard } from '../components/deposit-detail/phase-card'
+import { RescheduleMovementDialog } from '../components/reschedule-movement-dialog'
 import { useAssistantView } from '../../assistant/view-context'
 import { depositDetailView } from '../assistant-views'
 
@@ -72,7 +74,10 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
   const [clearError, setClearError] = useState('')
   const [clearingBusy, setClearingBusy] = useState(false)
   const [version, setVersion] = useState(0)
+  /** Entry movement we are about to reschedule from the activity feed or the actions menu. */
+  const [rescheduling, setRescheduling] = useState<{ code: string; effectiveAt: string } | null>(null)
   const profile = useCurrentProfile()
+  const canCorrect = useCan('MOVEMENT_REGISTER')
 
   useEffect(() => { let mounted = true; setLoading(true); cellarApi.getDeposit(code).then((data) => { if (mounted) setDeposit(data) }).finally(() => { if (mounted) setLoading(false) }); return () => { mounted = false } }, [code])
   const occupation = deposit ? activeOccupation(deposit) : undefined
@@ -95,11 +100,20 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
   const history = deposit.occupations.filter((item) => item !== occupation)
   const lastCleaning = deposit.cleaningHistory[0]
   const needsCleaning = deposit.status === 'pending_cleaning' || deposit.status === 'cleaning'
+  // Most recent ENTRY event for the current content: when there is one and the user can correct movements,
+  // we offer a quick way to fix the entry date from the actions menu and from the activity timeline.
+  const entryEvent = insights.events.find((event) => event.type === 'ENTRY' && event.movementCode)
+  const canRescheduleEntry = Boolean(entryEvent && occupation && canCorrect)
+  const openEntryReschedule = () => {
+    if (!entryEvent) return
+    setRescheduling({ code: entryEvent.movementCode as string, effectiveAt: entryEvent.at })
+  }
   const registerSample = () => (onRegisterSample ? onRegisterSample(deposit.code) : setNotice(`Registrar muestra para ${occupation?.contentCode}: vista de laboratorio pendiente.`))
   const registerEntry = () => (onRegisterEntry ? onRegisterEntry(deposit.code) : onOpenLots())
   const menu = [
     { label: 'Editar depósito', icon: Pencil, onClick: () => setEditing(true) },
     ...(onOpenReport ? [{ label: 'Informe', icon: FileText, onClick: () => onOpenReport(deposit.code) }] : []),
+    ...(canRescheduleEntry ? [{ label: 'Corregir fecha de entrada', icon: CalendarClock, onClick: openEntryReschedule }] : []),
     ...(occupation ? [{ label: 'Ficha del contenido', icon: ExternalLink, onClick: () => onOpenContent(occupation.contentCode) }, { label: 'Eliminar contenido', icon: Trash2, danger: true, onClick: () => { setClearing(true); setClearError('') } }] : []),
   ]
 
@@ -154,7 +168,7 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
           <section className="rounded-[18px] border border-border bg-white p-4 sm:p-5"><div className="mb-3 flex items-baseline justify-between gap-2"><h2 className="text-[15px] font-semibold">Lecturas clave</h2><span className="text-[11px] text-muted">{phaseName}</span></div>{insights.loading ? <p className="text-[12px] text-muted">Cargando lecturas…</p> : <><KeyReadings readings={readings} /><TemplateReadings groups={readingsByTemplate(insights, 30)} days={30} /></>}</section>
         </div>
         <div className="min-w-0 space-y-4">
-          <ActivityFeed deposit={deposit} events={insights.events} alerts={insights.alerts} samples={insights.samples} />
+          <ActivityFeed deposit={deposit} events={insights.events} alerts={insights.alerts} samples={insights.samples} onRescheduleEntry={setRescheduling} canCorrect={canCorrect} />
           <Collapsible title="Ficha técnica">{technical}</Collapsible>
           <Collapsible title="Ocupaciones anteriores" count={history.length}>{occupationsList}</Collapsible>
           <Collapsible title="Limpieza y mantenimiento" count={deposit.cleaningHistory.length}><CleaningTab deposit={deposit} onChanged={setDeposit} profile={profile} /></Collapsible>
@@ -181,6 +195,16 @@ export function DepositDetailPage({ code, onBack, onOpenLots, onOpenContent, onR
       </div>
     </>}
     {editing && <EditDeposit deposit={deposit} onClose={() => setEditing(false)} onSaved={(updated) => { setDeposit(updated); setEditing(false) }} />}
+    {rescheduling && (
+      <RescheduleMovementDialog
+        movementCode={rescheduling.code}
+        effectiveAt={rescheduling.effectiveAt}
+        title="Corregir fecha de entrada"
+        hint="Corrige cuándo entró este contenido al depósito. La fecha de inicio de la ocupación y, si era la entrada inicial del lote, la fecha del lote se ajustan solas. Los litros y los depósitos no cambian."
+        onClose={() => setRescheduling(null)}
+        onSaved={() => reload('Fecha de entrada corregida.')}
+      />
+    )}
   </div>
 }
 
